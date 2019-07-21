@@ -1,5 +1,4 @@
-# RenderWare 3.7.0.2, Windows-PC (Leak)
-RenderWare (Graphics) 3.7.0.2 — (Substantial Leak)
+# RenderWare "Graphics" 3 (3.7.0.2), Windows-PC — Substantial Leak
 
 Um vazamento de porções substanciais do código-origem do middleware RenderWare (Graphics).
 
