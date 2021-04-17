@@ -1,16 +1,19 @@
-# RenderWare "Graphics" 3 (3.7.0.2), Windows-PC — Substantial Leak
-A leak of substantial portions of source-code of [RenderWare](https://sigmaco.org/t/renderware) Graphics 3.7.0.2 for Windows-PC.
+# RenderWare "Graphics" 3 (3.7.0.2), Windows-PC
+Uma distro da versão 3.7.0.2 do SDK de [RenderWare](https://sigmaco.org/t/renderware) Graphics, um [middleware](https://sigmaco.org/t/middleware) adjunto de plugins.
+Atualmente, este repositório compreende uma porção substancial em código-origem compilável e executável em [C](https://sigmaco.org/t/c).
 
-As mentioned above, it is a leak of "portions", the code is not complete, so here we have:
-* The core, which provides basic abstraction of elements of operating systems, such as memory management, file management, etc. It also includes mechanisms for immediate draw rendering via [Direct3D](https://sigmaco.org/t/direct3d) 8 and 9.
-* The RpWorld plugin, which offers a retained rendering mode, joins the DAG architecture for scene construction. The retained mode operates via [Direct3D](https://sigmaco.org/t/direct3d) 8 and 9.
-* The RpCollis plugin, which offers mediocre collision detection and resolution. However, from what I tested, this source code does not operate like the original version of [Criterion Software](https://sigmaco.org/t/criterion-software), so you should use the precompiled library.
-* The RpToon plugin, which offers a rendering technique aimed at cartoonization and silhouette accentuation. I haven't tested it, but it's what has been used in the Dragon Ball Online game.
-~There are many insights to write there...~
+Como mencionado acima, isto se trata de uma porção substancial, não do código completo. Aqui temos:
+* O core, que provém abstração básica de elementos de sistema operacional, tais como gerenciamento de memória, gerenciamento de arquivo, etc. Também inclui mecanismos para rendição imediata de desenho via [Direct3D](https://sigmaco.org/t/direct3d) 8 e 9.
+* O plugin RpWorld, que oferece mecanismos de rendição retida de desenho, juntamente a uma arquitetura para DAGs para edificação de cenários. A rendição retida de desenho opera também via [Direct3D](https://sigmaco.org/t/direct3d) 8 e 9.
+* O plugin RpCollis, que oferece detecção e resolução medíocres de colisão. Porém, do que testamos, há inconsistências neste código que não operam como a versão pré-compilada da [Criterion Software](https://sigmaco.org/t/criterion-software).
+* O plugin RpToon, que oferece uma técnica de rendição voltada a acentuação de silhueta e cartoonização. Não testamos propriamente este plugin, mas é o que foi usado no gameware Dragon Ball Online.
 
-For any questions, use our support at [Discord](https://sigmaco.org/discord/):
+Para quaisquer dúvidas ou dificuldades, use nosso canal de suporte no [Discord](https://sigmaco.org/t/discord):
 
 [![](https://discordapp.com/api/guilds/349379672351571969/embed.png?style=banner4)](https://sigmaco.org/discord/)
 
-[RenderWare](https://sigmaco.org/t/renderware) is © [1993](https://sigmaco.org/t/1993)-[2006](https://sigmaco.org/t/2006) [Criterion Software Ltd.](https://sigmaco.org/t/criterion-software), [Canon Inc.](https://sigmaco.org/t/canon), & [Electronic Arts Inc](https://sigmaco.org/t/ea-games). All rights reserved.
-This repository is intended merely to preserve the history and legacy of [RenderWare](https://sigmaco.org/t/renderware). No copyright infringement targets any harm to its legal holders. For any objections, contact the [SIGMA Technology Group](https://sigmaco.org/g/technology) at [technology@sigmaco.org](mailto:technology@sigmaco.org).
+A disponibilização deste repositório é uma resposta do cyber-consórcio brasileiro [SIGMA Technology Group](https://sigmaco.org/g/technology) a solicitações de organizações cibernéticas de modificação de [gamewares](https://sigmaco.org/t/gameware) baseados em RendeWare.
+Esta disponibilização está restrita a fins de estudo e modificação de engenharia de gameware. A Criterion Software reserva para si o licenciamento comercial.
+
+[RenderWare](https://sigmaco.org/t/renderware) é © [1993](https://sigmaco.org/t/1993)-[2006](https://sigmaco.org/t/2006) [Criterion Software Ltd.](https://sigmaco.org/t/criterion-software), [Canon Inc.](https://sigmaco.org/t/canon), & [Electronic Arts Inc](https://sigmaco.org/t/ea-games). Todos os direitos reservados.
+Contato administrativo: [technology@sigmaco.org](mailto:technology@sigmaco.org).
