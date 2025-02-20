@@ -55,7 +55,7 @@ SIGMA FEDERATION, formerly doing business as SIGMA Co. (contraction of SIGMA Col
 
 ## License
 
-Electronic Arts, Inc. reserves exclusively to itself any possibility of relicensing or sublicensing, which actually is not commercial in anyway. This project is published under the *monumental license* administrated by SIGMA partnership with Electronic Arts, Inc. asset management.
+Electronic Arts, Inc. reserves exclusively to itself any possibility of relicensing or sublicensing, which actually is not commercial in anyway. This project is published under the *monumental license* administrated by SIGMA in partnership with Electronic Arts, Inc. asset management.
 
 RenderWare is (c) 1993-2006 Canon Inc., Criterion Software Ltd., and Electronic Arts Inc. 
 Additional contracted effort for maintenance is (c) 2011-2023 SIGMA FEDERATION. 
