@@ -62,7 +62,7 @@ D3D9WorldRestoreCallback(void)
         current->geometry->lockedSinceLastInst = rpGEOMETRYLOCKALL;
 
         #if defined(RWDEBUG)
-        updatedGeometries++;
+        ++updatedGeometries;
         #endif
 
         current = current->next;

@@ -202,6 +202,15 @@ struct RpGeometry
     RwResEntry         *repEntry;       /* Information for an instance */
 
     RpMorphTarget      *morphTarget;    /* The Morph Target */
+    
+//@{ 20050513 DDonSS : Threadsafe
+#if defined USE_THREADSAFE_GEOMETRY
+#if defined WIN32
+	CRITICAL_SECTION	criticalSection;
+#else // defined WIN32
+	void*				criticalSection;
+#endif // defined WIN32
+#endif // defined USE_THREADSAFE_GEOMETRY
 };
 
 typedef struct RpGeometryChunkInfo RpGeometryChunkInfo;
@@ -510,6 +519,14 @@ RpGeometryLock(RpGeometry *geometry,
 
 extern RpGeometry  *
 RpGeometryUnlock(RpGeometry *geometry);
+
+//. 2006. 1. 16. Nonstopdj
+//. Geometry Critical Section external Lock/UnLock
+extern void
+RpGeometryCSLock(RpGeometry *geometry);
+
+extern void
+RpGeometryCSUnLock(RpGeometry *geometry);
 
 extern const RpGeometry  *
 RpGeometryForAllMeshes(const RpGeometry *geometry,

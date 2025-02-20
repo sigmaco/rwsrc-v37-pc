@@ -1,0 +1,13 @@
+RWECODE(E_RW_SECTORDEGENERATE,
+		"Degenerate Polygons")
+RWECODE(E_RW_SECTORINVNOPOLYGONS,
+		"Invalid number of Polygons")
+RWECODE(E_RW_NOPLANE,
+		"No suitable planes found")
+RWECODE(E_RW_SECTORINVPOLY,
+		"Invalid Polygon")
+RWECODE(E_RW_SECTORUSED,
+		"Invalid Polygon")
+RWECODE(E_RW_MAXBSPDEPTHEXCEEDED,
+		"Maximum BSP depth has been exceeded")
+

@@ -109,7 +109,12 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
                                     const RpVertexNormal *packedNormal,
                                     const RwTexCoords *texCoord,
                                     RxD3D9ResEntryHeader *meshHeader,
-                                    RwUInt32 stride);
+                                    RwUInt32 stride
+									//@{ Jaewon 20050330
+									,
+									const RpMeshHeader *mH
+									//@} Jaewon
+									);
 
 extern void
 _rpD3D9VertexDeclarationUnInstV3d(RwUInt32 type,

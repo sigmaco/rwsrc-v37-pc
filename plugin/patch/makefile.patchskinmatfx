@@ -1,0 +1,151 @@
+# What plugin are we building ?
+PLUGIN = rppatch
+LIBNAME = rppatchskinmatfx
+
+# Who are the maintainers ?
+MAINTAINERS = jamesa jeancl
+
+# Additional objects
+CSRC =						\
+	$(CURDIR)/patchmesh.c			\
+	$(CURDIR)/patchmatfx.c			\
+	$(CURDIR)/patchmaterial.c		\
+	$(CURDIR)/patchatomic.c			\
+	$(CURDIR)/patchgeometry.c		\
+	$(CURDIR)/patchskin.c			\
+	$(CURDIR)/patchstream.c			\
+	$(CURDIR)/patchsmooth.c			\
+	$(CURDIR)/patchhelper.c			\
+	$(CURDIR)/patchlod.c
+
+# How do we make the plugin header file?
+PLUGINAPI =					\
+	patchapi.h
+
+#####################
+# sky2 specific stuff
+#####################
+
+sky2CSRC =								\
+	$(CURDIR)/$(RWTARGET)/patchplatform.c				\
+	$(CURDIR)/$(RWTARGET)/patchskinmatfxsky.c
+
+###################
+# pc specific stuff
+###################
+
+openglCSRC =								\
+	$(CURDIR)/patchexpander.c					\
+	$(CURDIR)/patchgeom.c						\
+	$(CURDIR)/$(RWTARGET)/patchplatform.c				\
+	$(CURDIR)/$(RWTARGET)/patchopengl.c				\
+ 	$(CURDIR)/$(RWTARGET)/patchopenglskinrender.c			\
+	$(CURDIR)/$(RWTARGET)/patchopenglskinmatfx.c
+
+softrasCSRC =								\
+	$(CURDIR)/patchexpander.c					\
+	$(CURDIR)/$(RWTARGET)/patchplatform.c				\
+	$(CURDIR)/$(RWTARGET)/patchsoftrasskinmatfx.c			\
+	$(CURDIR)/$(RWTARGET)/nodesoftraspatchatomicinstance.c		\
+	$(CURDIR)/$(RWTARGET)/nodesoftraspatchskinatomicinstance.c
+
+nullCSRC =								\
+	$(CURDIR)/null/patchplatform.c					\
+	$(CURDIR)/null/patchskinmatfxnull.c
+
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+#####################
+# D3D8 specific stuff
+#####################
+
+d3d8CSRC =								\
+	$(CURDIR)/patchexpander.c					\
+	$(CURDIR)/$(RWTARGET)/patchd3d8.c				\
+	$(CURDIR)/$(RWTARGET)/patchd3d8skinmatfx.c			\
+	$(CURDIR)/$(RWTARGET)/noded3d8patchatomicinstance.c		\
+	$(CURDIR)/$(RWTARGET)/noded3d8patchskinatomicinstance.c
+
+#####################
+# D3D9 specific stuff
+#####################
+
+d3d9CSRC =								\
+	$(CURDIR)/patchexpander.c					\
+	$(CURDIR)/$(RWTARGET)/patchd3d9.c				\
+	$(CURDIR)/$(RWTARGET)/patchd3d9skinmatfx.c			\
+	$(CURDIR)/$(RWTARGET)/noded3d9patchatomicinstance.c		\
+	$(CURDIR)/$(RWTARGET)/noded3d9patchskinatomicinstance.c
+
+#####################
+# Xbox specific stuff
+#####################
+
+xboxCSRC =							\
+	$(CURDIR)/patchexpander.c				\
+	$(CURDIR)/$(RWTARGET)/patchxbox.c			\
+	$(CURDIR)/$(RWTARGET)/patchxboxskinmatfx.c		\
+    	$(CURDIR)/$(RWTARGET)/patchxboxskinmatbl.c		\
+	$(CURDIR)/$(RWTARGET)/nodexboxpatchatomicinstance.c	\
+	$(CURDIR)/$(RWTARGET)/nodexboxpatchskinatomicinstance.c
+
+####################
+# GCN specific stuff
+####################
+
+gcnCSRC =								\
+	$(CURDIR)/patchexpander.c					\
+	$(CURDIR)/$(RWTARGET)/patchplatform.c				\
+	$(CURDIR)/patchgeom.c						\
+	$(CURDIR)/$(RWTARGET)/patchskinmatfxgcn.c
+
+nullgcnCSRC = $(gcnCSRC)
+
+#####################################################################
+
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/makeplug
+
+ifneq ("$(RWTARGET)", "nullgcn")
+ifeq ($(findstring null,$(RWTARGET)),null)
+CFLAGS += -I./null
+else
+CFLAGS += -I./$(RWTARGET)
+endif
+endif
+
+####################
+# gcn specific stuff
+####################
+
+ifeq ("$(RWTARGET)", "gcn")
+CFLAGS +=             				\
+	-I./../skin2				\
+	-I./../skin2/gcn
+endif
+
+########################
+# nullgcn specific stuff
+########################
+
+ifeq ("$(RWTARGET)", "nullgcn")
+PLUGININCDIR = . $(CURDIR)/gcn
+
+CFLAGS +=					\
+	-I./gcn					\
+	-I./../skin2				\
+	-I./../skin2/gcn
+
+# Override rule to disable it
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/null/%.c
+
+# Define new rules for nullgcn
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/gcn/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+endif
+
+#####################################################################

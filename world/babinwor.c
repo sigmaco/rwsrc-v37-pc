@@ -334,6 +334,9 @@ WorldSectorStreamWrite(const RpWorldSector *worldSector,
     RWASSERT(worldSector);
     RWASSERT(stream);
 
+	/*	2005.1.28	gemani */
+	memset(&as, 0, sizeof(_rpWorldSector));
+
     if (!RwStreamWriteChunkHeader(stream, rwID_ATOMICSECT,
                                   WorldSectorStreamGetSize
                                   (worldSector, world, flags)))
@@ -425,7 +428,7 @@ WorldSectorStreamWrite(const RpWorldSector *worldSector,
                 vertexTexCoordSize = sizeof(RwTexCoords) *
                                      worldSector->numVertices;
 
-                for (i = 0; i < world->numTexCoordSets; i++)
+                for (i = 0; i < world->numTexCoordSets; ++i)
                 {
                     RWASSERT(worldSector->texCoords[i]);
 
@@ -542,17 +545,17 @@ WorldSectorIsCorrectlySorted(const RpWorldSector * sector, RwBool * result)
             RWRETURN((const RpWorldSector *)NULL);
         }
 
-        for (i = 0; i < numMaterials; i++)
+        for (i = 0; i < numMaterials; ++i)
         {
             matIndexBounds[i].minIndex = 65535;
             matIndexBounds[i].maxIndex = 0;
         }
 
-        for (i = 0; i < sector->numTriangles; i++)
+        for (i = 0; i < sector->numTriangles; ++i)
         {
             matIndex = (sector->triangles)[i].matIndex;
             RWASSERT(matIndex < numMaterials);
-            for (j = 0; j < 3; j++)
+            for (j = 0; j < 3; ++j)
             {
                 vertIndex = (sector->triangles)[i].vertIndex[j];
                 if (vertIndex > matIndexBounds[matIndex].maxIndex)
@@ -568,7 +571,7 @@ WorldSectorIsCorrectlySorted(const RpWorldSector * sector, RwBool * result)
 
         /* Is this geometry arranged ok? */
         sumOfMeshVertIndexRanges = 0;
-        for (i = 0; i < numMaterials; i++)
+        for (i = 0; i < numMaterials; ++i)
         {
             sumOfMeshVertIndexRanges += 1 + matIndexBounds[i].maxIndex -
                 matIndexBounds[i].minIndex;
@@ -812,7 +815,7 @@ WorldSectorStreamRead(RwStream * stream,
 
             if (result && (version < rwLIBRARYVERSION36002))
             {
-                for (i = 0; i < as.numTriangles; i++)
+                for (i = 0; i < as.numTriangles; ++i)
                 {
                     rpPolygon   poly;
 
@@ -845,9 +848,9 @@ WorldSectorStreamRead(RwStream * stream,
                 if (result && (b == FALSE))
                 {
                     RWMESSAGE((RWSTRING
-                               ("Warning: World sector is in an invalid format for "
-                                "RxPipeline rendering. There may be visible artifacts "
-                                "and/or decreased performance.")));
+                               ("Warning: World sector is in an invalid format for ")
+                                RWSTRING("RxPipeline rendering. There may be visible artifacts ")
+                                RWSTRING("and/or decreased performance.")));
                 }
             }
 #endif /* RWDEBUG */
@@ -1280,7 +1283,7 @@ WorldFindSize(const RpWorld * world, RwInt32 * numTriangles,
             RpWorldSector      *worldSector = (RpWorldSector *) spSect;
 
             /* One more world sector */
-            (*numWorldSectors)++;
+            ++(*numWorldSectors);
 
             /* Add on the vertices and triangles */
             (*numTriangles) += worldSector->numTriangles;
@@ -1294,7 +1297,7 @@ WorldFindSize(const RpWorld * world, RwInt32 * numTriangles,
             RpPlaneSector      *pspPlane = (RpPlaneSector *) spSect;
 
             /* One more plane sector */
-            (*numPlaneSectors)++;
+            ++(*numPlaneSectors);
 
             /* Go left, stack right */
             spSect = pspPlane->leftSubTree;
@@ -1583,8 +1586,8 @@ RpWorldStreamRead(RwStream * stream)
     {
         RWERROR((E_RW_BADVERSION));
         RWMESSAGE((RWSTRING(
-            "The BSP has not been exported since RW3.03, and contains "
-            "collision data that is incompatible with the current version."
+            "The BSP has not been exported since RW3.03, and contains ")
+            RWSTRING("collision data that is incompatible with the current version."
             )));
         RWRETURN((RpWorld *)NULL);
     }
@@ -1961,7 +1964,7 @@ _rpBinaryWorldClose(void *instance,
     RWFUNCTION(RWSTRING("_rpBinaryWorldClose"));
 
     /* One less instance */
-    binWorldModule.numInstances--;
+    --binWorldModule.numInstances;
 
     /* All done */
     RWRETURN(instance);
@@ -1981,7 +1984,7 @@ _rpBinaryWorldOpen(void *instance,
     RWFUNCTION(RWSTRING("_rpBinaryWorldOpen"));
 
     /* One more instance */
-    binWorldModule.numInstances++;
+    ++binWorldModule.numInstances;
 
     /* All done */
     RWRETURN(instance);

@@ -396,10 +396,10 @@ SortPolygonsInTriListMesh(RpMesh *mesh,
                             testInds[0] = testInds[1] = testInds[2] =
                                 65535;
 
-                            outIndex++;
+                            ++outIndex;
                         }
                     }
-                    inIndex++;
+                    ++inIndex;
                 }
 
                 /* We've reached the end of the line, time to start a new scan
@@ -504,7 +504,7 @@ TriStripBinEntryArrayDestroy(RwUInt32 numTris,
     /*
      * Release meshOpFreeLists->binEntryFreeList
      */
-    for (i = 0; i < numTris; i++)
+    for (i = 0; i < numTris; ++i)
     {
         /* free memory from meshOpFreeLists->binEntryFreeList */
         RwFreeListFree(meshOpFreeLists->binEntryFreeList,
@@ -551,7 +551,7 @@ TriStripBinEntryArrayCreate(RwUInt32 numTris,
         RwFreeListCreate(sizeof(Edge), (numTris / 2) + 1, sizeof(RwUInt32),
                          rwMEMHINTDUR_EVENT | rwID_MESHMODULE);
 
-    for (i = 0; i < numTris; i++)
+    for (i = 0; i < numTris; ++i)
     {
         binEntryArray[i] = (TriBinEntry *)
             RwFreeListAlloc(meshOpFreeLists->binEntryFreeList,
@@ -673,7 +673,7 @@ TriStripMarkTriUsed(TriBinEntry *tri,
             }
         }
 
-        for (i = 0; i < 3; i++)
+        for (i = 0; i < 3; ++i)
         {
             newTri = FALSE;
             /* for each of the three edges find the other adjacent
@@ -717,7 +717,7 @@ TriStripMarkTriUsed(TriBinEntry *tri,
                     }
                 }
 
-                newTri->adjCount--;
+                --newTri->adjCount;
 
                 /* reinsert into the list */
                 newTri->next = binListArray[newTri->adjCount].head;
@@ -773,7 +773,7 @@ TriStripIsLastTriInStrip(Edge *outgoingEdge,
             RWRETURN(TRUE);
         }
 
-        for (i = 0; i < 3; i++)
+        for (i = 0; i < 3; ++i)
         {
             if (nextTri->edge[i] != outgoingEdge &&
                 nextTri->edge[i] && EdgeAdjCount2(nextTri->edge[i]) > 1)
@@ -802,7 +802,7 @@ TriStripIsLastTriInStrip(Edge *outgoingEdge,
             RWRETURN(TRUE);
         }
 
-        for (i = 0; i < 3; i++)
+        for (i = 0; i < 3; ++i)
         {
             if (nextTri->edge[i] != outgoingEdge &&
                 nextTri->edge[i] &&
@@ -895,7 +895,7 @@ TriStripFollow(TriStripListEntry *strip,
             RWRETURN(addedTris);
         }
 
-        addedTris++;
+        ++addedTris;
 
         /* sort out the adjacency counts */
         TriStripMarkTriUsed(bestTri, binListArray,
@@ -994,16 +994,16 @@ TriStripFollow(TriStripListEntry *strip,
                 {
                     /* normal vert */
                     strip->strip[strip->stripLen] = v3;
-                    strip->stripLen++;
+                    ++strip->stripLen;
                     /* swapper */
 #ifdef ODDTURNS                /* odd turns */
                     strip->strip[strip->stripLen] = v3;
-                    strip->stripLen++;
+                    ++strip->stripLen;
 
                     /* swapper */
                     strip->strip[strip->stripLen] =
                         strip->strip[strip->stripLen - 4];
-                    strip->stripLen++;
+                    ++strip->stripLen;
                     nextEdge = otherEdge;
 #else /* ODDTURNS */
                     nextEdge = (Edge *)NULL;
@@ -1014,10 +1014,10 @@ TriStripFollow(TriStripListEntry *strip,
                     /* swapper */
                     strip->strip[strip->stripLen] =
                         strip->strip[strip->stripLen - 2];
-                    strip->stripLen++;
+                    ++strip->stripLen;
                     /* now output the appropriate vertex */
                     strip->strip[strip->stripLen] = v3;
-                    strip->stripLen++;
+                    ++strip->stripLen;
                     nextEdge = otherEdge;
                 }
             }
@@ -1025,7 +1025,7 @@ TriStripFollow(TriStripListEntry *strip,
             {
                 /* just output the appropriate vertex */
                 strip->strip[strip->stripLen] = v3;
-                strip->stripLen++;
+                ++strip->stripLen;
                 nextEdge = (Edge *)NULL;
             }
         }
@@ -1033,7 +1033,7 @@ TriStripFollow(TriStripListEntry *strip,
         {
             /* just output the appropriate vertex */
             strip->strip[strip->stripLen] = v3;
-            strip->stripLen++;
+            ++strip->stripLen;
         }
     }
 
@@ -1085,7 +1085,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
                                     &edgelist, triList);
 
     /* Build the lists of similarly adjacent triangles */
-    for (i = 0; i < numTris; i++)
+    for (i = 0; i < numTris; ++i)
     {
         binEntryArray[i]->next =
             binListArray[binEntryArray[i]->adjCount].head;
@@ -1164,7 +1164,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
             {
                 binListArray[0].head->prev = (TriBinEntry *)NULL;
             }
-            trisUsed++;
+            ++trisUsed;
         }
         else
         {
@@ -1174,7 +1174,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
             i = 1;
             while (!binListArray[i].head)
             {
-                i++;
+                ++i;
             }
 
             /* Then trace an edge */
@@ -1235,7 +1235,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
 
             /* reset all adjCount2 vars to be the same as adjCount vars. The adjCount2 vars
              * are temporary - we use them to test the stripping from each edge */
-            for (j = 0; j < numTris; j++)
+            for (j = 0; j < numTris; ++j)
             {
                 binEntryArray[j]->used2 = binEntryArray[j]->used;
             }
@@ -1287,7 +1287,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
 
             TriStripMarkTriUsed(binListArray[i].head, binListArray,
                                 /* binEntryArray, */ currentAttempt);
-            trisUsed++;
+            ++trisUsed;
 
             /* Follow along a strip from it */
             trisUsed += TriStripFollow(buildStrip, nextEdge,
@@ -1320,7 +1320,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
                     revBuildStrip->strip[revBuildStrip->stripLen] =
                         revBuildStrip->strip[revBuildStrip->stripLen -
                                              2];
-                    revBuildStrip->stripLen++;
+                    ++revBuildStrip->stripLen;
                 }
 
                 /* Check the length, record if necessary,
@@ -1357,7 +1357,7 @@ TriStripStripTris(RpBuildMeshTriangle *triList,
                         revBuildStrip->strip[revBuildStrip->stripLen -
                                              1];
                     newStrip->stripLen++;
-                    revBuildStrip->stripLen--;
+                    --revBuildStrip->stripLen;
                 }
                 memcpy(&newStrip->strip[newStrip->stripLen],
                        buildStrip->strip,
@@ -1458,7 +1458,7 @@ TriStripStripTrisExhaustive(RpBuildMeshTriangle *triList,
                                     &edgelist, triList);
 
     /* Build the lists of similarly adjacent triangles */
-    for (i = 0; i < numTris; i++)
+    for (i = 0; i < numTris; ++i)
     {
         binEntryArray[i]->next =
             binListArray[binEntryArray[i]->adjCount].head;
@@ -1521,7 +1521,7 @@ TriStripStripTrisExhaustive(RpBuildMeshTriangle *triList,
             {
                 binListArray[0].head->prev = (TriBinEntry *)NULL;
             }
-            trisUsed++;
+            ++trisUsed;
         }
         else
         {
@@ -1535,7 +1535,7 @@ TriStripStripTrisExhaustive(RpBuildMeshTriangle *triList,
                strips, hence to make sure we find one valid strip initialize
                bestLength to RwInt32MINVAL */
             bestLength = RwInt32MINVAL;
-            for (i = 1; i < 4; i++)
+            for (i = 1; i < 4; ++i)
             {
                 TriBinEntry        *entry = binListArray[i].head;
 
@@ -1544,7 +1544,7 @@ TriStripStripTrisExhaustive(RpBuildMeshTriangle *triList,
                     RwUInt32            j;
                     RwInt32             length;
 
-                    for (j = 0; j < 3; j++)
+                    for (j = 0; j < 3; ++j)
                     {
                         if (EdgeAdjCount(entry->edge[(j + 1) % 3]))
                         {
@@ -1559,7 +1559,7 @@ TriStripStripTrisExhaustive(RpBuildMeshTriangle *triList,
                              * The adjCount2 vars are temporary -
                              * we use them to test the stripping
                              * from each edge */
-                            for (k = 0; k < numTris; k++)
+                            for (k = 0; k < numTris; ++k)
                             {
                                 binEntryArray[k]->used2 =
                                     binEntryArray[k]->used;
@@ -1651,7 +1651,7 @@ TriStripStripTrisExhaustive(RpBuildMeshTriangle *triList,
             buildStrip->stripLen = 3;
             TriStripMarkTriUsed(bestTri, binListArray,
                                 /* binEntryArray, */ 4);
-            trisUsed++;
+            ++trisUsed;
             /* Follow along a strip from it */
             trisUsed += TriStripFollow(buildStrip, nextEdge,
                                        binListArray, triList,
@@ -1783,7 +1783,7 @@ TriStripJoin(TriStripList *stripList, RwBool maintainWinding)
                                              rwMEMHINTDUR_EVENT | rwID_MESHMODULE);
 
     stripPtr = stripList->head;
-    for (i = 0; i < stripPtr->stripLen; i++)
+    for (i = 0; i < stripPtr->stripLen; ++i)
     {
         newStrip->strip[newStrip->stripLen] = stripPtr->strip[i];
         newStrip->stripLen++;
@@ -1889,10 +1889,10 @@ TriStripJoin(TriStripList *stripList, RwBool maintainWinding)
         }
 
         /* copy over the verts in the strip */
-        for (j = 0; j < tempStrip->stripLen; j++)
+        for (j = 0; j < tempStrip->stripLen; ++j)
         {
             newStrip->strip[newStrip->stripLen] = tempStrip->strip[j];
-            newStrip->stripLen++;
+            ++newStrip->stripLen;
         }
         RwFree(tempStrip->strip);
         tempStrip->strip = (RwUInt16 *)NULL;
@@ -1969,7 +1969,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
     }
 
     /* Fill in pointers so that we can sort */
-    for (i = 0; i < mesh->numTriangles; i++)
+    for (i = 0; i < mesh->numTriangles; ++i)
     {
         triPointers[i] = &(mesh->meshTriangles[i]);
     }
@@ -1984,13 +1984,13 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
     {
         RpMaterial         *lastMat = triPointers[0]->material;
 
-        for (i = 1; i < mesh->numTriangles; i++)
+        for (i = 1; i < mesh->numTriangles; ++i)
         {
             if (triPointers[i]->material != lastMat)
             {
                 /* We found another material */
                 lastMat = triPointers[i]->material;
-                numMats++;
+                ++numMats;
             }
         }
     }
@@ -2013,7 +2013,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
     outMeshInfo[0].indices = (RxVertexIndex *)NULL;
     if (mesh->numTriangles >= 2)
     {
-        for (i = 0; i < mesh->numTriangles - 1; i++)
+        for (i = 0; i < mesh->numTriangles - 1; ++i)
         {
             if (triPointers[i]->material !=
                 triPointers[i + 1]->material)
@@ -2024,7 +2024,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
                 outMeshInfo[numMats].indices = (RxVertexIndex *)NULL;
                 outMeshInfo[numMats - 1].numIndices = (i + 1) -
                     outMeshInfo[numMats - 1].numIndices;
-                numMats++;
+                ++numMats;
             }
         }
     }
@@ -2041,17 +2041,17 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
     tempTriPtr = triPointers;
     stripList.head = (TriStripListEntry *)NULL;
 
-    for (i = 0; i < numMats; i++)
+    for (i = 0; i < numMats; ++i)
     {
         /* build a tri list for this mesh */
         triList = (RpBuildMeshTriangle *)
             RwMalloc(sizeof(RpBuildMeshTriangle) *
                      outMeshInfo[i].numIndices,
                      rwMEMHINTDUR_FUNCTION | rwID_MESHMODULE);
-        for (j = 0; j < outMeshInfo[i].numIndices; j++)
+        for (j = 0; j < outMeshInfo[i].numIndices; ++j)
         {
             triList[j] = *tempTriPtr[0];
-            tempTriPtr++;
+            ++tempTriPtr;
         }
 
         /* Build a set of strips */
@@ -2078,7 +2078,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
             meshEl->numIndices = stripPtr->stripLen;
             meshEl->indices = (RxVertexIndex *) (meshEl + 1);
 
-            for (j = 0; j < meshEl->numIndices; j++)
+            for (j = 0; j < meshEl->numIndices; ++j)
             {
                 meshEl->indices[j] =
                     (RxVertexIndex) stripPtr->strip[j];
@@ -2096,7 +2096,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
             }
 #endif /* JOINSTRIPS */
             outMeshes[numOutMeshes] = meshEl;
-            numOutMeshes++;
+            ++numOutMeshes;
 
             stripPtr = stripPtr->next;
         }
@@ -2124,7 +2124,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
     /* now build the whole mesh */
     meshSize = sizeof(RpMeshHeader);
     totalIndices = 0;
-    for (i = 0; i < numOutMeshes; i++)
+    for (i = 0; i < numOutMeshes; ++i)
     {
         RwUInt32            indexSize;
 
@@ -2145,7 +2145,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
 
     meshEl = (RpMesh *) (result + 1);
     stripMeshInds = (RxVertexIndex *) (meshEl + numOutMeshes);
-    for (i = 0; i < numOutMeshes; i++)
+    for (i = 0; i < numOutMeshes; ++i)
     {
         /* Add in the next mesh */
         meshEl->indices = stripMeshInds;
@@ -2158,7 +2158,7 @@ TriStripMeshGenerate(RpBuildMesh *mesh,
 
         /* Skip to next */
         stripMeshInds += meshEl->numIndices;
-        meshEl++;
+        ++meshEl;
 
         /* Don't need this any more */
         RwFree(outMeshes[i]);
@@ -2198,9 +2198,9 @@ _rpTriStripPolygonSharedVertex4(RpTriStripPolygon *poly1,
 
     RWFUNCTION( RWSTRING( "_rpTriStripPolygonSharedVertex4" ) );
 
-    for (i = 0; i < poly1->numEdges; i++)
+    for (i = 0; i < poly1->numEdges; ++i)
     {
-        for (j = 0; j < poly2->numEdges; j++)
+        for (j = 0; j < poly2->numEdges; ++j)
         {
             if (poly1->vertIndex[i] == poly2->vertIndex[j])
             {
@@ -2210,7 +2210,7 @@ _rpTriStripPolygonSharedVertex4(RpTriStripPolygon *poly1,
 
         if (j < poly2->numEdges)
         {
-            for (k = 0; k < poly3->numEdges; k++)
+            for (k = 0; k < poly3->numEdges; ++k)
             {
                 if (poly1->vertIndex[i] == poly3->vertIndex[k])
                 {
@@ -2220,7 +2220,7 @@ _rpTriStripPolygonSharedVertex4(RpTriStripPolygon *poly1,
 
             if (k < poly3->numEdges)
             {
-                for (l = 0; l < poly4->numEdges; l++)
+                for (l = 0; l < poly4->numEdges; ++l)
                 {
                     if (poly1->vertIndex[i] == poly4->vertIndex[l])
                     {
@@ -2256,13 +2256,13 @@ _rpTriStripPolygonSharedVertex3(RpTriStripPolygon *polygon1,
     RWFUNCTION(RWSTRING("_rpTriStripPolygonSharedVertex3"));
     RWASSERT(polygon1 && polygon2 && polygon3);
 
-    for (i = 0; i < polygon1->numEdges; i++)
+    for (i = 0; i < polygon1->numEdges; ++i)
     {
-        for (j = 0; j < polygon2->numEdges; j++)
+        for (j = 0; j < polygon2->numEdges; ++j)
         {
             if (polygon1->vertIndex[i] == polygon2->vertIndex[j])
             {
-                for (k = 0; k < polygon3->numEdges; k++)
+                for (k = 0; k < polygon3->numEdges; ++k)
                 {
                     if (polygon1->vertIndex[i] == polygon3->vertIndex[k])
                     {
@@ -2294,9 +2294,9 @@ _rpTriStripPolygonSharedVertex2(RpTriStripPolygon *polygon1,
     RWFUNCTION(RWSTRING("_rpTriStripPolygonSharedVertex2"));
     RWASSERT(polygon1 && polygon2);
 
-    for (i = 0; i < polygon1->numEdges; i++)
+    for (i = 0; i < polygon1->numEdges; ++i)
     {
-        for (j = 0; j < polygon2->numEdges; j++)
+        for (j = 0; j < polygon2->numEdges; ++j)
         {
             if (polygon1->vertIndex[i] == polygon2->vertIndex[j])
             {
@@ -2327,11 +2327,11 @@ _rpTriStripPolygonOtherSharedVertex2(RpTriStripPolygon *polygon1,
     RWFUNCTION(RWSTRING("_rpTriStripPolygonOtherSharedVertex2"));
     RWASSERT(polygon1 && polygon2);
 
-    for (i = 0; i < polygon1->numEdges; i++)
+    for (i = 0; i < polygon1->numEdges; ++i)
     {
         if (index != polygon1->vertIndex[i])
         {
-            for (j = 0; j < polygon2->numEdges; j++)
+            for (j = 0; j < polygon2->numEdges; ++j)
             {
                 if (polygon1->vertIndex[i] == polygon2->vertIndex[j])
                 {
@@ -2363,7 +2363,7 @@ _rpTriStripPolygonOtherVertex(RpTriStripPolygon *polygon,
     RWFUNCTION(RWSTRING("_rpTriStripPolygonOtherVertex"));
     RWASSERT(polygon);
 
-    for (i = 0; i < polygon->numEdges; i++)
+    for (i = 0; i < polygon->numEdges; ++i)
     {
         if (index1 != polygon->vertIndex[i]
             && index2 != polygon->vertIndex[i])
@@ -2395,7 +2395,7 @@ _rpTriStripTunnelEdges(RpTriStripTunnel *tunnel)
         i = 0;
     }
 
-    for (i = 0; i < tunnel->length; i++)
+    for (i = 0; i < tunnel->length; ++i)
     {
         tunnel->edges[i]->strip = !tunnel->edges[i]->strip;
     }
@@ -2419,11 +2419,11 @@ _rpTriStripPolygonNumStripEdges(RpTriStripPolygon *polygon)
     RWFUNCTION(RWSTRING("_rpTriStripPolygonNumStripEdges"));
 
     numStripEdges = 0;
-    for (i = 0; i < polygon->numEdges; i++)
+    for (i = 0; i < polygon->numEdges; ++i)
     {
         if (polygon->edges[i]->strip)
         {
-            numStripEdges++;
+            ++numStripEdges;
         }
     }
 
@@ -2449,9 +2449,14 @@ _rpTriStripMeshComplementTunnel(RpTriStripMesh *mesh,
 
     RWFUNCTION(RWSTRING("_rpTriStripMeshComplementTunnel"));
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     _rpTriStripTunnelEdges(tunnel);
 
-    for (i = 0; i <= tunnel->length; i++)
+    for (i = 0; i <= tunnel->length; ++i)
     {
         polygon = tunnel->polygons[i];
         numStripEdges = _rpTriStripPolygonNumStripEdges(polygon);
@@ -2537,7 +2542,7 @@ _rpTriStripTunnelCost(RpTriStripTunnel *tunnel,
     RWFUNCTION(RWSTRING("_rpTriStripTunnelCost"));
 
     cost = 0;
-    for (i = 0; i <= tunnel->length; i++)
+    for (i = 0; i <= tunnel->length; ++i)
     {
         /* find start of strip */
         polygon = tunnel->polygons[i];
@@ -2554,7 +2559,7 @@ _rpTriStripTunnelCost(RpTriStripTunnel *tunnel,
             cost += tunnelData->costCB(polygon, testFrame, tunnelData->data);
         }
     }
-    testFrame++;
+    ++testFrame;
 
     RWRETURN(cost);
 }
@@ -2630,7 +2635,7 @@ _rpTriStripTunnelFind(RpTriStripTunnel *tunnel,
 
     /* put initial edges on stack */
     top = stack;
-    for (i = 0; i < tunnel->polygons[0]->numEdges; i++)
+    for (i = 0; i < tunnel->polygons[0]->numEdges; ++i)
     {
         edge = tunnel->polygons[0]->edges[i];
 
@@ -2644,7 +2649,7 @@ _rpTriStripTunnelFind(RpTriStripTunnel *tunnel,
                 top->edge = edge;
                 top->polygon = polygon;
                 top->length = 1;
-                top++;
+                ++top;
             }
         }
     }
@@ -2652,7 +2657,7 @@ _rpTriStripTunnelFind(RpTriStripTunnel *tunnel,
     while (stack < top)
     {
         /* get next edge to test from stack */
-        top--;
+        --top;
         RWASSERT(top->polygon);
         RWASSERT(top->edge);
         tunnel->length = top->length;
@@ -2671,7 +2676,7 @@ _rpTriStripTunnelFind(RpTriStripTunnel *tunnel,
         {
             polygon = tunnel->polygons[tunnel->length];
 
-            for (i = 0; i < polygon->numEdges; i++)
+            for (i = 0; i < polygon->numEdges; ++i)
             {
                 edge = polygon->edges[i];
 
@@ -2683,7 +2688,7 @@ _rpTriStripTunnelFind(RpTriStripTunnel *tunnel,
                     if (NULL != top->polygon)
                     {
 
-                        for (j = 0; j <= tunnel->length; j++)
+                        for (j = 0; j <= tunnel->length; ++j)
                         {
                             if (top->polygon == tunnel->polygons[j])
                             {
@@ -2695,7 +2700,7 @@ _rpTriStripTunnelFind(RpTriStripTunnel *tunnel,
                         {
                             top->length = tunnel->length + 1;
                             top->edge = edge;
-                            top++;
+                            ++top;
                         }
                     }
                 }
@@ -2724,7 +2729,7 @@ _rpTriStripPolygonWindingCorrect(RpTriStripPolygon *polygon,
     RWFUNCTION(RWSTRING("_rpTriStripPolygonWindingCorrect"));
     RWASSERT(polygon);
 
-    for (i = 0; i < polygon->numEdges; i++)
+    for (i = 0; i < polygon->numEdges; ++i)
     {
         if (index1 == polygon->vertIndex[i])
         {
@@ -2771,13 +2776,13 @@ _rpTriStripPolygonStripIndex(RpTriStripPolygon *polygon,
         RwUInt32 numShared;
 
         numShared = 0;
-        for (i = 0; i < polygon->numEdges; i++)
+        for (i = 0; i < polygon->numEdges; ++i)
         {
             if (index1 == polygon->vertIndex[i]
                 || index2 == polygon->vertIndex[i]
                 || index3 == polygon->vertIndex[i])
             {
-                numShared++;
+                ++numShared;
             }
         }
         RWASSERT(2 <= numShared);
@@ -2785,7 +2790,7 @@ _rpTriStripPolygonStripIndex(RpTriStripPolygon *polygon,
 #endif
 
     *index = index1;
-    for (i = 0; i < polygon->numEdges; i++)
+    for (i = 0; i < polygon->numEdges; ++i)
     {
         if (index1 != polygon->vertIndex[i]
             && index2 != polygon->vertIndex[i]
@@ -2821,13 +2826,13 @@ _rpTriStripPolygonSharedVertices(RpTriStripPolygon *polygon1,
     RWASSERT(polygon2);
 
     numShared = 0;
-    for (i = 0; i < polygon1->numEdges; i++)
+    for (i = 0; i < polygon1->numEdges; ++i)
     {
-        for (j = 0; j < polygon2->numEdges; j++)
+        for (j = 0; j < polygon2->numEdges; ++j)
         {
             if (polygon1->vertIndex[i] == polygon2->vertIndex[j])
             {
-                numShared++;
+                ++numShared;
                 break;
             }
         }
@@ -2852,7 +2857,7 @@ _rpTriStripPolygonAdjCount(RpTriStripPolygon *polygon)
     RWFUNCTION(RWSTRING("_rpTriStripPolygonAdjCount"));
 
     adj = 0;
-    for (i = 0; i < polygon->numEdges; i++)
+    for (i = 0; i < polygon->numEdges; ++i)
     {
         edge = polygon->edges[i];
 
@@ -2861,7 +2866,7 @@ _rpTriStripPolygonAdjCount(RpTriStripPolygon *polygon)
             || (NULL != edge->poly2 && polygon != edge->poly2
             && rwLLLinkAttached(&edge->poly2->inFreeLink)))
         {
-            adj++;
+            ++adj;
         }
     }
 
@@ -2888,7 +2893,7 @@ _rpTriStripEdgeFindNext(RpTriStripEdge *edge, RpTriStripPolygon *polygon,
 
     RWASSERT(3 == polygon->numEdges);
 
-    for (i = 0; i < 3; i++)
+    for (i = 0; i < 3; ++i)
     {
         testEdge = polygon->edges[i];
 
@@ -2909,7 +2914,7 @@ _rpTriStripEdgeFindNext(RpTriStripEdge *edge, RpTriStripPolygon *polygon,
 
     if (3 == i)
     {
-        for (i = 0; i < 3; i++)
+        for (i = 0; i < 3; ++i)
         {
             testEdge = polygon->edges[i];
 
@@ -2959,10 +2964,15 @@ _rpTriStripMeshCreate(RpBuildMeshTriangle **triangles, RwUInt32 numTriangles)
     RWASSERT(triangles);
     RWASSERT(numTriangles);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     numVertices = 0;
-    for (i = 0; i < numTriangles; i++)
+    for (i = 0; i < numTriangles; ++i)
     {
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < 3; ++j)
         {
             if (triangles[i]->vertIndex[j] > numVertices)
             {
@@ -2973,7 +2983,7 @@ _rpTriStripMeshCreate(RpBuildMeshTriangle **triangles, RwUInt32 numTriangles)
 
     vertices = RwMalloc(numVertices * sizeof(_rpTriStripVertex),
         rwMEMHINTDUR_FUNCTION | rwID_MESHMODULE);
-    for (i = 0; i < numVertices; i++)
+    for (i = 0; i < numVertices; ++i)
     {
         rwLinkListInitialize(&vertices[i].triangleList);
     }
@@ -2995,7 +3005,7 @@ _rpTriStripMeshCreate(RpBuildMeshTriangle **triangles, RwUInt32 numTriangles)
     poly = (RpTriStripPolygon *)(mesh + 1);
     edge = (RpTriStripEdge *)(poly + numTriangles);
 
-    for (i = 0; i < numTriangles; i++)
+    for (i = 0; i < numTriangles; ++i)
     {
         /* setup polygon */
         poly->vertIndex[0] = triangles[i]->vertIndex[0];
@@ -3013,7 +3023,7 @@ _rpTriStripMeshCreate(RpBuildMeshTriangle **triangles, RwUInt32 numTriangles)
         poly->testFrame = 0;
 
         /* find or create edges */
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < 3; ++j)
         {
             RxVertexIndex index1, index2;
             _rpTriStripVertex *vertex;
@@ -3064,13 +3074,13 @@ _rpTriStripMeshCreate(RpBuildMeshTriangle **triangles, RwUInt32 numTriangles)
                 edge->strip = FALSE;
                 nextEdge->edge = edge;
                 rwLinkListAddLLLink(&vertex->triangleList, &nextEdge->inVertexLink);
-                nextEdge++;
-                edge++;
+                ++nextEdge;
+                ++edge;
             }
 
         }
 
-        poly++;
+        ++poly;
     }
 
     RwFree(edges);
@@ -3152,6 +3162,11 @@ _rpTriStripMeshCreateOutput(RpTriStripMesh *inMesh, RpMesh *outMesh,
     RWASSERT(inMesh);
     RWASSERT(outMesh);
     RWASSERT(data);
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     winding = data->ignoreWinding ? 0 : 1;
     indices = outMesh->indices;
@@ -3254,7 +3269,7 @@ _rpTriStripMeshCreateOutput(RpTriStripMesh *inMesh, RpMesh *outMesh,
             {
                 indices[0] = indices[-1];
                 indices[-1] = indices[-3];
-                indices++;
+                ++indices;
                 if (winding)
                 {
                     if (!_rpTriStripPolygonWindingCorrect(polygon1,
@@ -3276,7 +3291,7 @@ _rpTriStripMeshCreateOutput(RpTriStripMesh *inMesh, RpMesh *outMesh,
             {
                 index1 = indices[-3];
                 indices[0] = indices[-1];
-                indices++;
+                ++indices;
                 if (winding)
                 {
                     if (_rpTriStripPolygonWindingCorrect(polygon1, indices[-1],
@@ -3297,7 +3312,7 @@ _rpTriStripMeshCreateOutput(RpTriStripMesh *inMesh, RpMesh *outMesh,
             {
                 index1 = indices[-3];
                 indices[0] = indices[-1];
-                indices++;
+                ++indices;
                 if (winding)
                 {
                     if (_rpTriStripPolygonWindingCorrect(polygon1, indices[-1],
@@ -3501,8 +3516,8 @@ RpBuildMeshGenerateTrivialTriStrip(RpBuildMesh *buildMesh,
         *FillStripInds++ = (meshTriangles->vertIndex[2]);
 
         /* Move to next mesh */
-        meshTriangles++;
-        FillStripEl++;
+        ++meshTriangles;
+        ++FillStripEl;
     }
 
     RWRETURN (result);
@@ -3684,7 +3699,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
     }
 
     /* Fill in pointers so that we can sort */
-    for (i = 0; i < buildMesh->numTriangles; i++)
+    for (i = 0; i < buildMesh->numTriangles; ++i)
     {
         triPointers[i] = &(buildMesh->meshTriangles[i]);
     }
@@ -3701,13 +3716,13 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
     {
         RpMaterial         *lastMat = triPointers[0]->material;
 
-        for (i = 1; i < buildMesh->numTriangles; i++)
+        for (i = 1; i < buildMesh->numTriangles; ++i)
         {
             if (triPointers[i]->material != lastMat)
             {
                 /* We found another material */
                 lastMat = triPointers[i]->material;
-                numMats++;
+                ++numMats;
             }
         }
     }
@@ -3728,7 +3743,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
     outMeshInfo[0].indices = (RxVertexIndex *) NULL;
     if (buildMesh->numTriangles >= 2)
     {
-        for (i = 0; i < buildMesh->numTriangles - 1; i++)
+        for (i = 0; i < buildMesh->numTriangles - 1; ++i)
         {
             if (triPointers[i]->material !=
                 triPointers[i + 1]->material)
@@ -3739,7 +3754,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
                 outMeshInfo[numMats].indices = (RxVertexIndex *)NULL;
                 outMeshInfo[numMats - 1].numIndices = (i + 1) -
                     outMeshInfo[numMats - 1].numIndices;
-                numMats++;
+                ++numMats;
             }
         }
     }
@@ -3756,7 +3771,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
     tempTriPtr = triPointers;
     stripList.head = (TriStripListEntry *)NULL;
 
-    for (i = 0; i < numMats; i++)
+    for (i = 0; i < numMats; ++i)
     {
         /* build a tri list for this mesh */
         triList = (RpBuildMeshTriangle *)
@@ -3764,10 +3779,10 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
                      outMeshInfo[i].numIndices,
                      rwMEMHINTDUR_FUNCTION | rwID_MESHMODULE);
 
-        for (j = 0; j < outMeshInfo[i].numIndices; j++)
+        for (j = 0; j < outMeshInfo[i].numIndices; ++j)
         {
             triList[j] = *tempTriPtr[0];
-            tempTriPtr++;
+            ++tempTriPtr;
         }
 
         /* Build a set of strips */
@@ -3795,7 +3810,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
             meshEl->numIndices = stripPtr->stripLen;
             meshEl->indices = (RxVertexIndex *) (meshEl + 1);
 
-            for (j = 0; j < meshEl->numIndices; j++)
+            for (j = 0; j < meshEl->numIndices; ++j)
             {
                 meshEl->indices[j] =
                     (RxVertexIndex) stripPtr->strip[j];
@@ -3812,7 +3827,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
             }
 #endif /* JOINSTRIPS */
             outMeshes[numOutMeshes] = meshEl;
-            numOutMeshes++;
+            ++numOutMeshes;
 
             stripPtr = stripPtr->next;
         }
@@ -3840,7 +3855,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
     /* now build the whole mesh */
     meshSize = sizeof(RpMeshHeader);
     totalIndices = 0;
-    for (i = 0; i < numOutMeshes; i++)
+    for (i = 0; i < numOutMeshes; ++i)
     {
         RwUInt32            indexSize;
 
@@ -3861,7 +3876,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
 
     meshEl = (RpMesh *) (result + 1);
     stripMeshInds = (RxVertexIndex *) (meshEl + numOutMeshes);
-    for (i = 0; i < numOutMeshes; i++)
+    for (i = 0; i < numOutMeshes; ++i)
     {
         /* Add in the next mesh */
         meshEl->indices = stripMeshInds;
@@ -3874,7 +3889,7 @@ BuildMeshGenerateExhaustiveTriStrip(RpBuildMesh *buildMesh,
 
         /* Skip to next */
         stripMeshInds += meshEl->numIndices;
-        meshEl++;
+        ++meshEl;
 
         /* Don't need this any more */
         RwFree(outMeshes[i]);
@@ -4048,11 +4063,11 @@ RpTriStripDefaultCost(RpTriStripPolygon *startPolygon, RwUInt32 testFrame,
         }
         else if (afterFan)
         {
-            afterFan++;
+            ++afterFan;
         }
         else
         {
-            beforeFan++;
+            ++beforeFan;
         }
 
         polygon = next;
@@ -4102,6 +4117,11 @@ RpTriStripMeshTunnel(RpTriStripMesh *mesh, void *data)
 
     RWAPIFUNCTION(RWSTRING("RpTriStripMeshTunnel"));
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     if (tunnelData->lengthLimit)
     {
         /* create tunnel and stack */
@@ -4144,7 +4164,7 @@ RpTriStripMeshTunnel(RpTriStripMesh *mesh, void *data)
             if (curr == end)
             {
                 coeff = 0.5f * coeff + (RwReal)numTunnels / mesh->numPolygons;
-                tunnel->maxLength++;
+                ++tunnel->maxLength;
                 numTunnels = 0;
 
                 if (coeff < minCoeff
@@ -4157,7 +4177,7 @@ RpTriStripMeshTunnel(RpTriStripMesh *mesh, void *data)
             {
                 _rpTriStripMeshComplementTunnel(mesh, tunnel);
                 tunnel->length = 0;
-                numTunnels++;
+                ++numTunnels;
             }
         } while (1);
 
@@ -4199,6 +4219,11 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
 
     RWAPIFUNCTION(RWSTRING("RpTriStripMeshQuick"));
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     rwLinkListInitialize(&adjList[0]);
     rwLinkListInitialize(&adjList[1]);
     rwLinkListInitialize(&adjList[2]);
@@ -4213,14 +4238,14 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
         polygon = rwLLLinkGetData(curr, RpTriStripPolygon, inUsedLink);
 
         adj = 0;
-        for (i = 0; i < polygon->numEdges; i++)
+        for (i = 0; i < polygon->numEdges; ++i)
         {
             edge = polygon->edges[i];
 
             if ((NULL != edge->poly1 && polygon != edge->poly1)
                 || (NULL != edge->poly2 && polygon != edge->poly2))
             {
-                adj++;
+                ++adj;
             }
         }
 
@@ -4246,7 +4271,7 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
             bestDir = 0;
             polygon = rwLLLinkGetData(curr, RpTriStripPolygon, inFreeLink);
 
-            for (j = 0; j < 6; j++)
+            for (j = 0; j < 6; ++j)
             {
                 RwUInt32 length;
 
@@ -4256,7 +4281,7 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
                 if (NULL != test && rwLLLinkAttached(&test->inFreeLink))
                 {
                     oldIndex = j < 3 ? edge->vert1 : edge->vert2;
-                    testFrame++;
+                    ++testFrame;
                     if (!testFrame)
                     {
                         testFrame = 1;
@@ -4266,7 +4291,7 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
                     while (NULL != test && testFrame != test->testFrame)
                     {
                         test->testFrame = testFrame;
-                        length++;
+                        ++length;
 
                         next = _rpTriStripEdgeFindNext(edge, test, oldIndex, testFrame);
 
@@ -4365,7 +4390,7 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
 
                 while (NULL != curr)
                 {
-                    for (j = 0; j < 3; j++)
+                    for (j = 0; j < 3; ++j)
                     {
                         RpTriStripPolygon *temp;
 
@@ -4389,7 +4414,7 @@ RpTriStripMeshQuick(RpTriStripMesh *mesh,
         }
         else
         {
-            i++;
+            ++i;
         }
     } while (i < 4);
 
@@ -4420,7 +4445,7 @@ RpTriStripPolygonFollowStrip(RpTriStripPolygon *curr, RpTriStripPolygon *prev)
     RWASSERT(curr);
 
     next = NULL;
-    for (i = 0; i < curr->numEdges; i++)
+    for (i = 0; i < curr->numEdges; ++i)
     {
         if (curr->edges[i]->strip && prev != curr->edges[i]->poly1
             && prev != curr->edges[i]->poly2)
@@ -4480,7 +4505,7 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
     numTriangles = 0;
     triangles = RwMalloc(buildMesh->numTriangles * sizeof(RpBuildMeshTriangle *),
                          rwMEMHINTDUR_FUNCTION | rwID_MESHMODULE);
-    for (i = 0; i < (RwUInt32)buildMesh->numTriangles; i++)
+    for (i = 0; i < (RwUInt32)buildMesh->numTriangles; ++i)
     {
         triangle = &buildMesh->meshTriangles[i];
         if (triangle->vertIndex[0] != triangle->vertIndex[1]
@@ -4496,11 +4521,11 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
 
     /* count number of materials */
     numMaterials = 1;
-    for (i = 1; i < numTriangles; i++)
+    for (i = 1; i < numTriangles; ++i)
     {
         if (triangles[i-1]->material != triangles[i]->material)
         {
-            numMaterials++;
+            ++numMaterials;
         }
     }
     meshes = RwMalloc(numMaterials * sizeof(RpTriStripMesh *),
@@ -4509,7 +4534,7 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
     /* create a mesh for each material and tristrip it */
     materialNum = 0;
     materialStart = 0;
-    for (i = 1; i < numTriangles; i++)
+    for (i = 1; i < numTriangles; ++i)
     {
         if (triangles[i-1]->material != triangles[i]->material)
         {
@@ -4517,7 +4542,7 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
                 _rpTriStripMeshCreate(triangles + materialStart, i - materialStart);
             (triStripData->stripCB)(meshes[materialNum], triStripData->data);
 
-            materialNum++;
+            ++materialNum;
             materialStart = i;
         }
     }
@@ -4540,7 +4565,7 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
     mesh = (RpMesh *)(header + 1);
     indices = (RxVertexIndex *)(mesh + numMaterials);
     materialNum = 0;
-    for (i = 1; i < numTriangles; i++)
+    for (i = 1; i < numTriangles; ++i)
     {
         if (triangles[i-1]->material != triangles[i]->material)
         {
@@ -4550,8 +4575,8 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
                 triStripData);
             indices += mesh->numIndices;
             header->totalIndicesInMesh += mesh->numIndices;
-            mesh++;
-            materialNum++;
+            ++mesh;
+            ++materialNum;
         }
     }
     mesh->indices = indices;
@@ -4559,22 +4584,22 @@ RpBuildMeshGenerateTriStrip(RpBuildMesh *buildMesh, void *data)
     _rpTriStripMeshCreateOutput(meshes[materialNum], mesh, triStripData);
     indices += mesh->numIndices;
     header->totalIndicesInMesh += mesh->numIndices;
-    mesh++;
+    ++mesh;
 
     /* resize header */
     header = RwRealloc(header, (RwUInt8 *)indices - (RwUInt8 *)header,
                        rwMEMHINTDUR_EVENT | rwID_MESHMODULE);
     mesh = (RpMesh *)(header + 1);
     indices = (RxVertexIndex *)(mesh + numMaterials);
-    for (i = 0; i < numMaterials; i++)
+    for (i = 0; i < numMaterials; ++i)
     {
         mesh->indices = indices;
         indices += mesh->numIndices;
-        mesh++;
+        ++mesh;
     }
 
     /* tidy up */
-    for (i = 0; i < numMaterials; i++)
+    for (i = 0; i < numMaterials; ++i)
     {
         RwFree(meshes[i]);
     }
@@ -4733,7 +4758,7 @@ _rpTriListMeshGenerate(RpBuildMesh * buildMesh,
         RxVertexIndex    *meshTriInds;
 
         /* Fill in pointers so that we can sort */
-        for (i = 0; i < buildMesh->numTriangles; i++)
+        for (i = 0; i < buildMesh->numTriangles; ++i)
         {
             triPointers[i] = &(buildMesh->meshTriangles[i]);
         }
@@ -4748,13 +4773,13 @@ _rpTriListMeshGenerate(RpBuildMesh * buildMesh,
         {
             RpMaterial         *lastMat = triPointers[0]->material;
 
-            for (i = 1; i < buildMesh->numTriangles; i++)
+            for (i = 1; i < buildMesh->numTriangles; ++i)
             {
                 if (triPointers[i]->material != lastMat)
                 {
                     /* We found another different one */
                     lastMat = triPointers[i]->material;
-                    numMats++;
+                    ++numMats;
                 }
             }
         }
@@ -4800,7 +4825,7 @@ _rpTriListMeshGenerate(RpBuildMesh * buildMesh,
                 meshEl->material = triPointers[i]->material;
                 meshEl->indices = meshTriInds;
 
-                result->numMeshes++;
+                ++result->numMeshes;
             }
 
             *meshTriInds++ =
@@ -4812,7 +4837,7 @@ _rpTriListMeshGenerate(RpBuildMesh * buildMesh,
 
             meshEl->numIndices += 3;
 
-            i++;
+            ++i;
         }
         while (i < buildMesh->numTriangles);
 

@@ -1,0 +1,92 @@
+# What plugin are we building ?
+LIBNAME = rpskinmatfxtoon
+
+# Who are the maintainers ?
+MAINTAINERS = antonk
+
+######################################################################
+
+# get all the shared objects for all skin derived plugins
+include $(CURDIR)/makefile.sharedskin
+
+# get all the shared objects for all skin matfx derived plugins
+include $(CURDIR)/makefile.sharedmatfx
+
+# get all the shared objects for all skin toon derived plugins
+include $(CURDIR)/makefile.sharedtoon
+
+######################################################################
+
+#####################
+# sky2 specific stuff
+#####################
+
+sky2CSRC += 						\
+	$(CURDIR)/$(RWTARGET)/skinmatfxtoonsky.c
+
+####################
+#Xbox specific stuff
+####################
+
+xboxCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinxboxmatfxtoon.c
+
+######################
+# GCN
+######################
+
+gcnCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skingcnmt.c
+
+######################
+# NULLGCN
+######################
+
+nullgcnCSRC +=						\
+	$(CURDIR)/gcn/skingcnmt.c
+
+######################
+# d3d8
+######################
+d3d8CSRC +=	                    			\
+	$(CURDIR)/$(RWTARGET)/skind3d8matfxtoon.c
+
+######################
+# d3d9
+######################
+d3d9CSRC +=	                    			\
+	$(CURDIR)/$(RWTARGET)/skind3d9matfxtoon.c
+
+######################
+# opengl
+######################
+openglCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinopenglmatfxtoon.c
+
+######################
+# softras
+######################
+softrasCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinsoftrasmatfxtoon.c
+
+######################
+# null
+######################
+
+nullCSRC +=	                    \
+	$(CURDIR)/null/skinmatfxtoonnull.c
+
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+######################################################################
+
+# get all the shared flags, additional objects for all skin derived plugins
+# does the include makeopt/makeplug malarky as well
+include $(CURDIR)/makefile.sharedskin2
+
+include $(CURDIR)/makefile.sharedmatfx2
+
+include $(CURDIR)/makefile.sharedtoon2
+
+######################################################################

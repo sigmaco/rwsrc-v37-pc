@@ -1,0 +1,88 @@
+# This file is meant as a template for your options.mak file used to
+# control your RenderWare build process.  You can either rename it to
+# options.mak or use it as a reference for your own options.mak file.
+
+# Set the RWGSDK variable to you path of your RWGSDK directory.  For
+# example C:/RW/Graphics/rwsdk.  Note the forward slashes which are used
+# for all paths in the options.mak.
+RWGSDK=
+
+# The following options determine whether the build generates a
+# debug or a release build.  Values of 0,1,1 generate debug libraries
+# and the inverse 1,0,0 generates release libraries.  If COPTIMIZE is
+# not specified, it is set to 0 (off) when CDEBUG is 1 (on) and
+# 1 when CDEBUG is 0.  These values default to 1,0,0 - a release.
+COPTIMIZE=1
+CDEBUG=0
+RWDEBUG=0
+
+# Defines whether a stack trace of function calls should be sent to
+# RW's debug log stream.  Defaults to 0.
+RWTRACE=0
+
+# Define the compiler you would like to use.  Acceptable values are:
+#	net, visualc, intel, cygwin32, cwpc for Win32 builds.
+#	xbox        for Xbox builds.
+#	cwppc       for Macintosh builds (CodeWarrior 6 PowerPC).
+#	skygcc      for Playstation2 builds (Unix hosted)
+#	skyprodg    for Playstation2 builds (SN ps2cc).
+#	sky2953     for Playstation2 builds (SN GCC 2.95.3).
+#	cwsky       for Playstation2 builds (CodeWarrior).
+#	gcc         for Linux builds.
+#	cwdfin      for GameCube builds (CodeWarrior).
+#	ngccc       for GameCube builds (SN Systems).
+# Make sure you have the corresponding tools set upon your system!
+RWCOMPILER=visualc
+
+# Define the operating system that the build is for.  Acceptable
+# values are:
+#	win         Win32 systems (Win95, Win98, WinNT, Win2000, WinXP)
+#	mac         MacOS 9.1 and above
+#	sky         Playstation2
+#	linux       Linux
+#	gcn         GameCube
+#	xbox        Xbox
+RWOS=win
+
+# Define the rendering layer.  Acceptable values are:
+#	d3d9        Microsoft's Direct3D 9.
+#	d3d8        Microsoft's Direct3D 8.
+#	opengl      SGI's OpenGL.
+#	sky2        Criterion's Playstation2 renderer.
+#	gcn         GameCube.
+#	xbox        Xbox.
+RWTARGET=d3d8
+
+# Explicitly define which toolkit and plugin libraries are built
+# during the build process.  Setting these variables to nothing or
+# omitting them will result in all plugins and toolkits being built.
+TOOLKITS=
+PLUGINS=
+
+# If set to 1, the build process will use a C implementation
+# of any assembler source where possible.  Defaults to 0.
+NOASM=0
+
+# If set to 1, the build process will not compile any SSE assembler.
+# If set to 0, please ensure that your compiler supports inline SSE
+# assembler. Defaults to 0.
+NOSSEASM=0
+
+
+#############################
+# Target specific variables #
+#############################
+
+# Defines the path to your DirectX SDK.  NB Use forward slashes.
+DXSDK=
+
+# Defines the path to your OpenGL libraries.
+OGLLIBPATH=
+
+# Defines the path to your Apple OpenGL SDK.
+APPLEGLSDKPATH=
+
+# Defines the path to your PS2 IOP modules
+# NB: On a Linux box, the path to these modules needs to be /usr/local/sce/somthing...
+#  but with SNSystems this needs to be d:/usr/local/sce/something...
+IOPPATH =

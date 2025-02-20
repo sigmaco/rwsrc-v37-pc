@@ -26,6 +26,16 @@
 
 extern D3DCAPS9 _RwD3D9DeviceCaps;
 
+//@{ Jaewon 20040917
+extern D3DTEXTUREOP TextureOpModulation;
+//@} Jaewon
+
+//@{ Jaewon 20040923
+//@{ Jaewon 20050418
+// Max number of local lights : 2 -> 8
+extern RpWorldGetAtomicLocalLightsCallBack getAtomicLocalLightsCB;
+//@} Jaewon
+//@} Jaewon
 
 /*****************************************************************************
  local defines
@@ -140,7 +150,8 @@ extern D3DCAPS9 _RwD3D9DeviceCaps;
 #define FLOATASINT(f) (*((const RwInt32 *)&(f)))
 #define COLORSCALAR 0.003921568627450980392156862745098f    /* 1.0f/ 255.0f */
 
-#define RWD3D9_ALIGN16 __declspec(align(16))
+#define RWD3D9_ALIGN16 
+//__declspec(align(16))
 
 /*****************************************************************************
  local types
@@ -212,9 +223,9 @@ D3D9MemEqual(const RwUInt32 *buff0,
             RWRETURN(FALSE);
         }
 
-        buff0++;
-        buff1++;
-        sizeBytes--;
+        ++buff0;
+        ++buff1;
+        --sizeBytes;
     }
 
     RWRETURN(TRUE);
@@ -238,9 +249,9 @@ D3D9MemLess(const RwUInt32 *buff0,
             RWRETURN(FALSE);
         }
 
-        buff0++;
-        buff1++;
-        sizeBytes--;
+        ++buff0;
+        ++buff1;
+        --sizeBytes;
     }
 
     RWRETURN(TRUE);
@@ -698,7 +709,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                     {
                         ADD_INS(text, "mova a0.%s, "TX(VSIN_REG_INDICES)"\n", maskelements[numWeights - 1]);
 
-                        for (wi = 0; wi < numWeights; wi++)
+                        for (wi = 0; wi < numWeights; ++wi)
                         {
                             /* Transform position */
                             if (wi)
@@ -717,7 +728,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                     }
                     else
                     {
-                        for (wi = 0; wi < numWeights; wi++)
+                        for (wi = 0; wi < numWeights; ++wi)
                         {
                             ADD_INS(text, "mov a0.x, "TX(VSIN_REG_INDICES)".%c\n", elements[wi]);
 
@@ -773,7 +784,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                     }
                     else
                     {
-                        for (wi = 0; wi < numWeights; wi++)
+                        for (wi = 0; wi < numWeights; ++wi)
                         {
                             ADD_INS(text, "mov a0.x, "TX(VSIN_REG_INDICES)".%c\n", elements[wi]);
 
@@ -916,7 +927,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                         maxblock = numDirectionalLights - dir;
                     }
 
-                    for (m = 0; m < maxblock; m++)
+                    for (m = 0; m < maxblock; ++m)
                     {
                         constantDirOffset = (dir + m) * 2 + RWD3D9VSCONST_LIGHTS_OFFSET;
 
@@ -928,7 +939,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
 
                     ADD_INS(text, "max "TX(VSTMP_REG_CLAMP_TMP)".%s, c["TX(RWD3D9VSCONST_LIGHTS_OFFSET)"].w, -"TX(VSTMP_REG_CLAMP_TMP)".%s\n", mask, mask);
 
-                    for (m = 0; m < maxblock; m++)
+                    for (m = 0; m < maxblock; ++m)
                     {
                         constantDirOffset = (dir + m) * 2 + 1 + RWD3D9VSCONST_LIGHTS_OFFSET;
 
@@ -942,7 +953,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                             ADD_INS(text, "mad oD0, c[%d], "TX(VSTMP_REG_CLAMP_TMP)".%c, "TX(VSTMP_REG_COLOR_TMP)"\n", constantDirOffset, elements[m]);
                         }
 
-                        numLights--;
+                        --numLights;
                     }
                 }
             }
@@ -966,7 +977,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                         maxblock = numPointLights - pnt;
                     }
 
-                    for (m = 0; m < maxblock; m++)
+                    for (m = 0; m < maxblock; ++m)
                     {
                         RwUInt32 constantDirOffset;
 
@@ -999,7 +1010,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                     /* intensity *= attenuation */
                     ADD_INS(text, "mul "TX(VSTMP_REG_CLAMP_TMP)".%s, "TX(VSTMP_REG_CLAMP_TMP)".%s, "TX(VSTMP_REG_ATTEN_TMP)".%s\n", mask, mask, mask);
 
-                    for (m = 0; m < maxblock; m++)
+                    for (m = 0; m < maxblock; ++m)
                     {
                         RwUInt32 constantDirOffset;
 
@@ -1019,7 +1030,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                             ADD_INS(text, "mad oD0, c[%d], "TX(VSTMP_REG_CLAMP_TMP)".%c, "TX(VSTMP_REG_COLOR_TMP)"\n", constantDirOffset, elements[m]);
                         }
 
-                        numLights--;
+                        --numLights;
                     }
 
                     pointOffset += 2 * maxblock + 1; /* 2 more constants for each point light we did, one constant for 4 radii */
@@ -1049,7 +1060,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                     }
 
                     /* Attenuations */
-                    for (m = 0; m < maxblock; m++)
+                    for (m = 0; m < maxblock; ++m)
                     {
                         RwUInt32 constantDirOffset;
 
@@ -1105,7 +1116,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                     /* intensity *= angle attenuation */
                     ADD_INS(text, "mul "TX(VSTMP_REG_CLAMP_TMP)".%s, "TX(VSTMP_REG_CLAMP_TMP)".%s, "TX(VSTMP_REG_ANGLE_ATTEN_TMP)".%s\n", mask, mask, mask);
 
-                    for (m = 0; m < maxblock; m++)
+                    for (m = 0; m < maxblock; ++m)
                     {
                         RwUInt32 constantDirOffset;
 
@@ -1127,7 +1138,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                             ADD_INS(text, "mad oD0, c[%d], "TX(VSTMP_REG_CLAMP_TMP)".%c, "TX(VSTMP_REG_COLOR_TMP)"\n", constantDirOffset, elements[m]);
                         }
 
-                        numLights--;
+                        --numLights;
                     }
 
                     spotOffset += 4 * maxblock + 1; /* 3 more constants for each point light we did, one constant for 4 radii */
@@ -1521,7 +1532,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
                 break;
 
             default:
-                for (n = 0; n < desc->numTexCoords; n++)
+                for (n = 0; n < desc->numTexCoords; ++n)
                 {
                     ADD_INS(text, "mov oT%u.xy, v%u\n", n, n + VSD_REG_TEXCOORD0);
                 }
@@ -1530,7 +1541,7 @@ _rpD3D9GenerateVertexShader(const _rpD3D9VertexShaderDescriptor *desc,
     }
     else
     {
-        for (n = 0; n < desc->numTexCoords; n++)
+        for (n = 0; n < desc->numTexCoords; ++n)
         {
             ADD_INS(text, "mov oT%u.xy, v%u\n", n, n + VSD_REG_TEXCOORD0);
         }
@@ -1681,7 +1692,7 @@ _rpD3D9VertexShaderCachePurge(void)
 
     RWASSERT(sizeof(_rpD3D9VertexShaderDescriptor) == 4);
 
-    for (i = 0; i < NumShadersInCache; i++)
+    for (i = 0; i < NumShadersInCache; ++i)
     {
         if (VertexShaderCache[i].shader != NULL)
         {
@@ -2118,13 +2129,32 @@ _rxD3D9VertexShaderDefaultMeshRenderCallBack(RxD3D9ResEntryHeader *resEntryHeade
      */
     RwD3D9SetPixelShader(NULL);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// ResEntry Lock
+	CS_RESENTRYHEADER_LOCK( resEntryHeader );
+	//@} DDonSS
+	
+	//>@ 2005.3.31 gemani
+	if(!resEntryHeader->isLive)
+	{
+		//@{ 20050513 DDonSS : Threadsafe
+		// ResEntry Unlock
+		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
+		//@} DDonSS
+
+		RWRETURNVOID();
+	}
+	//<@
+
     material = instancedMesh->material;
 
     if (material->texture != NULL)
     {
         RwD3D9SetTexture(material->texture, 0);
 
-        RwD3D9SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_MODULATE);
+		//@{ Jaewon 20040917
+        RwD3D9SetTextureStageState(0, D3DTSS_COLOROP,   TextureOpModulation);
+		//@} Jaewon
         RwD3D9SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
         RwD3D9SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 
@@ -2165,6 +2195,11 @@ _rxD3D9VertexShaderDefaultMeshRenderCallBack(RxD3D9ResEntryHeader *resEntryHeade
                             instancedMesh->numPrimitives);
     }
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// ResEntry Unlock
+	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
+	//@} DDonSS
+
     RWRETURNVOID();
 }
 
@@ -2182,6 +2217,11 @@ FindAtomicLights(RpAtomic *atomic,
     RpWorld     *world;
 
     RWFUNCTION(RWSTRING("FindAtomicLights"));
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     haveLights = FALSE;
 
@@ -2244,6 +2284,72 @@ FindAtomicLights(RpAtomic *atomic,
      */
     if (hasNormals)
     {
+	//@{ Jaewon 20040923
+	//@{ Jaewon 20050418
+	// Max number of local lights : 2 -> 8
+	if(getAtomicLocalLightsCB)
+	{
+		RpLight *pLight[8];
+		RwUInt32 nLights, i;
+		nLights = getAtomicLocalLightsCB(atomic, pLight);
+		for(i=0; i<nLights; ++i)
+		{
+            const RwMatrix  *matrixLight;
+            const RwV3d     *pos;
+            const RwSphere  *sphere;
+            RwV3d           distanceVector;
+            RwReal          distanceSquare;
+            RwReal          distanceCollision;
+
+            /* Does the light intersect the atomics bounding sphere */
+            matrixLight = RwFrameGetLTM(RpLightGetFrame(pLight[i]));
+
+            pos = &(matrixLight->pos);
+
+            sphere = RpAtomicGetWorldBoundingSphere(atomic);
+
+            RwV3dSub(&distanceVector, &(sphere->center), pos);
+
+            distanceSquare = RwV3dDotProduct(&distanceVector, &distanceVector);
+
+            distanceCollision = (sphere->radius + RpLightGetRadius(pLight[i]));
+
+            if (distanceSquare < (distanceCollision * distanceCollision))
+            {
+                switch (RpLightGetType(pLight[i]))
+                {
+                    case rpLIGHTPOINT:
+                        if (lightsArray->numPoint < MAX_LIGHTS)
+                        {
+                            lightsArray->point[lightsArray->numPoint] = pLight[i];
+
+                            lightsArray->numPoint += 1;
+
+                            haveLights = TRUE;
+                        }
+                        break;
+
+                    case rpLIGHTSPOT:
+                    case rpLIGHTSPOTSOFT:
+                        if (lightsArray->numSpot < MAX_LIGHTS)
+                        {
+                            lightsArray->spot[lightsArray->numSpot] = pLight[i];
+
+                            lightsArray->numSpot += 1;
+
+                            haveLights = TRUE;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+		}
+	}
+	//@} Jaewon
+	else
+	{
         /* don't light this atomic with the same light more than once! */
         RWSRCGLOBAL(lightFrame)++;
 
@@ -2341,6 +2447,8 @@ FindAtomicLights(RpAtomic *atomic,
             cur = rwLLLinkGetNext(cur);
         }
     }
+	//@} Jaewon
+	}
 
     RWRETURN(haveLights);
 }
@@ -2359,6 +2467,11 @@ FindSectorLights(const RpWorldSector *worldSector,
     const RwLLLink  *curLight, *endLight;
 
     RWFUNCTION(RWSTRING("FindSectorLights"));
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     haveLights = FALSE;
 
@@ -2564,7 +2677,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                 /* Directionals */
                 if (lightsArray.numDirectional)
                 {
-                    for (n = 0; n < lightsArray.numDirectional; n++)
+                    for (n = 0; n < lightsArray.numDirectional; ++n)
                     {
                         light = lightsArray.directional[n];
 
@@ -2574,7 +2687,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         _rwD3D9VSGetNormalInLocalSpace(at, (RwV3d *)shaderConstantPtr);
 
                         shaderConstantPtr->w = 0.0f; /* Use this for clamping */
-                        shaderConstantPtr++;
+                        ++shaderConstantPtr;
 
                         /* Set the light color */
                         color = RpLightGetColor(light);
@@ -2582,7 +2695,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         shaderConstantPtr->y = color->green;
                         shaderConstantPtr->z = color->blue;
                         shaderConstantPtr->w = 0.f;
-                        shaderConstantPtr++;
+                        ++shaderConstantPtr;
                     }
 
                     desc->numDirectionalLights = lightsArray.numDirectional;
@@ -2592,7 +2705,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                 if (lightsArray.numPoint)
                 {
                     lightBlock = 0;
-                    for (n = 0; n < lightsArray.numPoint; n++)
+                    for (n = 0; n < lightsArray.numPoint; ++n)
                     {
                         light = lightsArray.point[n];
 
@@ -2600,10 +2713,10 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         if ( (lightBlock % 4) == 0 )
                         {
                             radiiConstant = (RwReal *)shaderConstantPtr;
-                            shaderConstantPtr++;
+                            ++shaderConstantPtr;
                         }
 
-                        lightBlock++;
+                        ++lightBlock;
 
                         /* Set the light's position, in object space */
                         pos = RwMatrixGetPos(RwFrameGetLTM(RpLightGetFrame(light)));
@@ -2611,7 +2724,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         _rwD3D9VSGetPointInLocalSpace(pos, (RwV3d *)shaderConstantPtr);
 
                         shaderConstantPtr->w = 0.0f; /* Use this for clamping */
-                        shaderConstantPtr++;
+                        ++shaderConstantPtr;
 
                         /* Set the light color */
                         color = RpLightGetColor(light);
@@ -2619,14 +2732,14 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         shaderConstantPtr->y = color->green;
                         shaderConstantPtr->z = color->blue;
                         shaderConstantPtr->w = 0.f;
-                        shaderConstantPtr++;
+                        ++shaderConstantPtr;
 
                         /* and the radius */
                         _rwD3D9VSGetRadiusInLocalSpace(RpLightGetRadius(light), radiiConstant);
 
                         *radiiConstant = 1.f / *radiiConstant;
 
-                        radiiConstant++;
+                        ++radiiConstant;
                     }
 
                     desc->numPointLights = lightsArray.numPoint;
@@ -2636,7 +2749,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                 if (lightsArray.numSpot)
                 {
                     lightBlock = 0;
-                    for (n = 0; n < lightsArray.numSpot; n++)
+                    for (n = 0; n < lightsArray.numSpot; ++n)
                     {
                         light = lightsArray.spot[n];
 
@@ -2644,10 +2757,10 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         if ( (lightBlock % 4) == 0 )
                         {
                             radiiConstant = (RwReal *)shaderConstantPtr;
-                            shaderConstantPtr++;
+                            ++shaderConstantPtr;
                         }
 
-                        lightBlock++;
+                        ++lightBlock;
 
                         /* Set the light's position, in object space */
                         pos = RwMatrixGetPos(RwFrameGetLTM(RpLightGetFrame(light)));
@@ -2655,7 +2768,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         _rwD3D9VSGetPointInLocalSpace(pos, (RwV3d *)shaderConstantPtr);
 
                         shaderConstantPtr->w = 0.0f; /* Use this for clamping */
-                        shaderConstantPtr++;
+                        ++shaderConstantPtr;
 
                         /* Set the lights direction, in object space */
                         at = RwMatrixGetAt(RwFrameGetLTM(RpLightGetFrame(light)));
@@ -2663,7 +2776,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
                         _rwD3D9VSGetNormalInLocalSpace(at, (RwV3d *)shaderConstantPtr);
 
                         shaderConstantPtr->w = 0.0f; /* Use this for clamping */
-                        shaderConstantPtr++;
+                        ++shaderConstantPtr;
 
                         /* Angles range */
                         angle = RpLightGetConeAngle(light);
@@ -2700,7 +2813,7 @@ RwV4d *_rxD3D9VertexShaderDefaultLightingCallBack(void *object,
 
                         *radiiConstant = 1.f / *radiiConstant;
 
-                        radiiConstant++;
+                        ++radiiConstant;
                     }
 
                     desc->numSpotLights = lightsArray.numSpot;
@@ -2739,11 +2852,11 @@ _rpD3D9VertexShaderUpdateLightsColors(RwV4d *shaderConstantPtr,
     shaderConstantPtr->x *= ambientCoef;
     shaderConstantPtr->y *= ambientCoef;
     shaderConstantPtr->z *= ambientCoef;
-    shaderConstantPtr++;
+    ++shaderConstantPtr;
 
     /* Directional lights */
     numLights = desc->numDirectionalLights;
-    for (n = 0; n < numLights; n++)
+    for (n = 0; n < numLights; ++n)
     {
         /* Skip direction */
         shaderConstantPtr++;
@@ -2752,57 +2865,57 @@ _rpD3D9VertexShaderUpdateLightsColors(RwV4d *shaderConstantPtr,
         shaderConstantPtr->x *= diffuseCoef;
         shaderConstantPtr->y *= diffuseCoef;
         shaderConstantPtr->z *= diffuseCoef;
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
     }
 
     /* Point lights */
     lightBlock = 0;
     numLights = desc->numPointLights;
-    for (n = 0; n < numLights; n++)
+    for (n = 0; n < numLights; ++n)
     {
         /* Skip radious */
         if ( (lightBlock % 4) == 0 )
         {
-            shaderConstantPtr++;
+            ++shaderConstantPtr;
         }
-        lightBlock++;
+        ++lightBlock;
 
         /* Skip position */
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
 
         /* Update the light color */
         shaderConstantPtr->x *= diffuseCoef;
         shaderConstantPtr->y *= diffuseCoef;
         shaderConstantPtr->z *= diffuseCoef;
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
     }
 
     /* Spot lights */
     lightBlock = 0;
     numLights = desc->numSpotLights;
-    for (n = 0; n < numLights; n++)
+    for (n = 0; n < numLights; ++n)
     {
         /* Skip radious */
         if ( (lightBlock % 4) == 0 )
         {
-            shaderConstantPtr++;
+            ++shaderConstantPtr;
         }
-        lightBlock++;
+        ++lightBlock;
 
         /* Skip position */
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
 
         /* Skip direction */
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
 
         /* Skip angle range */
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
 
         /* Update the light color */
         shaderConstantPtr->x *= diffuseCoef;
         shaderConstantPtr->y *= diffuseCoef;
         shaderConstantPtr->z *= diffuseCoef;
-        shaderConstantPtr++;
+        ++shaderConstantPtr;
     }
 
     RwD3D9SetVertexShaderConstant( RWD3D9VSCONST_AMBIENT_OFFSET,

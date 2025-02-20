@@ -1,0 +1,80 @@
+# makefile.sharedskin2 - 2nd part of make process shared by all libs
+# generated with skin as the "base" plugin.
+# calls makeplug/makeopt, adds misc target dependent objects, cflags.
+# included by makefiles for specific combination libraries.
+
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/makeplug
+
+ifneq ("$(RWTARGET)", "nullgcn")
+ifeq ($(findstring null,$(RWTARGET)),null)
+CFLAGS += -I./null
+else
+CFLAGS += -I./$(RWTARGET)
+endif
+endif # ("$(RWTARGET)", "nullgcn")
+
+#####################
+# GCN specific stuff
+#####################
+
+ifeq ("$(RWTARGET)", "gcn")
+CFLAGS +=					\
+	-DSKIN_ATOMIC_PLATFORM_DATA		\
+	-DSKIN_ATOMIC_PLATFORM_STREAM_SIZE		\
+	-I$(CURDIR)/$(RWTARGET)			\
+	-I$(CURDIR)/$(RWTARGET)/instance
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/$(RWTARGET)/instance/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+endif
+
+ifeq ("$(RWTARGET)", "nullgcn")
+CFLAGS +=					\
+	-DNOASM					\
+	-DSKIN_ATOMIC_PLATFORM_DATA		\
+	-DSKIN_ATOMIC_PLATFORM_STREAM_SIZE		\
+	-I$(CURDIR)/gcn				\
+	-I$(CURDIR)/gcn/instance
+
+# Override rule to disable it
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/null/%.c
+
+# Define new rules for nullgcn
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/gcn/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/gcn/instance/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+endif
+
+#####################
+# Xbox specific stuff
+#####################
+
+ifeq ("$(RWTARGET)", "xbox")
+CFLAGS += -I./xbox/shaders
+endif
+
+########################
+# Win specific stuff
+########################
+
+ifeq ("$(RWOS)", "win")
+CFLAGS += -I./win
+endif
+
+########################
+# Mac specific stuff
+########################
+
+ifeq ("$(RWOS)", "mac")
+CFLAGS += -I./mac
+endif

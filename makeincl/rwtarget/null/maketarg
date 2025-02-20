@@ -1,0 +1,19 @@
+#
+# Compiler & Directory Definition File
+#
+
+include $(BASEDIR)/makeincl/rwtarget/default/maketarg
+
+# driver objects
+GENERICDRVCSRC =					\
+	$(DRVGENERICSRCDIR)/palquant.c
+
+SPECIFICDRVCSRC =				\
+	$(DRVSPECIFICSRCDIR)/banull.c
+
+DRVCSRC += $(SPECIFICDRVCSRC) $(GENERICDRVCSRC)
+
+DRVINC += -I$(BASEDIR)/world
+
+# driver defines
+DRVDEF =

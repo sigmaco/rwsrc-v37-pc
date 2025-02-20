@@ -1,0 +1,149 @@
+#
+# Compiler & Directory Definition File
+#
+
+include $(BASEDIR)/makeincl/rwtarget/default/maketarg
+
+# Common driver objects
+GENERICDRVCSRC =			\
+	$(DRVGENERICSRCDIR)/datblkcb.c	\
+	$(DRVGENERICSRCDIR)/palquant.c
+
+ifeq ($(RWOS), win)
+GENERICDRVCSRC +=			\
+	$(DRVGENERICSRCDIR)/cpuext.c
+endif # RWOS==win
+
+ifneq ($(NOASM),1)
+ifneq ($(NOSSEASM),1)
+GENERICDRVCSRC +=			\
+	$(DRVGENERICSRCDIR)/ssematml.c
+endif # NOSSEASM != 1
+endif # NOASM != 1
+
+SPECIFICDRVCSRC =			\
+	$(DRVSPECIFICSRCDIR)/baim2dgl.c	\
+	$(DRVSPECIFICSRCDIR)/barstate.c	\
+	$(DRVSPECIFICSRCDIR)/baconvgl.c	\
+	$(DRVSPECIFICSRCDIR)/baintogl.c	\
+	$(DRVSPECIFICSRCDIR)/barastgl.c \
+	$(DRVSPECIFICSRCDIR)/bantexgl.c	\
+	$(DRVSPECIFICSRCDIR)/badxtgl.c  \
+	$(DRVSPECIFICSRCDIR)/basprigl.c	\
+	$(DRVSPECIFICSRCDIR)/bastdogl.c	\
+	$(DRVSPECIFICSRCDIR)/bautilgl.c \
+	$(DRVSPECIFICSRCDIR)/bavagl.c
+
+# WINDOWS BUILD
+ifeq ($(RWOS), win)
+
+ifndef OGLLIBPATH
+ifeq ($(RWCOMPILER),mingw32)
+OGLLIBPATH = C:/mingw/lib
+else
+OGLLIBPATH = C:/progra~1/micros~1/vc98/lib
+endif
+endif
+
+ifndef USESGI
+USESGI = 0
+endif
+
+ifeq ($(USESGI), 0)
+
+SPECIFICDRVCSRC +=				\
+	$(DRVSPECIFICSRCDIR)/bawinogl.c
+
+ifeq ($(RWCOMPILER),mingw32)
+
+DRVLIB =                                        \
+	$(OGLLIBPATH)/libopengl32.a 
+
+else
+
+DRVLIB =                                        \
+	$(OGLLIBPATH)/opengl32.lib 
+
+endif
+
+# for DLL builds, we don't want to export non-RenderWare
+# Graphics symbols so use the DRVLIBs at a later stage
+ifeq ($(RWDLL),1)
+DLLDRVLIB := $(DRVLIB)
+DRVLIB :=
+endif
+
+DRVCSRC += $(DRVLIB)
+
+else
+
+SPECIFICDRVCSRC +=				\
+	$(DRVSPECIFICSRCDIR)/bawinogl.c
+
+DRVLIB =                                        \
+        $(OGLLIBPATH)/opengl.lib
+
+# for DLL builds, we don't want to export non-RenderWare
+# Graphics symbols so use the DRVLIBs at a later stage
+ifeq ($(RWDLL),1)
+DLLDRVLIB := $(DRVLIB)
+DRVLIB :=
+endif
+
+DRVCSRC += $(DRVLIB)
+
+endif
+
+ifneq ($(NOASM), 1)
+
+GENERICDRVASMSRC =				\
+         $(DRVGENERICSRCDIR)/baprocfp.$(ASM)	\
+         $(DRVGENERICSRCDIR)/x86matml.$(ASM)	\
+         $(DRVGENERICSRCDIR)/x86matvc.$(ASM)
+
+endif
+
+endif
+# END WINDOWS BUILD
+
+
+# MAC BUILD
+ifeq ($(RWOS), mac)
+
+SPECIFICDRVCSRC +=				\
+	$(DRVSPECIFICSRCDIR)/bamacogl.c
+
+endif
+# END MAC BUILD
+
+
+# UNIX BUILD
+ifeq ($(RWOS), linux)
+
+SPECIFICDRVCSRC +=				\
+	$(DRVSPECIFICSRCDIR)/baunxogl.c
+
+endif
+#END UNIX BUILD
+
+# QNX BUILD
+ifeq ($(RWOS), qnx)
+
+SPECIFICDRVCSRC +=                               \
+	$(DRVSPECIFICSRCDIR)/baqnxogl.c
+
+endif
+
+# END QNX BUILD 
+
+DRVCSRC += $(SPECIFICDRVCSRC) $(GENERICDRVCSRC)
+
+ifeq ($(RWCOMPILER), sggcc)
+DRVINC += -I/usr/freeware/lib/gcc-lib/mips-sgi-irix5.3/2.6.3/include/
+endif
+
+# driver include directories
+DRVINC += -I$(BASEDIR)/world
+
+# driver defines
+DRVDEF = -DUSE_OGL_PIPE

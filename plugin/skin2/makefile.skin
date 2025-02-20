@@ -1,0 +1,95 @@
+# makefile.skin
+# Generates the basic no frills rpskin.lib from shared source
+# adding source specific to just this library where necessary.
+
+LIBNAME = rpskin
+
+# Who are the maintainers ?
+MAINTAINERS = jamesa
+
+######################################################################
+
+# get all the shared objects for all skin derived plugins
+include $(CURDIR)/makefile.sharedskin
+
+######################################################################
+
+# add the specific object for just the basic skin lib
+
+#####################
+# SKY2
+#####################
+
+sky2CSRC +=					\
+	$(CURDIR)/$(RWTARGET)/skinsky.c
+
+####################
+# XBOX
+####################
+
+xboxCSRC +=					\
+	$(CURDIR)/$(RWTARGET)/skinxbox.c
+
+######################
+# GCN
+######################
+
+gcnCSRC +=					\
+	$(CURDIR)/$(RWTARGET)/skingcng.c
+
+######################
+# NULLGCN
+######################
+
+nullgcnCSRC +=					\
+	$(CURDIR)/gcn/skingcng.c
+
+######################
+# D3D8
+######################
+
+d3d8CSRC +=					\
+	$(CURDIR)/$(RWTARGET)/skind3d8plain.c
+
+######################
+# D3D9
+######################
+
+d3d9CSRC +=					\
+	$(CURDIR)/$(RWTARGET)/skind3d9plain.c
+
+######################
+# OPENGL
+######################
+
+openglCSRC +=					\
+	$(CURDIR)/$(RWTARGET)/skinopenglplain.c
+
+######################
+# SOFTRAS
+######################
+
+softrasCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinsoftrasgeneric.c
+
+######################
+# NULL
+######################
+
+nullCSRC +=					\
+	$(CURDIR)/null/skinnull.c
+
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+######################
+# and the generic case
+######################
+
+######################################################################
+
+# get all the shared flags, additional objects for all skin derived plugins
+# does the include makeopt/makeplug malarky as well
+include $(CURDIR)/makefile.sharedskin2
+
+######################################################################

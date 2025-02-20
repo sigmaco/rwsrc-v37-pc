@@ -1,0 +1,64 @@
+#
+# Compiler & Directory Definition File
+#
+
+include $(BASEDIR)/makeincl/rwtarget/default/maketarg
+
+ifndef DXSDK
+DXSDK = c:/dxsdk
+endif
+
+# driver objects
+GENERICDRVCSRC =					    \
+         $(DRVGENERICSRCDIR)/palquant.c \
+         $(DRVGENERICSRCDIR)/cpuext.c
+
+ifneq ($(NOASM), 1)
+GENERICDRVCSRC +=                       \
+        $(DRVGENERICSRCDIR)/ssematml.c
+endif
+
+SPECIFICDRVCSRC =				\
+         $(DRVSPECIFICSRCDIR)/d3d9device.c	\
+         $(DRVSPECIFICSRCDIR)/d3d92drend.c	\
+         $(DRVSPECIFICSRCDIR)/d3d9convrt.c	\
+         $(DRVSPECIFICSRCDIR)/d3d9dxttex.c	\
+         $(DRVSPECIFICSRCDIR)/d3d9raster.c	\
+         $(DRVSPECIFICSRCDIR)/d3d9rendst.c	\
+         $(DRVSPECIFICSRCDIR)/d3d9vertexbuffer.c	\
+         $(DRVSPECIFICSRCDIR)/d3d9texdic.c 
+
+ifeq ($(RWMETRICS), 1)
+SPECIFICDRVCSRC +=				\
+	 $(DRVSPECIFICSRCDIR)/d3d9metric.c
+endif
+
+DRVLIB +=					\
+         $(DXSDK)/lib/d3d9.lib
+
+# for DLL builds, we don't want to export non-RenderWare
+# Graphics symbols so use the DRVLIBs at a later stage
+ifeq ($(RWDLL),1)
+DLLDRVLIB := $(DRVLIB)
+DRVLIB :=
+endif
+
+DRVCSRC += $(DRVLIB)
+
+ifneq ($(NOASM), 1)
+
+GENERICDRVASMSRC =				\
+         $(DRVGENERICSRCDIR)/baprocfp.$(ASM)	\
+         $(DRVGENERICSRCDIR)/x86matml.$(ASM)	\
+         $(DRVGENERICSRCDIR)/x86matvc.$(ASM)
+
+endif
+
+DRVCSRC += $(SPECIFICDRVCSRC) $(GENERICDRVCSRC)
+
+# driver include directories
+DRVINC += -I$(DXSDK)/include
+DRVINC += -I$(BASEDIR)/world
+
+# driver defines
+DRVDEF =

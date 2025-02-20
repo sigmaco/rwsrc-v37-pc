@@ -1,0 +1,19 @@
+;
+; Pixel shader 
+
+; Declare pixel shader version 2.0
+ps_2_0
+
+dcl_2d s0           ; light texture
+
+dcl t0.xyz          ; light texture
+
+nrm_pp r0, t0
+
+dp3_sat r0.x, r0, c0    ; Normal dot light
+
+texld r0, r0, s0        ; light texture
+
+mul r0, r0, c1          ; modulate material color
+
+mov oC0, r0

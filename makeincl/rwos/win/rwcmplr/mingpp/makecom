@@ -1,0 +1,162 @@
+##########################################################
+# These are for mingw32/gcc - Minimalist GNU Win32
+# See
+# o GCC homepage
+#   http://www.gnu.org/software/gcc
+# o GCC compilations flags
+#   http://www.gnu.org/software/gcc/onlinedocs/gcc_2.html
+# o Minimalist GNU Win32
+#   http://www.xraylith.wisc.edu/~khan/software/gnu-win32/gcc.html
+#   ftp://ftp.xraylith.wisc.edu/pub/khan/gnu-win32/mingw32/gcc-2.95
+#   http://www.geocities.com/Tokyo/Towers/6162/gcc.html
+##########################################################
+
+# CFLAGS += -x c++ -I/usr/include/g++-3
+
+CFLAGS += -I/usr/include/g++-3
+
+ifeq ($(SMALLCODE), 1)
+C_OPT = -Os 
+else
+C_OPT = -O3 
+endif
+
+CDEFINES =					\
+	-DNONAMELESSUNION			\
+	-DWIN32					\
+	-D_NO_COM				\
+	-D_WIN32				\
+	-DCINTERFACE				\
+	-DPNGAPI=" "				\
+	-DPNG_IMPEXP=" "			\
+	-U_NO_COM 
+
+CPPWARNINGS =					\
+    -Weffc++					\
+    -Woverloaded-virtual			\
+    -Wsign-promo				\
+    -Wsynth
+
+#   -Werror 					\
+#   -Wold-style-cast				\
+
+CWARNINGS =					\
+    -Wall					\
+    -Wcast-align				\
+    -Wcast-qual					\
+    -Wchar-subscripts				\
+    -Wcomment					\
+    -Wformat					\
+    -Wimplicit					\
+    -Wimplicit-function-declaration		\
+    -Wimplicit-int				\
+    -Winline					\
+    -Wlong-long					\
+    -Wmain					\
+    -Wmissing-declarations			\
+    -Wmissing-noreturn				\
+    -Wmissing-prototypes			\
+    -Wmultichar					\
+    -Wnested-externs				\
+    -Wparentheses				\
+    -Wpointer-arith				\
+    -Wreturn-type				\
+    -Wsign-compare				\
+    -Wstrict-prototypes				\
+    -Wswitch					\
+    -Wtrigraphs					\
+    -Wundef					\
+    -Wuninitialized				\
+    -Wunknown-pragmas				\
+    -Wwrite-strings 
+
+#    -W						\
+#    -Wunused					\
+#    -Werror
+#    -Waggregate-return \
+#    -Wbad-function-cast
+#    -Wconversion
+#    -Wid-clash-32 \
+#    -Wlarger-than-len 
+#    -Wredundant-decls \
+#    -Wshadow \
+#    -Wtraditional
+#    -ansi \
+#    -pedantic \
+
+
+CWARNINGS += $(CPPWARNINGS)
+
+ifeq ($(COPTIMIZE), 1)
+CFLAGS += $(CWARNINGS) $(C_OPT) $(CDEFINES) -DNDEBUG -U_DEBUG
+else
+# CFLAGS += -Wall -O0
+# gcc requires the generation of a dependency tree, 
+# and hence at least -O1,
+# to detect any use of uninitialized variables
+# -ansi -pedantic 
+CFLAGS +=  $(CWARNINGS) -O1 $(CDEFINES) -UNDEBUG -D_DEBUG
+endif
+
+ifeq ($(CDEBUG), 1)
+CFLAGS += -g -DDBG=1
+else
+CFLAGS += -DDBG=0
+endif
+
+# These seem to be platform specific, not compiler specific
+
+ifeq ($(NOASM), 1)
+CFLAGS += -DNOASM 
+endif
+
+
+ifeq ("$(CPU)", "")
+CPU=pentiumpro
+endif
+
+CFLAGS +=					\
+	-c -mcpu=$(CPU) -mno-cygwin		\
+	-DVC_EXTRALEAN				\
+	-DWIN32_EXTRA_LEAN			\
+	-DWIN32_LEAN_AND_MEAN			\
+	-D__CYGWIN__				\
+	-I/usr/include/mingw			\
+	-I/usr/include/w32api			\
+        -I$(BASEDIR)/misc/mssdk/include		\
+	-I$(DXSDK)/include
+
+# -Id:/Program\ Files/Microsoft\ Visual\ Studio/VC98/Include
+
+CFLAGS += -fno-rtti -fno-exceptions
+
+ifeq ("$(COMPILER)", "")
+COMPILER=cc
+endif
+
+ifeq ("$(LINKER)", "")
+# It should be this, but we have a rather strange idea of LINKER
+LINKER=link.exe
+endif
+
+CC        = g++
+CPP       = $(CC)
+COUT      = -o
+LOUT      = -e
+SOUT      = -S -o $(@F)
+CPPOPT    = -E -P
+
+AS        = ml
+ASFLAGS   = -I$(SRCDIR) -I$(DEVDIR)/$(RWTARGET) -c -W2 -Cp -Zm -DFUNCSTD -DBCC -DSTACK -coff
+AOUT      = -nologo -Fo
+
+# Librarian options (for append, we include the source lib again)
+AR		= ar -r
+ARCREATEFLAGS   = $@ $^
+ARAPPENDFLAGS	= -out:$@ $@
+
+# How to run programs (no need for shell/simulator)
+RUNIT		=
+
+# We do want assembler
+NOASM = 1

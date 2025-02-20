@@ -1,0 +1,16 @@
+;
+; Pixel shader 
+
+; Declare pixel shader version 1.1
+ps_1_1
+
+
+tex t0              ; decal texture 0
+tex t1              ; decal texture 1
+
+; do emboss
+mul r0, t0, 1-t0.a
+mul r0, r0, v0
+
+mul r1, t1, t1.a
+mad r0, r1, v0, r0

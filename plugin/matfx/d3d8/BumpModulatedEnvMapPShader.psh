@@ -1,0 +1,26 @@
+;
+; Pixel shader 
+
+; Declare pixel shader version 1.0
+ps.1.0
+
+
+tex t0              ; bumpmapped texture
+tex t1              ; bumpmapped shifted texture
+tex t2              ; envmap texture
+
+; do emboss
+mul r0.rgb, t0, 1-t0.a +
+    mov r0.a, t0.a
+mul r0, r0, v0
+
+mul r1.rgb, t1, t1.a +
+    mov r1.a, t1.a
+mad r0, r1, v0, r0
+
+; do envmap
+mul r1, t2, t2.a
+mul r1, r1, r0.a
+
+; Modulate with shiny factor and add it to the final color
+mad r0, r1, c0, r0

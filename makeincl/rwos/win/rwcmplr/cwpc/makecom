@@ -1,0 +1,115 @@
+#####################################################
+#                                                   #
+# Compiler settings for CodeWarrior 8 for PC        #
+#                                                   #
+#####################################################
+
+# ---------------------------------------------------
+# global compiler flags
+# ---------------------------------------------------
+
+# Win32 specific defines
+CFLAGS += -DWIN32
+
+# CodeWarrior specific compiler settings
+CFLAGS += 			\
+	-nosyspath		\
+	-c 			\
+	-warnings on 		\
+	-warnings nounused	\
+	-msgstyle mpw		\
+	-inline off		\
+	-nomultibyte
+
+# D3DMATRIX definitions requires C++ compilation
+#ifeq ("$(RWTARGET)","d3d8")
+#CFLAGS += -lang c
+#else
+#ifeq ("$(RWTARGET)","d3d9")
+#CFLAGS += -lang c
+#else
+#CFLAGS += -lang c
+#endif
+#endif
+
+# ---------------------------------------------------
+# debugging
+# ---------------------------------------------------
+
+ifeq ($(CDEBUG), 1)
+	CFLAGS += -g -sym fullpath, codeview -runtime staticsingledebug -opt debug
+else
+	CFLAGS += -runtime staticsingle
+endif
+
+
+# ---------------------------------------------------
+# optimizations
+# ---------------------------------------------------
+
+ifeq ($(COPTIMIZE), 0)
+	CFLAGS += -opt off
+else
+	ifeq ($(SMALLCODE), 1)
+		CFLAGS += -opt space
+	else
+		CFLAGS += -opt all
+	endif
+endif
+
+# turn 'em off!
+CFLAGS += -DNOASM -DNOSSEASM
+
+
+# ---------------------------------------------------
+# command line names and options
+# ---------------------------------------------------
+CC        = mwcc
+CPP       = mwcc
+CPPOPT    = -EP
+COUT      = -o 
+
+CC_ASM     = cl
+CFLAGS_ASM = -nologo -W3 -DWIN32 -D_WINDOWS -D_MBCS -D__MSC__ \
+	     -DVC_EXTRALEAN  -DWIN32_EXTRA_LEAN -DWIN32_LEAN_AND_MEAN -c \
+             -I. -I$(SDKINCDIR) $(C_INC)
+SOUT      = -c -Fa$(@F)
+
+AS        = ml
+AOUT      = -nologo -Fo
+ASFLAGS   = -I$(BASEDIR)/driver/common			\
+	    -I$(BASEDIR)/makeincl/rwos/$(RWOS)/masm	\
+	    -I$(SRCDIR)					\
+	    -I$(DEVDIR)/$(RWTARGET)			\
+	    -c						\
+	    -W2						\
+	    -Cp						\
+	    -Zm						\
+	    -DBCC					\
+	    -DSTACK					\
+	    -coff
+
+ifeq ("$(RWSW15)", "1")
+ASFLAGS  += -DFB1555
+endif
+
+# ---------------------------------------------------
+# librarian options
+# ---------------------------------------------------
+
+AR		= mwld -library
+ARCREATEFLAGS   = -o $@ $^
+ARAPPENDFLAGS	= -o $@ $@
+
+# ---------------------------------------------------
+# object file extensions
+# ---------------------------------------------------
+
+O       = obj
+LP      = 
+L       = lib
+
+# We do want assembler
+ifeq ("$(NOASM)", "")
+NOASM = 0
+endif

@@ -1,0 +1,131 @@
+########################
+# These are for gcc
+# See
+# o GCC homepage
+#   http://www.gnu.org/software/gcc
+# o GCC compilations flags
+#   http://www.gnu.org/software/gcc/onlinedocs/gcc_2.html
+# o GCC for Win32
+#   http://sourceware.cygnus.com
+#   ftp://sunsite.org.uk/Mirrors/sourceware.cygnus.com/pub/cygwin/
+########################
+
+ifeq ($(SMALLCODE), 1)
+C_OPT = -Os 
+else
+C_OPT = -O3 
+endif
+
+CDEFINES = \
+ -DCINTERFACE \
+ -DNONAMELESSUNION \
+ -DWIN32 \
+ -D_NO_COM \
+ -D_WIN32 \
+ -U_NO_COM 
+
+CWARNINGS = \
+    -ansi \
+    -pedantic \
+    -W \
+    -Wall \
+    -Wbad-function-cast \
+    -Wcast-align \
+    -Wcast-qual \
+    -Wchar-subscripts \
+    -Wcomment \
+    -Werror \
+    -Wformat \
+    -Wimplicit \
+    -Wimplicit-function-declaration \
+    -Wimplicit-int \
+    -Winline \
+    -Wlong-long \
+    -Wmain \
+    -Wmissing-declarations \
+    -Wmissing-noreturn \
+    -Wmissing-prototypes \
+    -Wmultichar \
+    -Wnested-externs \
+    -Wparentheses \
+    -Wpointer-arith \
+    -Wreturn-type \
+    -Wsign-compare \
+    -Wstrict-prototypes \
+    -Wswitch \
+    -Wtrigraphs \
+    -Wundef \
+    -Wuninitialized \
+    -Wunknown-pragmas \
+    -Wunused \
+    -Wwrite-strings 
+
+#    -Waggregate-return \
+#    -Wconversion \
+#    -Wid-clash-32 \
+#    -Wlarger-than-len  \
+#    -Wredundant-decls \
+#    -Wshadow \
+#    -Wtraditional \
+
+ifeq ($(COPTIMIZE), 1)
+CFLAGS += $(CWARNINGS) $(C_OPT) $(CDEFINES) -DNDEBUG -U_DEBUG 
+else
+# CFLAGS += -Wall -O0
+# gcc requires the generation of a dependency tree, 
+# and hence at least -O1,
+# to detect any use of uninitialized variables
+CFLAGS +=  -ansi -pedantic $(CWARNINGS) -O1 $(CDEFINES) -UNDEBUG -D_DEBUG
+endif
+
+ifeq ($(CDEBUG), 1)
+CFLAGS += -g
+endif
+
+# These seem to be platform specific, not compiler specific
+
+ifeq ($(NOASM), 1)
+CFLAGS += -DNOASM 
+endif
+
+
+ifeq ("$(CPU)", "")
+CPU=pentiumpro
+endif
+
+CFLAGS += -c -mcpu=$(CPU) -D_INCLUDE_MALLOC_H_ \
+	-DVC_EXTRALEAN  -DWIN32_EXTRA_LEAN -DWIN32_LEAN_AND_MEAN
+
+CFLAGS += -fno-rtti -fno-exceptions
+
+ifeq ("$(COMPILER)", "")
+COMPILER=cc
+endif
+
+ifeq ("$(LINKER)", "")
+# It should be this, but we have a rather strange idea of LINKER
+LINKER=link.exe
+endif
+
+CC        = gcc
+CPP       = $(CC)
+COUT      = -o
+LOUT      = -e
+SOUT      = -S -o $(@F)
+CPPOPT    = -E -P
+
+AS        = ml
+ASFLAGS   = -I$(SRCDIR) -I$(DEVDIR)/$(RWTARGET) -c -W2 -Cp -Zm -DFUNCSTD -DBCC -DSTACK -coff
+AOUT      = -nologo -Fo
+
+# Librarian options (for append, we include the source lib again)
+AR		= ar -r
+ARCREATEFLAGS   = $@ $^
+ARAPPENDFLAGS	= -out:$@ $@
+
+# How to run programs (no need for shell/simulator)
+RUNIT		=
+
+# We do want assembler
+NOASM = 1
+

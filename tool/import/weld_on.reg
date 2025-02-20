@@ -1,0 +1,5 @@
+REGEDIT4
+; File to set geometry conditioning related registry entries for RenderWare
+
+[HKEY_LOCAL_MACHINE\Software\Criterion\RenderWare]"
+"Weld_Off"=dword:00000000

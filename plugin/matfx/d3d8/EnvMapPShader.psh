@@ -1,0 +1,17 @@
+;
+; Pixel shader 
+
+; Declare pixel shader version 1.0
+ps.1.0
+
+
+tex t0              ; decal texture 0
+tex t1              ; decal texture 1
+
+; Modulate with diffuse
+mul r0, t0, v0
+
+mul r1, t1, t1.a
+
+; Modulate with shiny factor and add it to the final color
+mad r0.rgb, r1, c0, r0

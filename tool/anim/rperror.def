@@ -1,0 +1,6 @@
+RWECODE(E_RT_ANIM_INTERP_IDINUSE, 
+        "Interpolation scheme ID already in use.")
+RWECODE(E_RT_ANIM_INTERP_BLOCKFULL, 
+        "Maximum number of interpolation schemes in use.")
+RWECODE(E_RT_ANIM_INTERP_IDUNKNOWN, 
+        "Unregistered interpolation scheme ID.")

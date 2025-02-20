@@ -1,0 +1,205 @@
+# This builds the world plugin for the 3D graphics API
+
+# Define the root for the RenderWare build.
+
+# all directories are defined relative to the rwsdk BASEDIR
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/..
+endif
+
+# This target must be defined before makeopt is included. It contains a single
+# forward reference to the main target
+
+all: rwplugin
+ 
+# Include the shared RenderWare make definitions
+
+include $(BASEDIR)/makeincl/makeopt
+ifndef PIPETYPE
+PIPETYPE = p2
+endif # PIPETYPE
+include $(BASEDIR)/makeincl/rwtarget/pipe/$(PIPETYPE)/maketarg
+
+CSRC += $(WORLDPIPECSRC) 
+CSRC += $(WORLDPIPEPSCSRC) 
+
+CROOT = $(notdir $(basename $(CSRC)))
+COBJS  = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(CROOT)))
+
+OBJ    += $(COBJS)
+
+# Find the pipeline files
+C_INC 	      += -I$(BASEDIR)/world/pipe/$(PIPETYPE)
+
+ifneq ("$(PIPETYPE)", "generic")
+C_INC += -I$(BASEDIR)/world/pipe/$(PIPETYPE)/$(RWTARGET)
+endif
+
+# derive the library, header and error filename from the plugin name
+RPLIB 	        = $(SDKLIBDIR)/$(LIBPREFIX)$(PLUGIN).$(LIBEXT)
+RPHEAD 	        = $(SDKINCDIR)/$(PLUGIN).h
+RPERR 	        = $(SDKINCDIR)/$(PLUGIN).rpe
+RPDOCDIR        = $(SDKDOCDIR)/plugin
+RPHLPDIR        = ../autodocs/hlp/plugin
+RPHTMDIR        = $(SDKHTMDIR)/plugin
+TARGETLIB       = $(RPLIB)
+
+# and what object files are required. Note, if the RenderWare error & 
+# debug mechnism is to be used then rpdbgerr.$(O) must be included
+# because of the needs for some compilers for the module names to be unique
+# we generate a unique name for this file based on the name of the plugin
+
+OBJS            = $(OBJ) $(WORLDPIPEOBJ) $(WORLDPIPEPSOBJ)
+ifeq ($(RWDEBUG), 1)
+OBJS           += $(CURDIR)/$(OBJDIR)/u$(PLUGIN).$(O)
+endif
+
+HSRC            = $(subst .c,.h,$(CSRC))
+
+# The main entry point - checkopt is defined in makeopt and 
+# checks that valid values for target, compiler and os have been defined
+
+rwplugin: checkopt dirsetup header equate $(RPLIB)
+
+header: dirsetup $(RPHEAD) $(RPERR) 
+
+equate: dirsetup $(RWEQUDEP)
+
+# The plugin library defined above
+$(RPLIB): $(OBJS)
+	$(RM) $@
+	$(AR) $(ARCREATEFLAGS)
+	$(ARPOSTCHECK)
+
+.PHONY : always
+always: # dummy target - always out of date
+
+# Create and install the headers in the right place
+$(RPHEAD): $(RPERR) $(HSRC)
+	$(BUILDTOOLDIR)/incgen/incgen		\
+		$(HSRC)				\
+		-I$(CURDIR)                     \
+		$(C_INC)			\
+		-sstdlib			\
+		-sstdarg			\
+		-prpworld			\
+		-o$(RPHEAD)			\
+		-lrpworld.lst			\
+		-grwcore.h 
+
+# Generate the documentation
+
+$(RPDOCDIR) $(RPHLPDIR) $(RPHTMDIR) $(RPHLPDIR)/$(PLUGIN):
+	$(MD) $@
+
+DOXYEXTRA =							\
+	$(SDKINCDIR)/$(PLUGIN).h				\
+
+DOXYSRC =							\
+	$(CSRC)							\
+	$(DOXYEXTRA)
+
+# See rwsdk\doxy\doxycfg.c for more info.
+doxygen:
+	echo $(DOXYSRC) |                               \
+	$(BINDIR)/doxycfg				\
+	  -b$(BASEDIR)					\
+	  -d$(RPHLPDIR)/$(PLUGIN)/			\
+	  -m$(BASEDIR)/doxy/format/html		\
+	  -n$(PLUGIN)					\
+	  -o$(RWOS)					\
+	  -t$(RWTARGET)					\
+	> $(RPHLPDIR)/$(PLUGIN)/Doxyfile
+
+doc:
+	echo $(DOXYSRC) 1>> $(SDKHLPDIR)/$(RWTARGET)/Docfile
+
+defgroup:
+	-$(BINDIR)/egrep --line-number --with-filename \
+	"\\\defgroup" $(addprefix $(CURDIR)/, $(DOXYSRC))
+
+DOXYIMAGE = $(BASEDIR)/doxy/images
+
+# List of directories containing image files used by Doxygen
+SRCIMAGE  +=		\
+	$(DOXYIMAGE)/*.*					\
+
+# Builds the chm
+# subtopic.sed tidies the API's index, pdf.sed enables pdf hyperlinking 
+plugindoc:
+	doxygen $(RPHLPDIR)/$(PLUGIN)/Doxyfile
+	-$(CP) $(SRCIMAGE) $(RPHLPDIR)/$(PLUGIN)/html
+	$(BINDIR)/UNIX2DOS $(RPHLPDIR)/$(PLUGIN)/html/index.hhc
+	-$(CP)  $(RPHLPDIR)/$(PLUGIN)/html/index.hhk \
+            $(RPHLPDIR)/$(PLUGIN)/html/index.hhk_old
+	$(SED) -f $(BINDIR)/subtopic.sed < $(RPHLPDIR)/$(PLUGIN)/html/index.hhk_old > \
+            $(RPHLPDIR)/$(PLUGIN)/html/index.hhk
+
+	for myhtml in $(RPHLPDIR)/$(PLUGIN)/html/*.html; do \
+	$(SED) -f $(BINDIR)/pdf.sed < $$myhtml > $(RPHLPDIR)/$(PLUGIN)/html/tmp._html; \
+	$(RM) $$myhtml; \
+	$(MV) $(RPHLPDIR)/$(PLUGIN)/html/tmp._html $$myhtml;\
+	done
+
+	@echo About to run -cmd /C $(BINDIR)/hhc $(RPHLPDIR)/$(PLUGIN)/html/index.hhp
+	-cmd /C $(BINDIR)/hhc $(RPHLPDIR)/$(PLUGIN)/html/index.hhp
+
+doxy: $(RPHLPDIR)/$(PLUGIN) $(RPHEAD) doxygen plugindoc
+
+# Create the directory for the object files
+dirsetup: $(CURDIR)/$(OBJDIR)
+
+$(CURDIR)/$(OBJDIR):
+	$(MD) $@
+
+CVERIFY=$(CSRC)
+
+verify:
+	rwcheck $(RWCHECKFLAGS) $(CVERIFY)
+
+longline:
+	-egrep --line-number --with-filename "................................................................................" $(CVERIFY)
+
+
+tabs:
+	-egrep --line-number --with-filename "	" $(CVERIFY)
+
+
+# delete all intermediate files
+clean: checkopt
+	$(RM) -r $(CURDIR)/$(OBJDIR)
+	$(RM) *.i				\
+	      *.err				\
+	      *.cmd				\
+	      *.pdb				\
+              *.lst
+
+# delete all generated headers for the current target
+cleanheaders: checkopt
+	$(RM)                                   \
+		$(RPHEAD)                       \
+		$(RPERR) 
+
+# delete all files in preparation for a release
+distclean: cleanheaders clean
+	$(RM) -r obj
+	$(RM) $(RPLIB)				\
+	      $(RPHEAD)				\
+	      $(RPERR)				\
+	      $(PLUGIN).lib			\
+	      $(PLUGIN).rtf
+
+# dependencies
+
+$(PLUGIN).c: $(RPHEAD)
+
+$(RPERR): rperror.def 
+
+HDEPEND = $(patsubst %.h,$(CURDIR)/$(OBJDIR)/%.hd, $(notdir $(HSRC)))
+
+ifeq ($(RWDEPEND), 1)
+ifdef WITH_DEPEND
+-include $(OBJ:.$(O)=.d)
+-include $(HDEPEND)
+endif
+endif

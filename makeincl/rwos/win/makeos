@@ -1,0 +1,42 @@
+#
+# Os Specific make options
+
+#
+# Library handling
+#
+LIBPREFIX = 
+
+LIBEXT = lib
+
+#
+# Define SHELL to be used by make.
+# Note: An absolute filename must be specified without use of the $(BINDIR)
+# macro. 
+#
+
+SHELL = ./bin/sh.exe
+
+#
+# Extra SDK directories to be used throughout the build process
+#
+CFLAGS += -I$(DXSDK)/include
+
+#
+# File handling aliases
+#
+
+ifndef CP
+CP        = cp -f
+endif
+ifndef MV
+MV        = mv
+endif
+ifndef RM
+RM        = rm -f
+endif
+ifndef MD
+MD        = $(BINDIR)/mkdir -p
+endif
+ifndef SED
+SED       = $(BINDIR)/sed
+endif

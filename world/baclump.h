@@ -99,6 +99,18 @@ enum RpAtomicPrivateFlag
 };
 typedef enum RpAtomicPrivateFlag rpAtomicPrivateFlag;
 
+//. 2006. 1. 17. Nonstopdj
+//. atomic의 skin split 상태를 나타내는 enum
+enum RpAtomicSkinSplitFlag
+{
+	rpATOMICSKINSPLITNONE		= 0x01,
+	rpATOMICSKINSPLITNOTUSE		= 0x02,
+	rpATOMICSKINSPLITCOMPLETE	= 0x04,
+	rpATOMICSKINSPLITFORCEENUMSIZEINT	= RWFORCEENUMSIZEINT
+};
+
+typedef enum RpAtomicSkinSplitFlag RpAtomicSkinSplitFlag;
+
 /* RWPUBLICEND */
 
 /****************************************************************************
@@ -179,13 +191,52 @@ typedef struct RpClump RpClump;
  */
 typedef RpClump    *(*RpClumpCallBack) (RpClump * clump, void *data);
 
+typedef struct	AgcdClumpAddInfo
+{
+	/* 1 - high(self character) 2 - medium , 3 - low */
+	RwInt8		characterShadowLevel;
+	RwInt8		maxLODLevel;
+	RwInt8		customLightStatus;
+	RwInt8		octreeModeCamZIndex;
+
+	RwReal		calcDistance;
+	RwUInt32	calcDistanceTick;
+}AgcdClumpAddInfo;
+
+typedef struct AgcdType
+{
+	RwInt32		eType;
+	RwInt32		lID;
+	void*		pObject;
+	void*		pTemplate;
+	void*		pCustData;
+	void*		pPickAtomic;
+	void*		pOcTreeData;
+	void*		pOcTreeIDList;
+	
+	RwSphere	boundingSphere;
+	void*		pUpdateList;
+	RwUInt32	updateTick;
+
+	RwUInt32	frustumTestTick;
+	RwInt16		frustumTestResult;
+	RwInt16		viewSectorDistance;
+	
+	void*		pCollisionAtomic;
+
+	/* For Fast Add-Remove In AgcmRender Module */
+	void*		pRenderAddedNode;
+}AgcdType;
+
 #if (!defined(DOXYGEN))
 struct RpClump
 {
         RwObject            object;
 
         /* Information about all the Atomics */
-        RwLinkList          atomicList;
+        //RwLinkList          atomicList;
+		//2005.3.1		gemani .. atomicList를 선형 리스트로 변경하고 순서 보장하자..
+		RpAtomic*			atomicList;
 
         /* Lists of lights and cameras */
         RwLinkList          lightList;
@@ -196,6 +247,29 @@ struct RpClump
 
         /* Clump frustum callback */
         RpClumpCallBack     callback;
+		
+		void*				pvApBase;
+		RwUInt32			ulFlag;
+		RwChar*				szName;
+
+		/*	AcuObject의 DistanceInfo userdata를 clump에 붙였다.. 2004.11.3 gemani */
+		AgcdClumpAddInfo	stUserData;
+
+		/*	type은 clump가 있는 경우 clump에 붙어 있는 type만 유효하다..*/
+		AgcdType			stType;
+
+		// 2005.3.1	gemani	.. clump에 atomic 추가시 id부여용 
+		RwUInt32			iLastAtomicID;
+
+//@{ 20050513 DDonSS : Threadsafe
+#if defined USE_THREADSAFE_CLUMP
+#if defined WIN32
+	CRITICAL_SECTION	criticalSection;
+#else // defined WIN32
+	void*				criticalSection;
+#endif // defined WIN32
+#endif defined USE_THREADSAFE_CLUMP
+//@} DDonSS
 };
 #endif /* (!defined(DOXYGEN)) */
 
@@ -214,6 +288,32 @@ struct RpClump
  *
  * \see RpAtomicRender
  */
+
+typedef struct	AgcdRenderInfo
+{
+	RwInt8		renderType;
+	RwInt8		blendMode;
+	RwInt8		isHasBillboard;
+	RwInt8		isNowBillboard;
+
+	/* 0이 아님 shader모드임..지형 atomic에선 0 - default path, 1 - shadow2 path로 쓰인다.(AcuRpMTexture에서 씀 )*/
+	RwInt8		shaderUseType;
+	RwInt8		beforeLODLevel;
+	RwInt8		fadeinLevel;
+	RwInt8		fadeoutLevel;
+
+	RwInt16		countStart;
+	RwInt16		countEnd;
+	
+	RwUInt32	curTick;
+	RwUInt32	intersectTick;
+	void*		backupCB;
+	void*		backupCB2;
+	void*		backupCB3;				// 2차 콜백 저장(uvanim이나 lighting 같은..)
+
+	void*		pData1;					// uv 애니메이션 관련 데이터로 쓰임
+	void*		pData2;					// effect에서 삼각형 테이블로 쓰임.. 아이템 관련
+}AgcdRenderInfo;
 
 typedef RpAtomic   *(*RpAtomicCallBackRender) (RpAtomic * atomic);
 
@@ -234,7 +334,11 @@ struct RpAtomic
 
     /* Connections to other atomics */
     RpClump            *clump;
-    RwLLLink            inClumpLink;
+    
+	// 2005.3.1 gemani		atomiclist
+    //RwLLLink            inClumpLink;
+	RpAtomic			*prev;
+	RpAtomic			*next;
 
     /* callbacks */
     RpAtomicCallBackRender renderCallBack;
@@ -251,6 +355,30 @@ struct RpAtomic
 
     /* The Atomic object pipeline for this Atomic */
     RxPipeline         *pipeline;
+
+	void*				pvApBase;
+	RwUInt32			ulFlag;
+	RwChar*				szName;
+
+	/* RenderInfo Data (2004.11.3 .. gemani)*/
+	AgcdRenderInfo		stRenderInfo;
+
+	/*	type은 clump가 있는 경우 clump에 붙어 있는 type만 유효하다..
+	pointer로 변경 (2005.2.11 gemani) .. clump가 없는 경우에 동적 할당해서 쓰자*/
+	AgcdType*			stType;
+
+	//@{ Jaewon 20041222
+	// atomic identification number
+	RwInt32			id;
+	//@} Jaewon
+
+	// 2005.3.20 gemani
+	RwInt32			iPartID;
+
+	//. 2006. 1. 17. Nonstopdj
+	//. skinsplit이 완료되었는지 판단하는 flag
+	//. dafault status is false. when skin split complete time, status set true.			
+	RwUInt8			skinSplitFlags;
 };
 #endif /* (!defined(DOXYGEN)) */
 
@@ -593,6 +721,14 @@ extern RpClump *
 RpClumpRemoveLight(RpClump * clump,
                    RpLight * light);
 
+/* no looping aomitc list */
+extern RwBool
+RpAtomicRemoveDirtyFrameListEx(RpAtomic * atomic);
+
+/* looping atomic list  */
+extern RwBool
+RpAtomicRemoveDirtyFrameList(RpAtomic * atomic);
+
 extern RpClump *
 RpClumpAddLight(RpClump * clump,
                 RpLight * light);
@@ -735,6 +871,36 @@ RpAtomicValidatePlugins(const RpAtomic * atomic);
 
 extern RwBool
 RpClumpValidatePlugins(const RpClump * clump);
+
+//@{ Jaewon 20041222
+// Id setter/getter
+extern RpAtomic *
+RpAtomicSetId(RpAtomic * atomic,
+                 RwInt32 flags);
+
+extern RwInt32
+RpAtomicGetId(const RpAtomic * atomic);
+//@} Jaewon
+
+//@{ Jaewon 20050831
+// ;)
+extern RpAtomic *
+RpAtomicSetName(RpAtomic *atomic,
+				const RwChar *name);
+
+extern const RwChar *
+RpAtomicGetName(const RpAtomic *atomic);
+//@} Jaewon
+
+//@{ Jaewon 20050905
+// ;)
+extern RpClump *
+RpClumpSetName(RpClump *clump,
+				const RwChar *name);
+
+extern const RwChar *
+RpClumpGetName(const RpClump *clump);
+//@} Jaewon
 
 #if ( defined(RWDEBUG) || defined(RWSUPPRESSINLINE) )
 extern RwFrame *

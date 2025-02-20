@@ -1,0 +1,16 @@
+PLUGIN = rtmipk
+LIBNAME = rtmipkpatchmatfx
+
+# Who are the maintainers ?
+MAINTAINERS = jamesa
+
+CSRC =						\
+	$(CURDIR)/mipkcalc.c			\
+	$(CURDIR)/mipkworldmatfx.c		\
+	$(CURDIR)/mipkpatchmatfx.c		\
+	$(CURDIR)/mipkcalcpatch.c
+	
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/maketool
