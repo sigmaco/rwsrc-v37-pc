@@ -1,0 +1,4 @@
+RWECODE(E_RP_MORPH_INVALIDINTERP,
+        "Invalid interpolator number")
+RWECODE(E_RP_MORPH_NOGEOMETRY,
+        "No geometry to animate")

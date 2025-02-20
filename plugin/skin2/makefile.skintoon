@@ -1,0 +1,97 @@
+# makefile.skintoon
+# Generates the rpskintoon.lib from shared source
+# adding source specific to just this library where necessary.
+# contains basic skinning and skin toon functionality
+
+# What plugin are we building ?
+LIBNAME = rpskintoon
+
+# Who are the maintainers ?
+MAINTAINERS = antonk
+
+######################################################################
+
+# get all the shared objects for all skin derived plugins
+include $(CURDIR)/makefile.sharedskin
+
+# get all the shared objects for all skin matfx derived plugins
+include $(CURDIR)/makefile.sharedtoon
+
+######################################################################
+
+#####################
+# sky2 specific stuff
+#####################
+
+sky2CSRC += 						\
+	$(CURDIR)/$(RWTARGET)/skintoonsky.c
+
+####################
+#Xbox specific stuff
+####################
+
+xboxCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinxboxtoon.c
+
+######################
+# GCN
+######################
+
+gcnCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skingcnt.c
+
+######################
+# NULLGCN
+######################
+
+nullgcnCSRC +=						\
+	$(CURDIR)/gcn/skingcnt.c
+
+######################
+# d3d8
+######################
+
+d3d8CSRC +=                                 		\
+	$(CURDIR)/$(RWTARGET)/skind3d8toon.c
+
+######################
+# d3d9
+######################
+
+d3d9CSRC +=                                 		\
+	$(CURDIR)/$(RWTARGET)/skind3d9toon.c
+
+######################
+# opengl
+######################
+
+openglCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinopengltoon.c
+
+######################
+# softras
+######################
+
+softrasCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinsoftrastoon.c
+
+######################
+# null
+######################
+
+nullCSRC +=	                    			\
+	$(CURDIR)/null/skintoonnull.c
+
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+######################################################################
+
+# get all the shared flags, additional objects for all skin derived plugins
+# does the include makeopt/makeplug malarky as well
+include $(CURDIR)/makefile.sharedskin2
+
+# get all the shared flags, additional objects for all skin toon derived plugins
+include $(CURDIR)/makefile.sharedtoon2
+
+######################################################################

@@ -1,0 +1,432 @@
+# This builds the core file of the 3D graphics API
+
+all:  rwcore
+
+# Include target specific make options
+# all directories are defined relative to the rwsdk BASEDIR
+
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/..
+endif
+
+include $(BASEDIR)/makeincl/makeopt
+include $(BASEDIR)/makeincl/rwtarget/$(RWTARGET)/maketarg
+
+# Define pipe type (maketarg/$(RWTARGET) had first go)
+ifndef PIPETYPE
+PIPETYPE = p2
+endif # PIPETYPE
+
+include $(BASEDIR)/makeincl/rwtarget/pipe/$(PIPETYPE)/maketarg
+
+OSCSRC := $(BASEDIR)/os/$(RWOS)/osintf.c
+
+PLCORECSRC += $(OSCSRC)
+
+PLCORE_INC +=							\
+	-I../os/$(RWOS) # -I$(CURDIR)
+
+# Find the pipeline files
+C_INC += -I$(BASEDIR)/src/pipe/$(PIPETYPE)
+CORE_INC +=							\
+	-I$(BASEDIR)/src					\
+	-I../os/$(RWOS)						\
+	-I$(BASEDIR)/src/pipe/$(PIPETYPE) # -I$(CURDIR)/plcore
+
+ifneq ("$(PIPETYPE)", "generic")
+C_INC += -I$(BASEDIR)/src/pipe/$(PIPETYPE)/$(RWTARGET)
+CORE_INC += -I$(BASEDIR)/src/pipe/$(PIPETYPE)/$(RWTARGET)
+endif
+
+# define Object files which comprise the library
+STUBDRVCSRC := $(DRVSTUBSRCDIR)/sbdevice.c
+
+CSRC += $(GENERICDRVCSRC)
+CSRC += $(SPECIFICDRVCSRC)
+CSRC += $(PIPECSRC)
+CSRC += $(PIPEPSCSRC)
+
+ifeq ($(RWEVALUATION), 1)
+CSRC += $(BASEDIR)/src/bacamval.c
+endif
+
+HPLCORE_EXCLUDED = \
+	$(BASEDIR)/src/badevice.h
+
+HPLCORE = $(filter-out $(HPLCORE_EXCLUDED), $(subst .c,.h,$(PLCORECSRC)))
+
+HPLCORE +=							\
+	$(BASEDIR)/src/plcore/balibtyp.h			\
+	$(BASEDIR)/src/plcore/batypes.h		
+
+# HCORE is all of the .h files in the source directory 
+# - derived from the .c files so a few exceptions have to be tinkered with
+
+HCORE = $(subst .c,.h,$(CSRC))
+ifeq ("$(PIPETYPE)", "p2")
+ifneq ("$(RWTARGET)", "nullgcn")
+HCORE += $(BASEDIR)/src/pipe/$(PIPETYPE)/$(RWTARGET)/pip2model.h
+else
+HCORE += $(BASEDIR)/src/pipe/$(PIPETYPE)/gcn/pip2model.h
+endif
+endif
+
+PLCORECROOT = $(notdir $(basename $(PLCORECSRC)))
+PLCORECOBJS = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(PLCORECROOT)))
+PLCOREOBJ  += $(PLCORECOBJS)
+
+CROOT       = $(notdir $(basename $(CSRC)))
+COBJS       = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(CROOT)))
+OBJ        += $(PLCOREOBJ) $(COBJS)
+
+GENERICDRVASMROOT= $(notdir $(basename $(GENERICDRVASMSRC)))
+GENERICDRVASMOBJS = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(GENERICDRVASMROOT)))
+SPECIFICDRVASMROOT= $(notdir $(basename $(SPECIFICDRVASMSRC)))
+SPECIFICDRVASMOBJS = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(SPECIFICDRVASMROOT)))
+OBJ 	+= $(GENERICDRVASMOBJS) $(SPECIFICDRVASMOBJS)
+
+ifeq ("$(RWTARGET)", "sky2")
+OBJ += $(SPECIFICDRVDSMOBJS)
+endif
+
+STUBDRVCROOT = $(notdir $(basename $(STUBDRVCSRC)))
+STUBDRVCOBJS  = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(STUBDRVCROOT)))
+
+PLCOREINITCROOT = $(notdir $(basename $(PLCOREINITCSRC)))
+PLCOREINITCOBJS  = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(PLCOREINITCROOT)))
+
+#determine total build list
+
+LIBS = $(PLCORELIB) 
+ifeq ($(RWONLYPLCORE), 0)
+LIBS += $(CORELIB)
+endif
+TARGETLIB = $(CORELIB)
+
+ifeq ($(NOASM), 1)
+RWEQUDEP=
+else
+RWEQUDEP=$(DEVDIR)/$(RWTARGET)/baequate.i
+endif
+
+# softras requires the rasterizer DLLs and HH header to be present
+.PHONY: softras-files
+ifeq ("$(RWTARGET)","softras")
+softras-files:
+	$(CP)								\
+	  $(BASEDIR)/driver/softras/hybrid/dll/*.dll			\
+	  $(BASEDIR)/dll/$(RWPLATFORM)/
+	$(CP)								\
+	  $(BASEDIR)/driver/softras/hybrid/include/hhRasterizer.h	\
+	  $(SDKINCDIR)
+else
+softras-files:
+endif
+
+# RWTARGETs
+
+rwcore: checkopt dirsetup header equate $(LIBS) softras-files
+# make the directories required by the build process
+
+SDKDIRS =								\
+	$(SDKLIBDIR) $(SDKINCDIR)
+
+ifeq ($(RWDLL),1)
+SDKDIRS += 								\
+	$(SDKDLLDIR)
+endif # ifeq ($(RWDLL),1)
+
+ifdef APLUGINS
+SDKDIRS +=								\
+	$(SDKLIBDIR)/archive $(SDKINCDIR)/archive
+endif
+
+$(CURDIR)/$(OBJDIR) $(SDKDIRS) $(DEPDIR):
+	$(MD) $@
+
+dirsetup: $(CURDIR)/$(OBJDIR) $(SDKDIRS)
+
+depend: $(DEPDIR)
+
+# AR up the driver bit separately.
+
+# The list of dependancies for the core library is too long so it is split
+# by using a make filter
+
+$(PLCORELIB): $(PLCOREINITCOBJS) $(STUBDRVCOBJS) $(PLCOREOBJ)
+	$(RM) $(PLCORELIB)
+	$(AR) $(ARCREATEFLAGS)
+	$(ARPOSTCHECK)
+
+$(CORELIB): $(OBJ) $(DRVLIB)
+	$(RM) $(CORELIB)
+	$(AR) $(ARCREATEFLAGS)
+	$(ARPOSTCHECK)
+
+COREHFILES =							      \
+	$(SDKINCDIR)/rwversion.h 				      \
+	$(SDKINCDIR)/rpcriter.h 				      \
+	$(SDKINCDIR)/rpdbgerr.c					      \
+	$(SDKINCDIR)/rpdbgerr.h 				      \
+	$(SDKINCDIR)/rperror.h					      \
+	$(SDKINCDIR)/errcom.def 				      \
+	$(SDKINCDIR)/errcore.def
+
+$(COREHFILES): $(SDKINCDIR)/% : $(CURDIR)/plcore/%
+	$(CP) $^ $@
+
+ifeq ($(RWDEPEND), 1)
+ifdef WITH_DEPEND
+HCOREDEPEND = $(filter-out $(HPLCORE_EXCLUDED) $(HCORE_EXCLUDED), $(HCORE))
+endif
+endif
+
+$(SDKINCDIR)/rwplcore.h: $(HCOREDEPEND)
+	$(BUILDTOOLDIR)/incgen/incgen $(INCGENFLAGS) $(PLCORE_INC) $(HPLCORE) \
+	-sstdlib 						      \
+	-sstdio 						      \
+	-sstddef 						      \
+	-sstdarg 						      \
+	-o$@ -lrwplcore.lst
+
+$(SDKINCDIR)/rwcore.h: $(HCOREDEPEND)
+	$(BUILDTOOLDIR)/incgen/incgen $(INCGENFLAGS) $(CORE_INC) $(HCORE) \
+	-srwplcore 						      \
+	-o$@ -lrwcore.lst
+
+rwcore_h:: $(SDKINCDIR)/rwcore.h
+
+
+
+header:	dirsetup						      \
+	$(COREHFILES)						      \
+	$(SDKINCDIR)/rwplcore.h					      \
+	$(SDKINCDIR)/rwcore.h
+
+equate: dirsetup $(RWEQUDEP)
+
+
+$(SDKDOCDIR) $(SDKHLPDIR) $(SDKHTMDIR) 				      \
+$(SDKDOCDIR)/platform $(SDKHLPDIR)/platform $(SDKHTMDIR)/platform     \
+$(SDKHLPDIR)/$(RWTARGET) $(SDKHLPDIR)/rwcore $(SDKHLPDIR)/rwplcore    \
+$(SDKHLPDIR)/ppipe:
+	$(MD) $@
+
+######################################################################
+
+# Generate the documentation
+
+RWDOCPLCOREDIR        = ../autodocs/doc/plcore
+RWHLPPLCOREDIR        = ../autodocs/hlp/plcore
+RWHTMPLCOREDIR        = ../autodocs/htm/plcore
+
+$(RWDOCPLCOREDIR) $(RWHLPPLCOREDIR) $(RWHTMPLCOREDIR):
+	$(MD) $@
+
+DOXYIMAGE = $(BASEDIR)/doxy/images
+
+# List of directories containing image files used by Doxygen
+SRCIMAGE  +=		\
+	$(DOXYIMAGE)/*.*					\
+
+PLCOREDOXYSRC =							\
+	$(SDKINCDIR)/rpcriter.h					\
+        $(SDKINCDIR)/rwplcore.h					\
+	$(PLCOREINITCSRC)					\
+	$(STUBDRVCSRC)						\
+	$(PLCORECSRC)
+
+# See rwsdk\doxy\doxycfg.c for more info.
+plcoredoxygen:
+	echo $(PLCOREDOXYSRC) |                               	\
+	$(BINDIR)/doxycfg					\
+	  -b..							\
+	  -d$(RWHLPPLCOREDIR)/					\
+	  -m$(BASEDIR)/doxy/format/html				\
+	  -nrwplcore						\
+	  -o$(RWOS)						\
+	  -t$(RWTARGET)						\
+	> $(RWHLPPLCOREDIR)/Doxyfile
+
+# Builds the chm
+# subtopic.sed tidies the API's index, pdf.sed enables pdf hyperlinking 
+plcoredoc:
+	doxygen $(RWHLPPLCOREDIR)/Doxyfile
+	-$(CP) $(SRCIMAGE) $(RWHLPPLCOREDIR)/html
+	$(BINDIR)/UNIX2DOS $(RWHLPPLCOREDIR)/html/index.hhc
+	-$(CP)  $(RWHLPPLCOREDIR)/html/index.hhk \
+            $(RWHLPPLCOREDIR)/html/index.hhk_old
+	$(SED) -f $(BINDIR)/subtopic.sed < $(RWHLPPLCOREDIR)/html/index.hhk_old > \
+            $(RWHLPPLCOREDIR)/html/index.hhk
+
+	for myhtml in $(RWHLPPLCOREDIR)/html/*.html; do \
+	$(SED) -f $(BINDIR)/pdf.sed < $$myhtml > $(RWHLPPLCOREDIR)/html/tmp._html; \
+	$(RM) $$myhtml; \
+	$(MV) $(RWHLPPLCOREDIR)/html/tmp._html $$myhtml;\
+	done
+
+	@echo About to run -cmd /C $(BINDIR)/hhc $(RWHLPPLCOREDIR)/html/index.hhp
+	-cmd /C $(BINDIR)/hhc $(RWHLPPLCOREDIR)/html/index.hhp
+
+plcoredoxy: header $(RWHLPPLCOREDIR) plcoredoxygen plcoredoc
+
+RWDOCDIR        = ../autodocs/doc/core
+RWHLPDIR        = ../autodocs/hlp/core
+RWHTMDIR        = ../autodocs/htm/core
+
+DOXYDIR		= $(BASEDIR)/doxy/docs
+
+$(RWDOCDIR) $(RWHLPDIR) $(RWHTMDIR):
+	$(MD) $@
+
+DOXYEXTRA =							\
+	$(SDKINCDIR)/rpcriter.h					\
+	$(SDKINCDIR)/rwplcore.h					\
+	$(SDKINCDIR)/rwcore.h					\
+	$(CURDIR)/baim3doc.c					\
+	$(DOXYDIR)/*.h							\
+	$(DOXYDIR)/$(RWTARGET)/*.h				\
+	
+DOXYSRC =							\
+	$(PLCORECSRC)						\
+	$(CSRC)							\
+	$(DOXYEXTRA)
+
+# Tutorial specific documentation
+SRCTUTORIAL = $(BASEDIR)/../examples/tutorials
+
+DOXYTUTORIAL =									\
+	$(SRCTUTORIAL)/Tutorial1/Doc/tutorial1.c	\
+	$(SRCTUTORIAL)/Tutorial2/Doc/tutorial2.c	\
+	$(SRCTUTORIAL)/Tutorial3/Doc/tutorial3.c	\
+	$(SRCTUTORIAL)/Tutorial4/Doc/tutorial4.c	\
+	$(SRCTUTORIAL)/Tutorial5/Doc/tutorial5.c	\
+	$(SRCTUTORIAL)/Tutorial6/Doc/tutorial6.c
+
+ifeq ("$(RWOS)", "win")
+DOXYSRC +=										\
+	$(DOXYTUTORIAL)								
+endif #("$(RWOS)", "win")
+
+# See rwsdk\doxy\doxycfg.c for more info.
+coredoxygen:
+	echo $(DOXYSRC) |                               	\
+	$(BINDIR)/doxycfg					\
+	  -b..							\
+	  -d$(RWHLPDIR)/					\
+	  -m$(BASEDIR)/doxy/format/html				\
+	  -nrwcore						\
+	  -o$(RWOS)						\
+	  -t$(RWTARGET)						\
+	> $(RWHLPDIR)/Doxyfile
+
+# Builds the chm
+# subtopic.sed tidies the API's index, pdf.sed enables pdf hyperlinking 
+coredoc:
+	doxygen $(RWHLPDIR)/Doxyfile
+	-$(CP) $(SRCIMAGE) $(RWHLPDIR)/html
+	$(BINDIR)/UNIX2DOS $(RWHLPDIR)/html/index.hhc
+	-$(CP)  $(RWHLPDIR)/html/index.hhk \
+            $(RWHLPDIR)/html/index.hhk_old
+	$(SED) -f $(BINDIR)/subtopic.sed < $(RWHLPDIR)/html/index.hhk_old > \
+            $(RWHLPDIR)/html/index.hhk
+
+	for myhtml in $(RWHLPDIR)/html/*.html; do \
+	$(SED) -f $(BINDIR)/pdf.sed < $$myhtml > $(RWHLPDIR)/html/tmp._html; \
+	$(RM) $$myhtml; \
+	$(MV) $(RWHLPDIR)/html/tmp._html $$myhtml;\
+	done
+
+	@echo About to run -cmd /C $(BINDIR)/hhc $(RWHLPDIR)/html/index.hhp
+	-cmd /C $(BINDIR)/hhc $(RWHLPDIR)/html/index.hhp
+
+coredoxy: header $(RWHLPDIR) coredoxygen coredoc
+
+doxy: plcoredoxy  coredoxy
+
+doc:
+	echo $(DOXYSRC) 1>> ../autodocs/hlp/$(RWTARGET)/Docfile
+
+######################################################################
+
+defgroup:
+	-$(BINDIR)/egrep --line-number --with-filename 		      \
+	"\\\defgroup" $(DOXYSRC)
+
+offsets_message:
+	@echo building [$(RWEQUDEP)] ...
+
+offsets_clean:
+	$(RM) $(DEVDIR)/$(RWTARGET)/baequate.i $(CURDIR)/$(OBJDIR)/baequ.s
+
+offsets: offsets_message offsets_clean $(RWEQUDEP)
+
+# This compiles to assembly using target compiler
+# then parses for the offsets 
+$(DEVDIR)/$(RWTARGET)/baequate.i: $(CURDIR)/$(OBJDIR)/baequ.s
+	$(BUILDTOOLDIR)/findsyms/findsyms			\
+	-Fi$(CURDIR)/$(OBJDIR)/baequ.s				\
+	-Fo$(DEVDIR)/$(RWTARGET)/baequate.i			\
+	-A$(AS)
+
+# Define Compiler for generating assembler
+ifndef CC_ASM
+CC_ASM = $(CC)
+endif # CC_ASM
+
+# Define compiler flags for generating assembler
+ifndef CFLAGS_ASM
+CFLAGS_ASM = $(CFLAGS)
+endif # CFLAGS_ASM
+
+$(CURDIR)/$(OBJDIR)/baequ.s: $(DEVDIR)/common/baequ.c
+	$(MD) $(CURDIR)/$(OBJDIR)
+	$(CC_ASM) $(CFLAGS_ASM) -I$(SDKINCDIR) $(CODEGENCFLAGS) $(SOUT) $^
+	$(CP) $(notdir $@) $@
+	$(RM) $(notdir $@) 
+
+# devclean implemented in maketarg
+clean: checkopt
+	$(RM) -r $(CURDIR)/$(OBJDIR)
+	$(RM) $(DEVDIR)/$(RWTARGET)/baequate.i			\
+	      *.cmd						\
+	      *.err						\
+	      *.ilk						\
+	      *.lst						\
+	      *.obj						\
+	      *.pdb
+
+# delete all generated headers for the current target
+cleanheaders: checkopt
+	$(RM)                                                   \
+		$(COREHFILES)                                   \
+		$(SDKINCDIR)/rwplcore.h                         \
+		$(SDKINCDIR)/rwcore.h
+ifeq ("$(RWTARGET)","softras")
+	$(RM)	$(SDKINCDIR)/hhRasterizer.h
+endif # ifeq ("$(RWTARGET)","softras")
+
+distclean: cleanheaders clean
+	$(RM) -r obj
+	$(RM) -r $(LIBS)
+
+VERIFYEXCLUDED += $(BASEDIR)/os/$(RWOS)/osintf.c
+CVERIFY=$(filter-out $(VERIFYEXCLUDED), $(PLCORECSRC) $(CSRC))
+
+verify:
+	rwcheck $(RWCHECKFLAGS) $(CVERIFY)
+
+longline:
+	-$(BINDIR)/egrep --line-number --with-filename "................................................................................" $(CVERIFY)
+
+tabs:
+	-$(BINDIR)/egrep --line-number --with-filename " $(CVERIFY)
+
+HDEPEND = $(patsubst %.h,$(CURDIR)/%.hd, $(notdir $(HCORE)))
+
+ifeq ($(RWDEPEND), 1)
+ifdef WITH_DEPEND
+-include $(CSRC:.c=.d)
+-include $(HDEPEND)
+endif
+endif

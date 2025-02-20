@@ -1,0 +1,24 @@
+;
+; Pixel shader 
+
+; Declare pixel shader version 1.1
+ps.1.1
+
+
+tex t0              ; normal map
+tex t1              ; base texture
+texcoord t2         ; light vector
+
+; (Normal * Light)
+dp3_sat r0.rgb, t0_bx2, t2_bx2
+
+; Add prelit to ambient
+add r1, c1, v0
+
+; Modulate light color, add ambient color
+mad_sat r0.rgb, r0, c0, r1 +
+mul r0.a, c0.a, v0.a
+
+; Modulate diffuse with base texture
+mul r0.rgb, r0, t1 +
+mul r0.a, r0.a, t1.a

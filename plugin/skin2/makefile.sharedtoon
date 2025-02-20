@@ -1,0 +1,32 @@
+# makefile.sharedtoon
+
+######################
+# d3d8
+######################
+
+d3d8CSRC +=					\
+    $(CURDIR)/$(RWTARGET)/skind3d8toonshared.c
+
+######################
+# d3d9
+######################
+
+d3d9CSRC +=					\
+    $(CURDIR)/$(RWTARGET)/skind3d9toonshared.c
+
+######################
+# softras
+######################
+
+softrasCSRC +=					\
+    $(CURDIR)/$(RWTARGET)/skinsoftrastoonshared.c
+
+
+####################
+#Xbox specific stuff
+####################
+
+xboxCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinxboxtoonshared.c  \
+    $(CURDIR)/win/x86matbl.c
+

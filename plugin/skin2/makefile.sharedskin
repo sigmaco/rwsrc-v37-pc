@@ -1,0 +1,152 @@
+# makefile.sharedskin - source shared by all libs generated with skin as the "base" plugin.
+# included by makefiles for specific combination libraries.
+
+ifndef RWOPTIONS
+RWOPTIONS = $(BASEDIR)/options.mak
+endif
+-include $(RWOPTIONS)
+
+# What plugin are we building ?
+PLUGIN = rpskin
+
+# Additional common objects (rpskin.c is automatically included by plugin makefile system)
+CSRC = \
+	$(CURDIR)/bsplit.c
+
+# How do we make the plugin header file?
+PLUGINAPI =						\
+	skinapi.h
+
+#####################
+# sky2 specific stuff
+#####################
+
+sky2HDRS =
+sky2CSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skinskycommon.c
+
+
+####################
+#Xbox specific stuff
+####################
+
+xboxCSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skinxboxconstantmode.c    \
+	$(CURDIR)/$(RWTARGET)/skinxboxformat.c		\
+	$(CURDIR)/$(RWTARGET)/skinxboxinstance.c	\
+	$(CURDIR)/$(RWTARGET)/skinxboxplain.c		\
+	$(CURDIR)/$(RWTARGET)/skinxboxrender.c
+
+######################
+# GCN
+######################
+
+ifeq ("$(RWTARGET)", "gcn")
+ifeq ($(NOASM), 1)
+RWEQUDEP =
+else #
+RWEQUDEP =						\
+	$(CURDIR)/$(RWTARGET)/skinequ.i
+endif # ($(NOASM), 1)
+endif # ("$(RWTARGET)", "gcn")
+
+gcnCSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skingcn.c			\
+	$(CURDIR)/$(RWTARGET)/skinstream.c		\
+	$(CURDIR)/$(RWTARGET)/instance/instanceskin.c
+
+ifeq ($(NOASM), 1)
+else
+gcnCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinmatrixblend.c		\
+	$(CURDIR)/$(RWTARGET)/skingcnasm.c
+endif
+
+######################
+# NULLGCN
+######################
+
+ifeq ("$(RWTARGET)", "nullgcn")
+PLUGININCDIR = . $(CURDIR)/gcn
+endif
+
+nullgcnCSRC =						\
+	$(CURDIR)/gcn/skinplatform.c			\
+	$(CURDIR)/gcn/skingcn.c				\
+	$(CURDIR)/gcn/skinstream.c			\
+	$(CURDIR)/gcn/instance/instanceskin.c
+
+######################
+# d3d8
+######################
+
+d3d8CSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skind3d8.c		\
+	$(CURDIR)/$(RWTARGET)/skind3d8pipesshared.c	\
+	$(CURDIR)/$(RWOS)/ssematbl.c			\
+	$(CURDIR)/$(RWOS)/x86matbl.c
+
+######################
+# d3d9
+######################
+
+d3d9CSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skind3d9.c		\
+	$(CURDIR)/$(RWTARGET)/skind3d9generic.c		\
+	$(CURDIR)/$(RWTARGET)/skind3d9instance.c	\
+	$(CURDIR)/$(RWTARGET)/skind3d9pipesshared.c	\
+	$(CURDIR)/$(RWOS)/ssematbl.c			\
+	$(CURDIR)/$(RWOS)/x86matbl.c
+
+######################
+# opengl
+######################
+
+openglCSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skinopengl.c
+
+openglCSRC_win +=					\
+	$(CURDIR)/$(RWOS)/x86matbl.c			\
+	$(CURDIR)/$(RWOS)/ssematbl.c
+
+openglCSRC_mac  +=					\
+	$(CURDIR)/$(RWOS)/macmatbl.c
+
+openglCSRC += $(openglCSRC_$(RWOS))
+
+######################
+# softras
+######################
+
+softrasCSRC =						\
+	$(CURDIR)/$(RWTARGET)/skinplatform.c		\
+	$(CURDIR)/$(RWTARGET)/skinsoftras.c		\
+	$(CURDIR)/$(RWTARGET)/skinsoftrasgenericshared.c\
+	$(CURDIR)/$(RWOS)/x86matbl.c			\
+	$(CURDIR)/$(RWOS)/ssematbl.c
+
+######################
+# null
+######################
+
+nullCSRC =					\
+	$(CURDIR)/null/skinplatform.c   \
+	$(CURDIR)/null/skinnullshared.c
+
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+######################
+# and the generic case
+######################
+
+genericCSRC =								\
+	$(CURDIR)/$(RWTARGET)/skincommon.c				\
+	$(CURDIR)/$(RWTARGET)/skingeneric.c
+

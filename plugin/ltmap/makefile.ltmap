@@ -1,0 +1,106 @@
+# What plugin are we building ?
+PLUGIN    = rpltmap
+PLUGINAPI = rpltmap.h
+LIBNAME   = rpltmap
+
+# Who are the maintainers ?
+MAINTAINERS = iestynb
+
+# Additional objects
+CSRC = $(CURDIR)/generic.c
+
+#####################
+# sky2 specific stuff
+#####################
+
+sky2CSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+####################
+#Xbox specific stuff
+####################
+
+xboxCSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+####################
+# GCN specific stuff
+####################
+
+gcnCSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+#####################
+# d3d8 specific stuff
+#####################
+
+d3d8CSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+#####################
+# d3d9 specific stuff
+#####################
+
+d3d9CSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+#######################
+# opengl specific stuff
+#######################
+
+openglCSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+########################
+# softras specific stuff
+########################
+
+softrasCSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+#####################
+# null specific stuff
+#####################
+
+nullCSRC =					\
+	$(CURDIR)/null/pipes.c
+
+nullgcnCSRC = $(nullCSRC)
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+######################
+# and the generic case
+######################
+
+genericCSRC =					\
+	$(CURDIR)/$(RWTARGET)/pipes.c
+
+######################################################################
+
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/makeplug
+
+ifeq ($(findstring null,$(RWTARGET)),null)
+CFLAGS += -I./null
+else
+CFLAGS += -I./$(RWTARGET)
+endif
+
+
+######################################################################
+
+########################
+# softras specific stuff
+########################
+
+ifeq ("$(RWTARGET)", "softras")
+
+CFLAGS +=					\
+	-I$(BASEDIR)/driver/softras/hybrid/include
+
+endif # RWTARGET==softras
+
+#####################################################################

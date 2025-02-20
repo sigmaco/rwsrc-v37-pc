@@ -1,0 +1,99 @@
+
+ifndef RWSW15
+RWSW15 = 0
+endif
+
+ifndef WORLDTOOLBOX
+WORLDTOOLBOX = 1
+endif
+
+########################
+# Set up the directories
+########################
+SRCDIR     = $(BASEDIR)/src
+WORLDDIR   = $(BASEDIR)/world
+OSDIR      = $(BASEDIR)/os/$(RWOS)
+DEVDIR     = $(BASEDIR)/driver
+PLCOREDIR  = $(BASEDIR)/src/plcore
+
+DRVINC = -I$(DEVDIR)/$(RWTARGET)
+
+#########
+#
+# By default Object files will have the extension .ob?  where the ? character
+# is replaced with a unique character for each plugin. The individual
+# maketarg files can override this root value to give alternative extensions
+#
+##########
+
+ifndef O
+O = obj
+endif
+
+ifndef ASM
+ASM = asm
+endif
+
+CORELIB   = $(SDKLIBDIR)/$(LIBPREFIX)rwcore.$(LIBEXT)
+WORLDLIB  = $(SDKLIBDIR)/$(LIBPREFIX)rpworld.$(LIBEXT)
+PLCORELIB = $(SDKLIBDIR)/$(LIBPREFIX)rwplcore.$(LIBEXT)
+
+DRVSPECIFICSRCDIR = $(DEVDIR)/$(RWTARGET)
+DRVGENERICSRCDIR  = $(DEVDIR)/common
+DRVSTUBSRCDIR     = $(DEVDIR)/stub
+
+DRVSPECIFICOBJDIR = $(OBJDIR)
+DRVGENERICOBJDIR = $(OBJDIR)
+
+DRVPATH = $(DRVSPECIFICSRCDIR) $(DRVGENERICSRCDIR) $(DRVSTUBSRCDIR)
+
+########################
+# Start with basic flags
+########################
+CFLAGS += $(DRVDEF) $(DEVEXTRAS)
+C_INC += -I$(SRCDIR) -I$(PLCOREDIR) -I$(OSDIR) -I$(DEVDIR)/common $(DRVINC)
+PL_HEADER =
+
+##########################
+# Include flags for incgen
+##########################
+CORE_INC    = -I$(SRCDIR) -I$(DEVDIR)/common $(DRVINC)
+PLCORE_INC  = -I$(OSDIR) -I$(PLCOREDIR) -I$(DEVDIR)/common $(DRVINC)
+
+#######################################
+# compiler flags - 15 bit rasterisation
+#######################################
+ifeq ($(RWSW15), 1)
+CFLAGS += -DFB1555
+endif
+
+##############
+# RWEVALUATION
+##############
+ifeq ($(RWEVALUATION), 1)
+CFLAGS += -DRWEVALUATION
+endif
+
+########################
+# Build Rules
+########################
+
+.SUFFIXES: .c .$(O) .$(ASM)
+
+# VPATH += $(PLCOREDIR) $(SRCDIR) $(OSDIR) $(DRVPATH)
+
+# Use a separate .obj file suffix to allow different error macros to be
+# define for each module
+
+$(OBJDIR)/%.$(O) : %.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS) $(ERRCOREFLAGS) $(COUT)$@ $<
+
+ifneq ($(ASM), asm)
+%.$(ASM) : %.asm
+	$(SED) -f $(BASEDIR)/buildtools/nasm/masm2nasm.sed $< > $@
+#	$(SED) -f $(BASEDIR)/buildtools/nasm/masm2nasm.sed $< > $(<D)/$@
+endif
+
+$(OBJDIR)/%.$(O) : %.$(ASM)
+	$(AS) $(ASFLAGS) $(AOUT)$@ $<
+

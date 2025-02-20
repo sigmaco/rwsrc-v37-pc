@@ -1,0 +1,15 @@
+PLUGIN = rtmipk
+LIBNAME = rtmipk
+
+# Who are the maintainers ?
+MAINTAINERS = jamesa
+
+CSRC =						\
+	$(CURDIR)/mipkcalc.c			\
+	$(CURDIR)/mipkgeneric.c		\
+	$(CURDIR)/mipkworld.c
+	
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/maketool

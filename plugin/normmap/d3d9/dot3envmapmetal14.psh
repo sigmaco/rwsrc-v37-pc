@@ -1,0 +1,35 @@
+;
+; Pixel shader 
+
+; Declare pixel shader version 1.4
+ps.1.4
+
+def c2, 0.5, 0.5, 0.0, 1.0
+
+texld r0, t0            ; normal map
+
+texcrd r1.xyz, t2       ; env map matrix row 0
+texcrd r2.xyz, t3       ; env map matrix row 1
+
+dp3 r4.xz, r0_bx2, r1  ; only need to write to x, but this helps to initialize z
+dp3 r4.y, r0_bx2, r2
+
+mad r4.xyz, r4, c2, c2   ; convert to 0..1 range, set z to zero
+
+phase
+
+texld r1, t1            ; base texture
+texld r3, r4            ; env map texture
+
+; Normal dot Light
+dp3_sat r0.rgb, r0_bx2, v0_bx2
+
+; Modulate light color, add ambient color
+mad_sat r0.rgb, r0, c0, c1 +
+mov r0.a, c0.a          ; c0.a has material alpha
+
+; Modulate envmap with shininess and add diffuse component
+mad r0.rgb, r3, c1.a, r0
+
+; Modulate (diffuse + envmap) with base texture
+mul r0, r0, r1

@@ -148,7 +148,7 @@ _rpD3D9UsageFlagOpen(void *object,
     RWFUNCTION(RWSTRING("_rpD3D9UsageFlagOpen"));
 
     /* one more module instance */
-    _RpUsageFlagsModule.numInstances++;
+    ++_RpUsageFlagsModule.numInstances;
 
     /* Init only in the first instance */
     if (1 == _RpUsageFlagsModule.numInstances)
@@ -177,7 +177,7 @@ _rpD3D9UsageFlagClose(void *object,
     RWASSERT(_RpUsageFlagsModule.numInstances);
 
     /* one less module instance */
-    _RpUsageFlagsModule.numInstances--;
+    --_RpUsageFlagsModule.numInstances;
 
     if (_RpUsageFlagsModule.numInstances == 0)
     {

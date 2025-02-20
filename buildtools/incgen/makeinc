@@ -1,0 +1,25 @@
+
+
+INCDIR = /rw30/rwsdk/buildtools/incgen
+
+COMMON = $(INCDIR)/lexer.c
+
+CFLAGS = -Wall -O -mno-zap
+
+CC = vpcc
+
+
+all: incgen.00
+
+incgen.00 :	$(COMMON)
+	$(CC) $(INCDIR)/main.c $(COMMON) $(CFLAGS) -I$(INCDIR) -DYY_ALWAYS_INTERACTIVE -DYY_ALWAYS_INTERACTIVE -o $(INCDIR)/incgen.00
+
+clean:
+	rm $(INCDIR)/*.o
+	rm $(INCDIR)/incgen.00
+
+# Rules
+%.s : %.c
+	$(CC) -c $(CFLAGS) -I$(INCDIR) $<
+
+

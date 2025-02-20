@@ -1,0 +1,121 @@
+# What plugin are we building ?
+PLUGIN = rpnormmap
+LIBNAME = rpnormmapskin
+
+# Who are the maintainers ?
+MAINTAINERS = davidg
+
+OPTDISTCLEAN = localdistclean
+OPTCLEAN = localclean
+
+# Additional objects
+CSRC =									\
+	$(CURDIR)/rpnormmap.c
+
+#####################
+# Xbox specific stuff
+#####################
+
+xboxHDRS =								\
+	$(CURDIR)/$(RWOS)/dot3.h                        \
+	$(CURDIR)/$(RWOS)/dot3prelit.h                  \
+	$(CURDIR)/$(RWOS)/dot3envmap.h                  \
+	$(CURDIR)/$(RWOS)/dot3envmapprelit.h            \
+	$(CURDIR)/$(RWOS)/dot3notexture.h               \
+	$(CURDIR)/$(RWOS)/dot3prelitnotexture.h         \
+	$(CURDIR)/$(RWOS)/dot3envmapnotexture.h         \
+	$(CURDIR)/$(RWOS)/dot3envmapprelitnotexture.h
+
+xboxCSRC 	=                           \
+    $(CURDIR)/$(RWOS)/normmapxbox.c     \
+    $(CURDIR)/$(RWOS)/normmapxboxskin.c
+
+#####################
+# d3d9 specific stuff
+#####################
+
+d3d9CSRC 	=                           \
+    $(CURDIR)/$(RWTARGET)/normmapd3d9.c     \
+    $(CURDIR)/$(RWTARGET)/normmapd3d9skin.c
+
+#####################
+# null specific stuff
+#####################
+
+nullCSRC =								\
+	$(CURDIR)/null/normmapnull.c        \
+	$(CURDIR)/null/normmapnullskin.c
+
+nullgcnCSRC = $(nullCSRC)
+nullskyCSRC = $(nullCSRC)
+nullxboxCSRC = $(nullCSRC)
+
+d3d8CSRC = $(nullCSRC)
+openglCSRC = $(nullCSRC)
+skyCSRC = $(nullCSRC)
+gcnCSRC = $(nullCSRC)
+
+######################################################################
+######################################################################
+
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/makeplug
+
+ifeq ("$(RWTARGET)", "xbox")
+CFLAGS += -I./$(RWTARGET)
+else
+ifeq ("$(RWTARGET)", "d3d9")
+CFLAGS += -I./$(RWTARGET)
+else
+CFLAGS += -I./null
+endif
+endif
+
+######################################################################
+######################################################################
+
+#####################
+# xbox specific stuff
+#####################
+
+ifeq ("$(RWTARGET)", "xbox")
+
+LOCALDISTCLEAN=localxboxdistclean
+
+localxboxdistclean:
+	$(RM) $(RWOS)/dot3.h                        \
+	$(RM) $(RWOS)/dot3prelit.h                  \
+	$(RM) $(RWOS)/dot3envmap.h                  \
+	$(RM) $(RWOS)/dot3envmapprelit.h            \
+	$(RM) $(RWOS)/dot3notexture.h               \
+	$(RM) $(RWOS)/dot3prelitnotexture.h         \
+	$(RM) $(RWOS)/dot3envmapnotexture.h         \
+	$(RM) $(RWOS)/dot3envmapprelitnotexture.h
+
+# add new rules for vertex shader headers
+%.h : %.vsh
+	$(VSHASM) $(VSHFLAGS) /I xbox $^
+
+# add new rules for pixel shader headers
+%.h : %.psh
+	$(VSHASM) $(VSHFLAGS) /I xbox $^
+
+$(OBJDIR)/normmapxbox.$(O):			\
+	normmapxbox.c   		        \
+	dot3.h                          \
+	dot3prelit.h                    \
+	dot3envmap.h                    \
+	dot3envmapprelit.h              \
+	dot3notexture.h                 \
+	dot3prelitnotexture.h           \
+	dot3envmapnotexture.h           \
+	dot3envmapprelitnotexture.h
+
+endif
+
+#####################################################################
+
+localclean: $(LOCALCLEAN)
+localdistclean: $(LOCALDISTCLEAN)

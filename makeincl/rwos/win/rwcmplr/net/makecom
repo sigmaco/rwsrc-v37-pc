@@ -1,0 +1,133 @@
+########################
+# These are for visual C
+########################
+
+
+# -GB flag remove
+# CFLAGS += -GB -Zl
+CFLAGS += -Zl
+CFLAGS += -nologo -W3 -DWIN32 -D_WINDOWS -D_MBCS -D__MSC__ \
+	-DVC_EXTRALEAN  -DWIN32_EXTRA_LEAN -DWIN32_LEAN_AND_MEAN -c
+
+LFLAGS += -NODEFAULTLIB
+LFLAGS += -nologo -verbose
+
+LIBFLAGS = -nodefaultlib -nologo -verbose
+
+
+ifeq ($(RWDLL),1)
+# dll generation requires all libs to be built using multithreaded flags
+# RWDLL = 0이라도 멀티쓰레드로 고침. by nonstopdj.
+C_SHARED = -MD
+else
+ifeq ($(SMALLCODE), 1)
+C_SHARED = -MD
+C_OPT = -O1 -Ob2
+else
+C_SHARED = -MD
+C_OPT = -O2 -Ob2
+endif
+endif
+
+ifeq ($(COPTIMIZE), 0)
+ifeq ($(CPROFILE), 0)
+ifeq ($(MSWST), 0)
+CFLAGS += -Ob0 -Oy- -Od
+endif
+else
+# Inlining confuses VTune profiling; turn it off with -Ob0
+CFLAGS += -Ob0gity -Gfys
+endif
+else
+CFLAGS += $(C_OPT)
+endif
+
+# Do not build with -GZ since not all x86 runtimes support __chkesp
+
+ifeq ($(CDEBUG), 1)
+CFLAGS += -Zi -D_DEBUG -UNDEBUG $(C_SHARED)d \
+	  -Fd$(subst .$(LIBEXT),.pdb,$(TARGETLIB))
+LFLAGS += -debug
+else
+ifeq ($(CPROFILE), 1)
+CFLAGS += -Zi -U_DEBUG -DNDEBUG $(C_SHARED) \
+	  -Fd$(subst .$(LIBEXT),.pdb,$(TARGETLIB))
+LFLAGS += -debug -fixed:no
+else
+ifeq ($(MSWST), 1)
+CFLAGS += -DNDEBUG -GX -Gh -Gs -O2 -Ob1 -Oity -U_CRTDBG_MAP_ALLOC -U_DEBUG -Zi
+LFLAGS += -PDB:none -debug:full -debugtype:cv wst.lib
+else
+CFLAGS += -U_DEBUG -DNDEBUG $(C_SHARED) -Zi \
+	  -Fd$(subst .$(LIBEXT),.pdb,$(TARGETLIB))
+endif
+endif
+endif
+
+ifeq ($(NOASM), 1)
+CFLAGS += -DNOASM
+endif
+
+ifeq ("$(COMPILER)", "")
+COMPILER=cl.exe
+endif
+
+ifeq ("$(LINKER)", "")
+# It should be this, but we have a rather strange idea of LINKER
+LINKER=link.exe
+endif
+
+CC	= $(COMPILER)
+CPP	= $(COMPILER)
+COUT	= -Fo
+LOUT	= -Fe
+SOUT	= -c -Fa$(@F)
+CPPOPT	= -EP
+
+AS		= ml
+AOUT	= -nologo -Fo
+ASFLAGS   = -I$(BASEDIR)/driver/common			\
+	    -I$(BASEDIR)/makeincl/rwos/$(RWOS)/masm	\
+	    -I$(SRCDIR)					\
+	    -I$(DEVDIR)/$(RWTARGET)			\
+	    -c						\
+	    -W2						\
+	    -Cp						\
+	    -Zm						\
+	    -DBCC					\
+	    -DSTACK					\
+	    -coff
+
+ifeq ("$(RWSW15)", "1")
+ASFLAGS  += -DFB1555
+endif
+
+# Librarian options (for append, we include the source lib again)
+AR		= lib.exe $(LIBFLAGS)
+ARCREATEFLAGS   = -out:$@ $^
+ARAPPENDFLAGS	= -out:$@ $@
+ifneq ("$(RWTARGET)","d3d9")
+ARPOSTCHECK     = @dumpbin /ARCHIVEMEMBERS /RELOCATIONS $@ | egrep "(_ftol|Archive member)" | egrep -B1 _ftol || :
+else
+ARPOSTCHECK	=
+endif
+
+VSHASM		= nvasm.exe
+ifeq ($(CDEBUG), 1)
+VSHFLAGS	= -Od -h -nologo
+else
+VSHFLAGS	= -h -v -nologo
+endif
+
+#.SUFFIXES: .h .vsh
+
+$(OBJDIR)/%.h: %.vsh
+	$(VSHASM) $(VSHFLAGS) $^
+
+# How to run programs (no need for shell/simulator)
+RUNIT		=
+
+# We do want assembler
+ifeq ("$(NOASM)", "")
+NOASM = 0
+endif

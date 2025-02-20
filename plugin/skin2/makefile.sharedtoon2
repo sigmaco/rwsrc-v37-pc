@@ -1,0 +1,11 @@
+# makefile.sharedtoon2
+
+#####################
+# Xbox specific stuff
+#####################
+
+ifeq ("$(RWTARGET)", "xbox")
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/win/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS) \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+endif

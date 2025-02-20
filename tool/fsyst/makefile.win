@@ -1,0 +1,7 @@
+# Win extension for file system build
+CSRC =				\
+	$(CURDIR)/rtfsyst.c	\
+	$(CURDIR)/rtfsmgr.c	\
+	$(CURDIR)/win/rtfswin.c
+
+CFLAGS += -I$(CURDIR)/win

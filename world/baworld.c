@@ -200,6 +200,11 @@ WorldSectorRenderAtomics(RpWorldSector * worldSector)
     RWFUNCTION(RWSTRING("WorldSectorRenderAtomics"));
     RWASSERT(worldSector);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     /* Coll objects first */
     cur = rwLinkListGetFirstLLLink(&worldSector->collAtomicsInWorldSector);
     end = rwLinkListGetTerminator(&worldSector->collAtomicsInWorldSector);
@@ -293,8 +298,8 @@ WorldBuildMeshAtomicSector(RpWorld * world,
     numMaterials = RpWorldGetNumMaterials(world);
 
     RWASSERTM( ( !((worldSector->numTriangles>0) && (0==numMaterials)) ),
-               (RWSTRING("Must have materials assigned to triangles to unlock "
-                         "the world")));
+               (RWSTRING("Must have materials assigned to triangles to unlock ")
+                RWSTRING("the world")));
     if (numMaterials)
     {
         textureArray = RwMalloc(sizeof(RwTexture *) * numMaterials,
@@ -304,7 +309,7 @@ WorldBuildMeshAtomicSector(RpWorld * world,
         pipelineArray = RwMalloc(sizeof(RxPipeline *) * numMaterials,
             rwMEMHINTDUR_FUNCTION | rwID_WORLDMODULE);
 
-        for (i = 0; i < worldSector->numTriangles; i++)
+        for (i = 0; i < worldSector->numTriangles; ++i)
         {
             RpTriangle  *tri;
             RpMaterial  *material;
@@ -318,11 +323,11 @@ WorldBuildMeshAtomicSector(RpWorld * world,
             tri = &worldSector->triangles[i];
             material = matBase[tri->matIndex];
             RWASSERTM(NULL != material,
-                      (RWSTRING("All triangles in a world must have materials "
-                                "assigned to unlock the world")));
+                      (RWSTRING("All triangles in a world must have materials ")
+                       RWSTRING("assigned to unlock the world")));
 
             texture = RpMaterialGetTexture(material);
-            for (texIndex = 0; texIndex < numTex; texIndex++)
+            for (texIndex = 0; texIndex < numTex; ++texIndex)
             {
                 if (textureArray[texIndex] == texture)
                 {
@@ -334,14 +339,14 @@ WorldBuildMeshAtomicSector(RpWorld * world,
             if (texIndex == numTex)
             {
                 textureArray[texIndex] = texture;
-                numTex++;
+                ++numTex;
             }
             if (texture)
             {
                 raster = RwTextureGetRaster(texture);
             }
 
-            for (rasIndex = 0; rasIndex < numRas; rasIndex++)
+            for (rasIndex = 0; rasIndex < numRas; ++rasIndex)
             {
                 if (rasterArray[rasIndex] == raster)
                 {
@@ -353,11 +358,11 @@ WorldBuildMeshAtomicSector(RpWorld * world,
             if (rasIndex == numRas)
             {
                 rasterArray[rasIndex] = raster;
-                numRas++;
+                ++numRas;
             }
 
             RpMaterialGetPipeline(material, &pipeline);
-            for (pipIndex = 0; pipIndex < numPip; pipIndex++)
+            for (pipIndex = 0; pipIndex < numPip; ++pipIndex)
             {
                 if (pipelineArray[pipIndex] == pipeline)
                 {
@@ -369,7 +374,7 @@ WorldBuildMeshAtomicSector(RpWorld * world,
             if (pipIndex == numPip)
             {
                 pipelineArray[pipIndex] = pipeline;
-                numPip++;
+                ++numPip;
             }
 
             _rpBuildMeshAddTriangle(buildMesh, material,
@@ -418,6 +423,11 @@ _rpWorldSectorDeinstanceAll(RpSector * sector)
 {
     RWFUNCTION(RWSTRING("_rpWorldSectorDeinstanceAll"));
     RWASSERT(sector);
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     switch (sector->type)
     {
@@ -504,6 +514,11 @@ _rpWorldSectorDestroyRecurse(RpSector * sector)
     RWFUNCTION(RWSTRING("_rpWorldSectorDestroyRecurse"));
     RWASSERT(sector);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     switch (sector->type)
     {
         case rwSECTORATOMIC:
@@ -566,7 +581,7 @@ _rpWorldSectorDestroyRecurse(RpSector * sector)
                     worldSector->triangles = (RpTriangle *)NULL;
                 }
 
-                for (i = 0; i < rwMAXTEXTURECOORDS;i ++)
+                for (i = 0; i < rwMAXTEXTURECOORDS;++i)
                 {
                     if (worldSector->texCoords[i])
                     {
@@ -695,7 +710,7 @@ WorldClose( void *instance,
     _rpWorldPipelineClose();
 
     /* One less module instance */
-    worldModule.numInstances--;
+    --worldModule.numInstances;
 
     /* Success */
     RWRETURN(instance);
@@ -739,7 +754,7 @@ WorldOpen( void *instance,
     rwLinkListInitialize(&RPWORLDGLOBAL(worldListHead));
 
     /* One more module instance */
-    worldModule.numInstances++;
+    ++worldModule.numInstances;
 
     /* Success */
     RWRETURN(instance);
@@ -808,6 +823,11 @@ _rpWorldForAllGlobalLights(RpLightCallBack callBack, void *pData)
     RWASSERT(world);
     RWASSERT(callBack);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     /* Directional light it */
     cur = rwLinkListGetFirstLLLink(&world->directionalLightList);
     end = rwLinkListGetTerminator(&world->directionalLightList);
@@ -850,6 +870,11 @@ _rpWorldSectorForAllLocalLights(RpWorldSector * sector,
     RWFUNCTION(RWSTRING("_rpWorldSectorForAllLocalLights"));
     RWASSERT(sector);
     RWASSERT(callBack);
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     /* Lights in the sector */
     cur = rwLinkListGetFirstLLLink(&sector->lightsInWorldSector);
@@ -996,7 +1021,7 @@ _rpWorldSetupSectorBoundingBoxes(RpWorld *world)
             /* Pop stack */
             sector = sectorStack[nStack];
             bbox = bboxStack[nStack];
-            nStack--;
+            --nStack;
         }
         else
         {
@@ -1037,6 +1062,11 @@ _rpWorldRegisterWorld(RpWorld * world, RwUInt32 memorySize)
     RWASSERT(world);
     RWASSERTISTYPE(world, rpWORLD);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     listedWorld = (RpListedWorld *)
         RwFreeListAlloc(RPWORLDGLOBAL(worldListFreeList),
                         rwMEMHINTDUR_GLOBAL | rwID_WORLDMODULE);
@@ -1067,6 +1097,11 @@ _rpWorldUnregisterWorld(RpWorld * world)
     RWFUNCTION(RWSTRING("_rpWorldUnregisterWorld"));
     RWASSERT(world);
     RWASSERTISTYPE(world, rpWORLD);
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     cur = rwLinkListGetFirstLLLink(&RPWORLDGLOBAL(worldListHead));
     end = rwLinkListGetTerminator(&RPWORLDGLOBAL(worldListHead));
@@ -1309,6 +1344,11 @@ RpWorldSectorGetWorld(const RpWorldSector * sector)
     RWAPIFUNCTION(RWSTRING("RpWorldSectorGetWorld"));
     RWASSERT(worldModule.numInstances);
     RWASSERT(sector);
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     cur = rwLinkListGetFirstLLLink(&RPWORLDGLOBAL(worldListHead));
     end = rwLinkListGetTerminator(&RPWORLDGLOBAL(worldListHead));
@@ -2179,6 +2219,11 @@ RpWorldForAllClumps(RpWorld * world, RpClumpCallBack fpCallBack,
     RWASSERT(world);
     RWASSERTISTYPE(world, rpWORLD);
 
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
+
     if (!rwLinkListEmpty(&world->clumpList))
     {
         RwLLLink           *cur, *term, *next;
@@ -2251,7 +2296,7 @@ RpWorldForAllMaterials(RpWorld * world, RpMaterialCallBack fpCallBack,
     RWASSERT(worldModule.numInstances);
 
     numMaterials = RpWorldGetNumMaterials(world);
-    for (i = 0; i < numMaterials; i++)
+    for (i = 0; i < numMaterials; ++i)
     {
         RpMaterial         *material;
 
@@ -2308,6 +2353,11 @@ RpWorldForAllLights(RpWorld * world, RpLightCallBack fpCallBack,
     RWASSERT(worldModule.numInstances);
     RWASSERT(world);
     RWASSERTISTYPE(world, rpWORLD);
+
+	//@{ 20050513 DDonSS : Threadsafe
+	// Threadsafe Check
+	THREADSAFE_CHECK_ISCALLEDMAIN();
+	//@} DDonSS
 
     /* First the directional and ambient lights */
     if (!rwLinkListEmpty(&world->directionalLightList))
@@ -2867,4 +2917,15 @@ RpWorldPluginAttach(void)
     RWRETURN(TRUE);
 }
 
+//@{ Jaewon 20040923
+// in order to support archlord local lights.
+//@{ Jaewon 20050418
+// Max number of local lights : 2 -> 8
+RpWorldGetAtomicLocalLightsCallBack getAtomicLocalLightsCB = NULL;
+void RpWorldSetGetAtomicLocalLightsCallBack(RpWorldGetAtomicLocalLightsCallBack getCB)
+{
+	getAtomicLocalLightsCB = getCB;
+}
+//@} Jaewon
+//@} Jaewon
 

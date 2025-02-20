@@ -1,0 +1,45 @@
+# makefile.sharedmatfx
+# Source used for any combination library that includes matfx extensions for skin
+
+####################
+#Xbox
+####################
+
+xboxCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/shaderfragmtxbox.c	\
+	$(CURDIR)/$(RWTARGET)/skinxboxmatfxshared.c
+
+######################
+# GCN
+######################
+
+gcnCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinmatfxgcn.c
+
+######################
+# NULLGCN
+######################
+
+nullgcnCSRC +=						\
+	$(CURDIR)/gcn/skinmatfxgcn.c
+
+######################
+# d3d8
+######################
+
+d3d8CSRC +=						\
+    $(CURDIR)/$(RWTARGET)/skind3d8matfxshared.c
+
+######################
+# d3d9
+######################
+
+d3d9CSRC +=						\
+    $(CURDIR)/$(RWTARGET)/skind3d9matfxshared.c
+
+######################
+# softras
+######################
+
+softrasCSRC +=						\
+	$(CURDIR)/$(RWTARGET)/skinsoftrasmatfxshared.c

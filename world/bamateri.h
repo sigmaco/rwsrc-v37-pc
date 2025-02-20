@@ -108,7 +108,7 @@ typedef RpMaterial *(*RpMaterialCallBack)(RpMaterial *material, void *data);
 #define RpMaterialAddRefVoidMacro(_material)                        \
 MACRO_START                                                         \
 {                                                                   \
-    (_material)->refCount++;                                        \
+    ++(_material)->refCount;                                        \
 }                                                                   \
 MACRO_STOP
 

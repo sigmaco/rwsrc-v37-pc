@@ -1,0 +1,20 @@
+# makefile.sharedmatfx2 - 2nd part of make process shared by all skin libs
+# generated with matfx extension.
+# calls makeplug/makeopt, adds misc target dependent objects, cflags.
+# included by makefiles for specific combination libraries.
+
+#####################
+# GCN specific stuff
+#####################
+
+ifeq ("$(RWTARGET)", "gcn")
+CFLAGS +=		\
+	 -I../matfx	\
+	 -I../matfx/gcn
+endif
+
+ifeq ("$(RWTARGET)", "nullgcn")
+CFLAGS +=		\
+	 -I../matfx	\
+	 -I../matfx/gcn
+endif

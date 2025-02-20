@@ -1,0 +1,538 @@
+# Common Make options used in the construction of the RenderWare SDK and
+# plugin libraries
+
+ifndef MAKEOPTINCLUDED
+MAKEOPTINCLUDED = 1
+
+# Include user custom options file. These options define the behaviour of the
+# current build. Note: the options.mak file is taken from the directory that
+# make is called from - not the directory containing this file.
+
+# all directories are defined relative to the rwsdk BASEDIR
+ifndef BASEDIR
+BASEDIR = $(CURDIR)
+endif
+
+ifndef RWOPTIONS
+RWOPTIONS = $(BASEDIR)/options.mak
+endif
+-include $(RWOPTIONS)
+
+# Check that the required build options (RWTARGET, RWCOMPILER, RWOS) have been
+# defined.
+
+checkopt:
+ifeq ("$(RWTARGET)", "")
+	@echo ERROR: target undefined
+	@echo
+	@error
+endif
+ifeq ("$(RWCOMPILER)", "")
+	@echo ERROR: compiler undefined
+	@echo
+	@error
+endif
+ifeq ("$(RWOS)", "")
+	@echo
+	@echo ERROR: os undefined
+	@error
+endif
+
+######################################################################
+# If user has not specified buld options via options.mak then use these
+# default values
+
+# by default, automatic dependency generation is off
+ifndef RWDEPEND
+RWDEPEND = 0
+endif
+
+# by default, C profiling is off
+ifndef CPROFILE
+CPROFILE = 0
+endif
+
+# by default, C profiling is off
+ifndef RW31DIRS
+RW31DIRS = 0
+endif
+
+# by default, MicroSoft Working Set Tuner is off
+ifndef MSWST
+MSWST = 0
+endif
+
+# by default, PS2 Colour DMA off
+ifndef COLOURDMA
+COLOURDMA=0
+endif
+
+# by default, C optimisation is off when a C debug build is used.
+ifndef COPTIMIZE
+ifeq ($(CDEBUG), 0)
+ifeq ($(CPROFILE), 0)
+ifeq ($(MSWST), 0)
+COPTIMIZE = 1
+else
+COPTIMIZE = 0
+endif
+else
+COPTIMIZE = 0
+endif
+else
+COPTIMIZE = 0
+endif
+endif
+
+# by default, parameter validation is off for a non RWDEBUG build
+ifndef RWVALIDATEPARAM
+ifeq ($(RWDEBUG), 1)
+RWVALIDATEPARAM = 1
+else
+RWVALIDATEPARAM = 0
+endif
+endif
+
+# by default, metrics are disabled
+ifndef RWMETRICS
+RWMETRICS=0
+endif
+
+# by default, single precsion floating point maths is off
+ifndef RW_USE_SPF
+RW_USE_SPF = 0
+endif
+
+# by default, inline suppression is off
+ifndef RWSUPPRESSINLINE
+RWSUPPRESSINLINE = 0
+endif
+
+# by default, inline optimization pragma suppression is off
+ifndef RWSUPPRESSOPTIMIZATIONPRAGMAS
+RWSUPPRESSOPTIMIZATIONPRAGMAS = 0
+endif
+
+# by default, _IBM_CHAR is off
+ifndef _IBM_CHAR
+_IBM_CHAR = 0
+endif
+
+# by default, NOSSEASM is off
+ifndef NOSSEASM
+NOSSEASM = 0
+endif
+
+# by default, DLL generation is off
+ifndef RWDLL
+RWDLL = 0
+endif
+
+# by default build all libraries
+ifndef RWONLYPLCORE
+RWONLYPLCORE = 0
+endif
+
+# by default disable stack depth checks on non RWTRACE builds
+ifndef RWSTACKDEPTHCHECKING
+RWSTACKDEPTHCHECKING= 0
+endif
+
+
+######################################################################
+
+# Define the common directories
+BUILDTOOLDIR = $(BASEDIR)/buildtools
+
+# binaries used in the build process
+ifndef BINDIR
+BINDIR     = $(BASEDIR)/bin
+endif
+
+# define the directory where object files and libraries will be located.
+# Note: each target creates a separate set of object, library and header files
+
+ifeq ($(RWFULLPLATFORM), 1)
+RWPLATFORM    = $(RWOS)/$(RWCOMPILER)/$(RWTARGET)
+else
+RWPLATFORM    = $(RWTARGET)
+endif  # ifeq ($(RWFULLPLATFORM), 1)
+
+ifeq ($(RWMETRICS), 1)
+ifeq ("$(RWOUTPUT)", "")
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/metrics
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/metrics
+OBJDIR       = obj/$(RWPLATFORM)m
+DEPDIR       = dep/$(RWPLATFORM)m
+else
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/$(RWOUTPUT)/metrics
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/$(RWOUTPUT)/metrics
+OBJDIR       = obj/$(RWPLATFORM)m/$(RWOUTPUT)
+DEPDIR       = dep/$(RWPLATFORM)m/$(RWOUTPUT)
+endif
+else
+ifeq ($(RWDEBUG), 1)
+ifeq ("$(RWOUTPUT)", "")
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/debug
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/debug
+OBJDIR       = obj/$(RWPLATFORM)d
+DEPDIR       = dep/$(RWPLATFORM)d
+else
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/$(RWOUTPUT)/debug
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/$(RWOUTPUT)/debug
+OBJDIR       = obj/$(RWPLATFORM)d/$(RWOUTPUT)
+DEPDIR       = dep/$(RWPLATFORM)d/$(RWOUTPUT)
+endif
+else
+ifeq ($(CPROFILE), 1)
+ifeq ("$(RWOUTPUT)", "")
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/profile
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/profile
+OBJDIR       = obj/$(RWPLATFORM)p
+DEPDIR       = dep/$(RWPLATFORM)p
+else
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/$(RWOUTPUT)/profile
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/$(RWOUTPUT)/profile
+OBJDIR       = obj/$(RWPLATFORM)p/$(RWOUTPUT)
+DEPDIR       = dep/$(RWPLATFORM)p/$(RWOUTPUT)
+endif
+else
+ifeq ($(MSWST), 1)
+ifeq ("$(RWOUTPUT)", "")
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/mswst
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/mswst
+OBJDIR       = obj/$(RWPLATFORM)wst
+DEPDIR       = dep/$(RWPLATFORM)wst
+else
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/$(RWOUTPUT)/mswst
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/$(RWOUTPUT)/mswst
+OBJDIR       = obj/$(RWPLATFORM)wst/$(RWOUTPUT)
+DEPDIR       = dep/$(RWPLATFORM)wst/$(RWOUTPUT)
+endif
+else
+ifeq ($(RW31DIRS), 1)
+ifeq ("$(RWOUTPUT)", "")
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)
+OBJDIR       = obj/$(RWPLATFORM)
+DEPDIR       = dep/$(RWPLATFORM)
+else
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/$(RWOUTPUT)
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/$(RWOUTPUT)
+OBJDIR       = obj/$(RWPLATFORM)/$(RWOUTPUT)
+DEPDIR       = dep/$(RWPLATFORM)/$(RWOUTPUT)
+endif
+else
+ifeq ("$(RWOUTPUT)", "")
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/release
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/release
+OBJDIR       = obj/$(RWPLATFORM)r
+DEPDIR       = dep/$(RWPLATFORM)r
+else
+SDKLIBDIR    = $(BASEDIR)/lib/$(RWPLATFORM)/$(RWOUTPUT)/release
+SDKDLLDIR    = $(BASEDIR)/dll/$(RWPLATFORM)/$(RWOUTPUT)/release
+OBJDIR       = obj/$(RWPLATFORM)r/$(RWOUTPUT)
+DEPDIR       = dep/$(RWPLATFORM)r/$(RWOUTPUT)
+endif
+endif
+endif
+endif
+endif
+endif
+
+SDKINCDIR    = $(BASEDIR)/include/$(RWPLATFORM)
+
+SDKAUTODOCDIR= $(BASEDIR)/autodocs
+SDKDOCDIR    = $(SDKAUTODOCDIR)/rtf
+SDKHLPDIR    = $(SDKAUTODOCDIR)/hlp
+SDKHTMDIR    = $(SDKAUTODOCDIR)/htm
+
+# Library prefix and extension - optional
+ifndef LIBPREFIX
+LIBPREFIX =
+endif
+
+ifndef LIBEXT
+LIBEXT = lib
+endif
+
+# Object extension
+ifndef O
+O = obj
+endif
+
+# ASM extension
+ifndef S
+S = s
+endif
+
+# Basic compilation flags
+CFLAGS += -I. -I$(SDKINCDIR) $(C_INC)
+CODEGENCFLAGS +=
+
+######################################################################
+# CFLAGS options
+
+# Turn on RenderWare debug
+ifeq ($(RWDEBUG), 1)
+CFLAGS += -DRWDEBUG
+endif
+
+# Turn on parameter validation
+ifeq ($(RWVALIDATEPARAM), 1)
+CFLAGS += -DRWVALIDATEPARAM
+endif
+
+# Turn on metrics
+ifeq ($(RWMETRICS), 1)
+CFLAGS += -DRWMETRICS
+endif
+
+# Turn on RenderWare memory debug -- for internal/CSL use.
+ifeq ($(RWMEMDEBUG), 1)
+CFLAGS += -DRWMEMDEBUG
+endif
+
+# Turn on verbose RenderWare debug -- for internal/CSL use.
+ifeq ($(RWVERBOSE), 1)
+CFLAGS += -DRWVERBOSE
+endif
+
+# Turn on tracing
+ifeq ($(RWTRACE), 1)
+CFLAGS += -DRWTRACE
+endif
+
+# Turn on single precision floating point arithmetic
+ifeq ($(RW_USE_SPF), 1)
+CFLAGS += -DRW_USE_SPF
+endif
+
+# Turn on inline suppression
+ifeq ($(RWSUPPRESSINLINE), 1)
+CFLAGS += -DRWSUPPRESSINLINE
+endif
+
+# Turn on optimization pragma suppression
+ifeq ($(RWSUPPRESSOPTIMIZATIONPRAGMAS), 1)
+CFLAGS += -DRWSUPPRESSOPTIMIZATIONPRAGMAS
+endif
+
+# Turn on _IBM_CHAR
+ifeq ($(_IBM_CHAR), 1)
+CFLAGS += -D_IBM_CHAR
+endif
+
+# Turn on COLOURDMA
+ifeq ($(COLOURDMA), 1)
+CFLAGS += -DDMA_COLOUR
+endif
+
+# Turn on PS2MANAGER
+ifeq ($(PS2MANAGER), 1)
+CFLAGS += -DPS2MANAGER
+endif
+
+# Turn on NOSSEASM
+ifeq ($(NOSSEASM), 1)
+CFLAGS += -DNOSSEASM
+endif
+
+# Only build plcore with smaller (2K) globals size
+ifeq ($(RWONLYPLCORE), 1)
+CFLAGS += -DRWONLYPLCORE
+endif
+
+# Enable stack depth checks on non RWTRACE builds - not Thread Safe
+ifeq ($(RWSTACKDEPTHCHECKING), 1)
+CFLAGS += -DRWSTACKDEPTHCHECKING
+endif
+
+######################################################################
+
+# Include OS specific options
+include $(BASEDIR)/makeincl/rwos/$(RWOS)/makeos
+
+# Include Compiler specific options
+include $(BASEDIR)/makeincl/rwos/$(RWOS)/rwcmplr/$(RWCOMPILER)/makecom
+
+ifndef PATHSEP
+PATHSEP        = /
+endif
+
+# Standard phony targets; phony is described at
+# http://www.fsf.org/manual/make-3.79.1/html_mono/make.html#SEC33
+.PHONY : all install distclean clean checkopt csrc dsmlabel rwquestionable
+
+# Rule to print input source files
+csrc:
+	@echo CSRC is $(CSRC)
+
+# Rule to find labels in dsm files, and reverse-alphabetically
+# sort these to bring any duplications together.
+# The ee-gcc linker appears to have a bug whereby it can become
+# confused by duplicate labels
+dsmlabel :
+	$(BINDIR)/cygfind . -name "*.dsm" \
+	-exec $(BINDIR)/egrep -n -H "\:" {} \; | \
+	$(SED) "s/;.*$$//" | \
+	$(BINDIR)/egrep ":.*:.*:" | \
+	$(BINDIR)/rev | \
+	$(BINDIR)/cygsort | \
+	$(BINDIR)/rev
+
+# Rule to find questionable global exports for linkage
+# from RW library files
+# All global exports should have "R" or "_r" prefixes
+# See 18.2  Naming Conventions
+# http://intratech.csl.com/Coding_Standards.html#tth_sEc18.2
+ifeq ("$(NM)", "")
+NM        = $(BINDIR)/nm --demangle=gnu
+endif
+
+rwquestionable :
+	-$(BINDIR)/cygfind $(BASEDIR)/lib/$(RWPLATFORM) -type f	\
+	-exec $(NM)						\
+		--defined-only					\
+		--extern-only					\
+		--format=posix					\
+		--line-numbers					\
+		--print-file-name {} \;  |			\
+	$(BINDIR)/egrep -v ' (R|_r)'
+
+# Default Build Rules
+.SUFFIXES:
+.SUFFIXES: .h .ipp .s .i .c .cpp .$(O) .rpe
+
+######################################################################
+# Compilation rules
+
+# 'C++' Code
+
+
+
+$(OBJDIR)/%.$(O) : %.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $(CURDIR)/$<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/%.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/$(RWTARGET)/%.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/$(RWOS)/%.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/null/%.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/%.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/$(RWTARGET)/%.cpp
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+%.ipp : %.cpp
+	$(CC) $(CPPOPT) $(CFLAGS) $(CODEGENCFLAGS) $(CURDIR)/$< > $@
+
+# 'C' Code
+
+
+$(OBJDIR)/%.$(O) : %.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $(CURDIR)/$<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/$(RWTARGET)/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/$(RWOS)/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/null/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/$(RWTARGET)/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+%.ipp : %.c
+	$(CC) $(CPPOPT) $(CFLAGS) $(CODEGENCFLAGS) $(CURDIR)/$< > $@
+
+# Rules to generate offset files for use in assembly
+
+
+$(CURDIR)/$(RWTARGET)/%.i: $(CURDIR)/$(OBJDIR)/%.s
+	$(BUILDTOOLDIR)/findsyms/findsyms	\
+	-Fi$^					\
+	-Fo$@					\
+	-A$(AS)
+
+$(CURDIR)/$(OBJDIR)/%.s: $(CURDIR)/$(RWTARGET)/%.c
+	$(CC) $(CFLAGS) -I$(SDKINCDIR) $(CODEGENCFLAGS) $(SOUT) $^
+	$(CP) $(notdir $@) $@
+	$(RM) $(notdir $@)
+
+# Some compilers require all modules used to have unique names. Since
+# the plugins all use rpdbgerr.c, this rule allows the generation of a
+# unique filename for each one from a common source file
+
+$(OBJDIR)/u$(PLUGIN).$(O) : rpdbgerr.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/u$(PLUGIN).$(O) : $(BASEDIR)/include/$(RWPLATFORM)/rpdbgerr.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(OBJDIR)/%.$(O) : %.$(ASM)
+	$(AS) $(ASFLAGS) $(AOUT)$@ $<
+
+# Rule to generate the .rpe error files used by the plugins
+# Note the cheesy hack using $(@F) since PC's are incapable of
+# redirecting to a filename containing forward slash characters
+
+$(SDKINCDIR)/$(PLUGIN).rpe: $(SDKINCDIR)/rperror.h
+	$(CPP) $(CPPOPT) $(CFLAGS) $< > $(@F)
+ifeq ("$(RWTARGET)", "gcn")
+	$(SED) -e s/^#pragma.*// $(@F) > $@
+else
+ifeq ("$(RWOS)", "win")
+ifeq ("$(RWCOMPILER)","cwpc")
+	$(SED) -e s/^#pragma.*// $(@F) > $@
+else
+	$(CP)  $(@F) $@
+endif
+else
+	$(CP)  $(@F) $@
+endif
+endif
+	$(RM)  $(@F)
+
+$(SDKINCDIR)/archive/$(PLUGIN).rpe: $(SDKINCDIR)/rperror.h
+	$(CPP) $(CPPOPT) $(CFLAGS) $< > $(@F)
+ifeq ("$(RWTARGET)", "gcn")
+	$(SED) -e s/^#pragma.*// $(@F) > $@
+else
+	$(CP)  $(@F) $@
+endif
+	$(RM)  $(@F)
+
+endif # ifndef MAKEOPTINCLUDED

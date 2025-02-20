@@ -1,0 +1,338 @@
+# Add in the pipeline modules
+
+#   $(CSRCDIR)/nodeClipLine.c
+#   $(CSRCDIR)/nodeCullLine.c
+
+SRCPIPEDIR   = $(BASEDIR)/src/pipe/$(PIPETYPE)
+WORLDPIPEDIR = $(BASEDIR)/world/pipe/$(PIPETYPE)
+
+#---------------------------------------------------------------------------
+#                                   - CORE -                                
+#---------------------------------------------------------------------------
+
+PIPECSRC =						\
+    $(SRCPIPEDIR)/baim3d.c				\
+    $(SRCPIPEDIR)/bapipe.c				\
+    $(SRCPIPEDIR)/p2altmdl.c				\
+    $(SRCPIPEDIR)/p2core.c				\
+    $(SRCPIPEDIR)/p2define.c				\
+    $(SRCPIPEDIR)/p2dep.c				\
+    $(SRCPIPEDIR)/p2heap.c				\
+    $(SRCPIPEDIR)/p2macros.c				\
+    $(SRCPIPEDIR)/p2renderstate.c			\
+    $(SRCPIPEDIR)/p2resort.c				\
+    $(SRCPIPEDIR)/p2stdcls.c				
+
+
+PIPEHDR =					\
+    $(SRCDIR)/pipe/$(PIPETYPE)/p2core.h
+
+#---------------------------------------------------------------------------
+#                                  - WORLD -                                
+#---------------------------------------------------------------------------
+WORLDPIPECSRC =						\
+    $(WORLDPIPEDIR)/bapipew.c
+
+WORLDPIPEHDR =
+
+#---------------------------------------------------------------------------
+#                                   - NULL -                                
+#---------------------------------------------------------------------------
+# Platform specific files
+ifeq ("$(RWTARGET)", "null")
+
+PIPEPSCSRC       =				\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c
+
+WORLDPIPEPSCSRC  =				\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+endif
+
+#---------------------------------------------------------------------------
+#                                 - NULLSKY -                               
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "nullsky")
+
+PIPEPSCSRC       =				\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c
+
+WORLDPIPEPSCSRC  =				\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+endif
+
+#---------------------------------------------------------------------------
+#                                   - D3d -                                 
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "d3d")
+
+PIPEPSCSRC       =					\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c		\
+    $(SRCPIPEDIR)/$(RWTARGET)/nodeD3DTransform.c
+
+WORLDPIPEPSCSRC  =						\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeD3DInFrustumTransform.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c
+
+endif
+
+#--------------------------------------------------------------------------
+#                                 - SOFTRAS -                              
+#--------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "softras")
+
+PIPEPSCSRC       =							\
+    $(SRCPIPEDIR)/$(RWTARGET)/nodeSoftRasImmSubmit.c			\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c
+
+WORLDPIPEPSCSRC  =							\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeSoftRasAtomicInstance.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeSoftRasLight.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeSoftRasWorldSectorInstance.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c				\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+C_INC += -I$(BASEDIR)/driver/softras/hybrid/include
+
+endif
+
+#--------------------------------------------------------------------------
+#                                  - OPENGL -                              
+#--------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "opengl")
+
+PIPEPSCSRC       =					\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c		\
+    $(SRCPIPEDIR)/$(RWTARGET)/nodeOpenGLSubmitNoLight.c
+
+WORLDPIPEPSCSRC  =						\
+    $(WORLDPIPEDIR)/$(RWTARGET)/opengllights.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/openglpipe.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeOpenGLAtomicAllInOne.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeOpenGLWorldSectorAllInOne.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+endif
+
+#---------------------------------------------------------------------------
+#                                   - D3D8 -                                
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "d3d8")
+
+PIPEPSCSRC       =					\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c		\
+    $(SRCPIPEDIR)/$(RWTARGET)/nodeD3D8SubmitNoLight.c
+
+WORLDPIPEPSCSRC  =						\
+    $(WORLDPIPEDIR)/$(RWTARGET)/D3D8lights.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/D3D8pipe.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/D3D8VertexBufferManager.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeD3D8AtomicAllInOne.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeD3D8WorldSectorAllInOne.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+endif
+
+#---------------------------------------------------------------------------
+#                                   - D3D9 -                                
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "d3d9")
+
+PIPEPSCSRC       =					\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c		\
+    $(SRCPIPEDIR)/$(RWTARGET)/nodeD3D9SubmitNoLight.c
+
+WORLDPIPEPSCSRC  =						\
+    $(WORLDPIPEDIR)/$(RWTARGET)/D3D9lights.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/D3D9pipe.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeD3D9AtomicAllInOne.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeD3D9WorldSectorAllInOne.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/d3d9vertexdeclaration.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/d3d9vertexshader.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/d3d9vertexshaderutils.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/d3d9usage.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c			\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+ifeq ($(RWDLL), 0)
+
+ifeq ($(CDEBUG), 1)
+WORLDPIPEPSOBJ +=					\
+	$(DXSDK)/lib/d3dx9dt.lib
+else
+WORLDPIPEPSOBJ +=					\
+	$(DXSDK)/lib/d3dx9.lib
+endif
+
+else
+
+ifeq ($(CDEBUG), 1)
+DLLDRVLIB +=					\
+	$(DXSDK)/lib/d3dx9dt.lib
+else
+DLLDRVLIB +=					\
+	$(DXSDK)/lib/d3dx9.lib
+endif
+
+endif
+
+endif
+
+#--------------------------------------------------------------------------
+#                                   - SKY2 -                               
+#--------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "sky2")
+
+PIPEPSCSRC       =				\
+    $(SRCPIPEDIR)/$(RWTARGET)/exports.c		\
+    $(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c
+
+WORLDPIPEPSCSRC  =					\
+    $(WORLDPIPEDIR)/$(RWTARGET)/fastim3d.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/matbridge.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/matinstance.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/matputil.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/native.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/nodeps2all.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/ps2alllighting.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/ps2allatomic.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/ps2allim3d.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/ps2allmat.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/ps2allsector.c		\
+    $(WORLDPIPEDIR)/$(RWTARGET)/ps2clusterattribs.c	\
+    $(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c
+
+C_INC += -I$(BASEDIR)/driver/sky2
+
+endif
+
+#---------------------------------------------------------------------------
+#                                    - GCN -                                
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "gcn")
+
+PIPEPSCSRC       =							\
+	$(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c				\
+	$(SRCPIPEDIR)/$(RWTARGET)/nodeDolphinSubmitNoLight.c
+
+
+WORLDPIPEPSCSRC	=							\
+	$(WORLDPIPEDIR)/$(RWTARGET)/gcpipe.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/vtxfmt.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/nodeGameCubeAtomicAllInOne.c	\
+	$(WORLDPIPEDIR)/$(RWTARGET)/nodeGameCubeWorldSectorAllInOne.c	\
+	$(WORLDPIPEDIR)/$(RWTARGET)/gclights.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/gcmorph.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/native.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/setup.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/geomcond.c			\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/geominst.c			\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/ibuffer.c			\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/instancegeom.c		\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/instanceworld.c		\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/itools.c			\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/vbuffer.c			\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/vtools.c			\
+	$(WORLDPIPEDIR)/$(RWTARGET)/instance/vtxdesc.c
+
+C_INC += -I$(WORLDPIPEDIR)/$(RWTARGET)/instance
+
+CFLAGS +=								\
+	-DRWNOVECMULTFUNCS
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/$(RWTARGET)/instance/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+endif
+
+#---------------------------------------------------------------------------
+#                                  - NULLGCN -                              
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "nullgcn")
+
+PIPEPSCSRC =							\
+	$(SRCPIPEDIR)/gcn/im3dpipe.c				\
+	$(SRCPIPEDIR)/gcn/nodeDolphinSubmitNoLight.c
+
+WORLDPIPEPSCSRC =						\
+	$(WORLDPIPEDIR)/gcn/gcpipe.c				\
+	$(WORLDPIPEDIR)/gcn/vtxfmt.c				\
+	$(WORLDPIPEDIR)/gcn/wrldpipe.c				\
+	$(WORLDPIPEDIR)/gcn/nodeGameCubeAtomicAllInOne.c	\
+	$(WORLDPIPEDIR)/gcn/nodeGameCubeWorldSectorAllInOne.c	\
+	$(WORLDPIPEDIR)/gcn/gclights.c				\
+	$(WORLDPIPEDIR)/gcn/gcmorph.c				\
+	$(WORLDPIPEDIR)/gcn/native.c				\
+	$(WORLDPIPEDIR)/gcn/setup.c				\
+	$(WORLDPIPEDIR)/gcn/instance/geomcond.c			\
+	$(WORLDPIPEDIR)/gcn/instance/geominst.c			\
+	$(WORLDPIPEDIR)/gcn/instance/ibuffer.c			\
+	$(WORLDPIPEDIR)/gcn/instance/instancegeom.c		\
+	$(WORLDPIPEDIR)/gcn/instance/instanceworld.c		\
+	$(WORLDPIPEDIR)/gcn/instance/itools.c			\
+	$(WORLDPIPEDIR)/gcn/instance/vbuffer.c			\
+	$(WORLDPIPEDIR)/gcn/instance/vtools.c			\
+	$(WORLDPIPEDIR)/gcn/instance/vtxdesc.c
+
+C_INC +=							\
+	-I$(SRCPIPEDIR)/gcn					\
+	-I$(WORLDPIPEDIR)/gcn					\
+	-I$(WORLDPIPEDIR)/gcn/instance
+
+CFLAGS +=							\
+	-DNOASM
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/gcn/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/pipe/$(PIPETYPE)/gcn/instance/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS)  \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+endif
+
+#---------------------------------------------------------------------------
+#                                   - XBOX -                                
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "xbox")
+PIPEPSCSRC =							\
+	$(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c			\
+	$(SRCPIPEDIR)/$(RWTARGET)/nodeXBoxSubmitNoLight.c
+
+WORLDPIPEPSCSRC =							\
+	$(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/nodeXBoxAtomicAllInOne.c		\
+	$(WORLDPIPEDIR)/$(RWTARGET)/nodeXBoxWorldSectorAllInOne.c	\
+	$(WORLDPIPEDIR)/$(RWTARGET)/xblights.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/xbpipe.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/native.c				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/xbpixelshader.c         \
+	$(WORLDPIPEDIR)/$(RWTARGET)/xbvtxfmt.c
+
+C_INC += -I$(XBOXSDK)/Xbox/include
+C_INC += -I$(BASEDIR)/driver/xbox
+endif
+
+#---------------------------------------------------------------------------
+#                                 - NULLXBOX -                              
+#---------------------------------------------------------------------------
+ifeq ("$(RWTARGET)", "nullxbox")
+PIPEPSCSRC =					\
+	$(SRCPIPEDIR)/$(RWTARGET)/im3dpipe.c
+
+WORLDPIPEPSCSRC =				\
+	$(WORLDPIPEDIR)/$(RWTARGET)/wrldpipe.c	\
+	$(WORLDPIPEDIR)/$(RWTARGET)/native.c
+
+#C_INC += -I$(XBOXSDK)/Xbox/include
+C_INC += -I$(BASEDIR)/driver/nullxbox
+endif
+
+#---------------------------------------------------------------------------

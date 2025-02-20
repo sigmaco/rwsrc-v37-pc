@@ -1,0 +1,33 @@
+COMPILER=icl.exe
+LINKER=xilink.exe
+
+# To pick up single precison maths functions from
+# include/mathf.h
+# uncomment the below
+# CFLAGS += -DRW_USE_SPF
+
+CFLAGS += -G6
+
+ifeq ("$(INTELPGO)", "use")
+CFLAGS += -Qprof_use -Qip -Qprof_dir $(RWGSDK)
+else
+ifeq ("$(INTELPGO)", "gen")
+CFLAGS += -Qprof_gen -Qprof_dir $(RWGSDK)
+endif
+endif
+
+
+SSEFLAGS := -Qrestrict -QxiMK -Qvec_report
+
+
+include $(BASEDIR)/makeincl/rwos/$(RWOS)/rwcmplr/visualc/makecom
+
+AR := xilib.exe -nologo
+
+ifeq ($(SMALLCODE), 1)
+C_OPT := -O1 -Ob2
+else
+C_OPT := -O3 -Qip -Qipo -QaxiMK
+AR    += -Qipo 
+SOUT  += -Qipo_obj
+endif

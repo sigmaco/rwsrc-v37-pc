@@ -1,0 +1,228 @@
+# name of the generated files, e.g. $(RWGDLLNAME).def, $(RWGDLLNAME).dll, etc.
+ifeq ($(RWDEBUG),1)
+RWGDLLNAME = rwg$(RWTARGET)d
+else # ifeq ($(RWDEBUG),1)
+RWGDLLNAME = rwg$(RWTARGET)
+endif # ifeq ($(RWDEBUG),1)
+
+# name of the resource compiler
+RESCOMPILER = rc.exe
+
+# extension for resource files
+RCEXT = rc
+
+# extension for compiled resource files
+RESEXT = res
+
+dllchecktarget:
+ifneq ("$(RWTARGET)","null")
+ifneq ("$(RWTARGET)","d3d8")
+ifneq ("$(RWTARGET)","d3d9")
+ifneq ("$(RWTARGET)","opengl")
+	@echo ERROR: DLL generation only available for the NULL targets
+	@echo
+	@error
+endif
+endif
+endif
+endif
+
+.PHONY: dllgen
+ifeq ($(RWDLL),1)
+dllgen: dllchecktarget $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME).def $(SDKDLLDIR)/$(RWGDLLNAME).dll
+else # ifeq ($(RWDLL),1)
+dllgen:	
+endif # ifeq ($(RWDLL),1)
+
+.PHONY: dllclean
+ifeq ($(RWDLL),1)
+dllclean:
+	$(RM) -f 						\
+		 $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME).def	\
+		 $(BASEDIR)/dllsrc/$(OBJDIR)/rwgdllep.$(O)	\
+		 $(BASEDIR)/dllsrc/$(OBJDIR)/rwgdll.$(RESEXT)
+else # ifeq ($(RWDLL),1)
+dllclean:
+endif # ifeq ($(RWDLL),1)
+
+.PHONY: dlldistclean
+ifeq ($(RWDLL),1)
+dlldistclean: dllclean
+	$(RM) -fr $(BASEDIR)/dllsrc/obj
+	$(RM) -f 					\
+		 $(SDKDLLDIR)/*.dll			\
+		 $(SDKDLLDIR)/*.exp			\
+		 $(SDKDLLDIR)/*.lib			\
+		 $(SDKDLLDIR)/*.pdf
+else # ifeq ($(RWDLL),1)
+dlldistclean:
+endif # ifeq ($(RWDLL),1)
+
+# core and world
+DLLLIBS =			\
+	rwcore			\
+	rpworld
+
+# plugins - can't use PLUGINS and $(foreach ...) since the name of the plugin doesn't match it's library name
+# and we have to choose the most complex combo plugin in those cases, e.g. skin and patch to avoid
+# multiple references
+DLLLIBS +=			\
+	rpanisot		\
+    rpadc           \
+	rpcollis		\
+	rpdmorph		\
+	rpenv			\
+	rphanim			\
+	rplodatm		\
+	rpltmap			\
+	rpmatfx			\
+	rpmipkl			\
+	rpmorph			\
+	rppatchskinmatfx	\
+	rpprtstd		\
+	rpprtadv		\
+	rpptank			\
+	rppvs			\
+	rprandom		\
+	rpskinmatfx		\
+	rpspline		\
+	rpusrdat		\
+	rpuvanim		\
+	rpid
+
+# normal map plugin is not supported on all targets
+# logo is required for non-NULL targets
+ifeq ("$(RWTARGET)","null")
+DLLLIBS += rpnormmapskin
+else
+DLLLIBS += rplogo
+endif
+ifeq ("$(RWTARGET)","d3d9")
+DLLLIBS += rpnormmapskin
+endif
+
+# toolkits - can't use TOOLKITS and $(foreach ...) since the name of the toolkit doesn't match it's library name
+# and we have to choose the most complex combo toolkit in those cases, e.g. mipk to avoid multiple references
+DLLLIBS +=			\
+	rt2d			\
+	rt2danim		\
+	rtanim			\
+	rtdict			\
+	rtbary			\
+	rtbezpat		\
+	rtbmp			\
+	rtcharse		\
+	rtcmpkey		\
+	rtfsyst			\
+	rtgcond			\
+	rtimport		\
+	rtintsec		\
+	rtltmap			\
+	rtltmapcnv		\
+	rtmipkpatchmatfx	\
+	rtnormmap		\
+	rtpick			\
+	rtpitexd		\
+	rtpng			\
+	rtquat			\
+	rtras			\
+	rtray			\
+	rtslerp			\
+	rtskinsp		\
+	rtsplpvs		\
+	rttiff			\
+	rttilerd		\
+	rttoc			\
+	rtwing			\
+	rtworld
+
+# vcat toolkit is target dependent
+ifeq ("$(RWTARGET)","null")
+DLLLIBS += rtvcatmd
+else
+DLLLIBS += rtvcat
+endif
+
+# FX pack
+DLLLIBS +=			\
+	rpcrowd			\
+	rpteam			\
+	rptoon			\
+	rttoon
+
+# DPVS
+# N.B. does not link into the DLL
+#DLLLIBS += 			\
+#	rpdpvs
+
+# full path names of all the libs to be included in the DLL
+DLLLIBPATHS=$(foreach dir, $(DLLLIBS), $(SDKLIBDIR)/$(dir).lib)
+
+# run-time library for the DLL
+ifeq ($(CDEBUG),1)
+DLLRTLIB = MSVCRTd.lib
+else # ifeq ($(CDEBUG),1)
+DLLRTLIB = MSVCRT.lib
+endif # ifeq ($(CDEBUG),1)
+
+# generate the .def file containing the exported functions/variables for all the libs to go in the DLL
+# note that it is 'fixed' using SED
+$(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME).def: $(DLLLIBPATHS)
+	$(RM) $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME).def
+	$(MD) $(BASEDIR)/dllsrc/$(OBJDIR)
+	$(BINDIR)/dlltool --export-all-symbols --no-default-excludes --output-def $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME)_temp.def $^
+	$(SED) -f $(BASEDIR)/dllsrc/rwgdllfx.sed $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME)_temp.def > $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME).def
+	$(RM) $(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME)_temp.def
+
+# compile the Dll main function
+$(BASEDIR)/dllsrc/$(OBJDIR)/rwgdllep.$(O): $(BASEDIR)/dllsrc/rwgdllep.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS) $(COUT)$@ $^
+
+# resource compiler options for creating the DLL
+DLLRESCOMPOPTIONS = -i "$(BASEDIR)/include/$(RWTARGET)"
+
+ifeq ($(CDEBUG),1)
+DLLRESCOMPOPTIONS += /d "_DEBUG"
+else # ifeq ($(CDEBUG),1)
+DLLRESCOMPOPTIONS += /d "NDEBUG"
+endif # ifeq ($(CDEBUG),1)
+
+# compile the Dll resources
+$(BASEDIR)/dllsrc/$(OBJDIR)/rwgdll.$(RESEXT): $(BASEDIR)/dllsrc/rwgdll.$(RCEXT) $(BASEDIR)/include/$(RWTARGET)/rwversion.h
+	$(RESCOMPILER) -fo$@ $(DLLRESCOMPOPTIONS) -n $(BASEDIR)/dllsrc/rwgdll.$(RCEXT)
+
+# linker options for creating the DLL
+DLLLINKOPTIONS = 			\
+	-machine:IX86			\
+	-dll				\
+	-fixed:no 			\
+	-largeaddressaware		\
+	-incremental:no			\
+	-def:$(BASEDIR)/dllsrc/$(OBJDIR)/$(RWGDLLNAME).def
+	
+ifeq ($(CDEBUG),1)
+DLLLINKOPTIONS +=			\
+	-debug				\
+	-pdb:$(SDKDLLDIR)/$(RWGDLLNAME).pdb
+endif # ifeq ($(CDEBUG),1)
+
+# additional target specific dependencies
+ifneq ("$(RWTARGET)","null")
+ADDITIONALTARGETDEPS =			\
+	$(DLLDRVLIB)			\
+	user32.lib
+endif
+ifeq ("$(RWTARGET)","opengl")
+ADDITIONALTARGETDEPS +=			\
+	gdi32.lib
+endif
+ifeq ("$(RWTARGET)","d3d9")
+ADDITIONALTARGETDEPS +=			\
+	gdi32.lib			\
+	advapi32.lib
+endif
+
+# generate the DLL from the information in the .def file
+$(SDKDLLDIR)/$(RWGDLLNAME).dll: $(DLLLIBPATHS) $(BASEDIR)/dllsrc/$(OBJDIR)/rwgdllep.$(O) $(BASEDIR)/dllsrc/$(OBJDIR)/rwgdll.$(RESEXT)
+	$(RM) $(SDKDLLDIR)/$(RWGDLLNAME).dll
+	$(LINKER) -out:$@ $(DLLLINKOPTIONS) $^ $(DLLLIBPATHS) $(ADDITIONALTARGETDEPS) $(DLLRTLIB)

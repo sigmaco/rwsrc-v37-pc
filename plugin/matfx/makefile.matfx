@@ -1,0 +1,216 @@
+#
+# Include options.mak as RWTARGET needs to be defined
+#
+ifndef RWOPTIONS
+RWOPTIONS = $(BASEDIR)/options.mak
+endif
+-include $(RWOPTIONS)
+
+#
+# What plugin are we building?
+#
+PLUGIN = rpmatfx
+PLUGINAPI = matfxapi.h
+
+#
+# Who are the maintainers?
+#
+MAINTAINERS = jamesa mattt
+
+#
+# Platform independent multitexture source - added for certain platforms
+# (see below)
+#
+
+MULTITEXCSRC =							\
+	$(CURDIR)/multiTex.c					\
+	$(CURDIR)/multiTexEffect.c
+
+MULTITEXCROOT =							\
+	$(notdir $(basename $(MULTITEXCSRC)))
+
+MULTITEXCOBJS =							\
+	$(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(MULTITEXCROOT)))
+
+
+#
+# Platform specific
+#
+
+################################################################################
+# D3D8
+################################################################################
+
+d3d8CSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectPipesD3D8.c
+
+################################################################################
+# D3D9
+################################################################################
+
+d3d9CSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectPipesD3D9.c
+
+
+################################################################################
+# openGL
+################################################################################
+
+openglCSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectPipesOpenGL.c
+
+
+################################################################################
+# softras
+################################################################################
+
+softrasCSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectPipesSoftras.c
+
+
+################################################################################
+# null
+################################################################################
+
+nullCSRC =							\
+	$(CURDIR)/null/effectPipesNull.c			\
+	$(CURDIR)/null/multiTexNull.c				\
+	$(MULTITEXCSRC)
+
+
+################################################################################
+# sky2
+################################################################################
+
+sky2CSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectpipesdriver.c		\
+	$(CURDIR)/$(RWTARGET)/effectPipesSky.c
+
+
+################################################################################
+# nullsky
+################################################################################
+
+nullskyCSRC =							\
+	$(CURDIR)/null/effectPipesNull.c
+
+
+################################################################################
+# xbox
+################################################################################
+
+xboxHDRS =							\
+	$(CURDIR)/$(RWTARGET)/envmap.h				\
+	$(CURDIR)/$(RWTARGET)/envmapnobase.h			\
+	$(CURDIR)/$(RWTARGET)/bumpmap.h				\
+	$(CURDIR)/$(RWTARGET)/bumpenvmap.h			\
+	$(CURDIR)/$(RWTARGET)/bumpenvmapalpha.h			\
+	$(CURDIR)/$(RWTARGET)/bumpmapnomatcolor.h		\
+	$(CURDIR)/$(RWTARGET)/bumpenvmapnomatcolor.h		\
+	$(CURDIR)/$(RWTARGET)/bumpenvmapnomatcoloralpha.h
+
+xboxCSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectPipesXbox.c			\
+	$(CURDIR)/$(RWTARGET)/multitexxbox.c			\
+	$(MULTITEXCSRC)
+
+################################################################################
+# nullxbox
+################################################################################
+
+nullxboxCSRC =							\
+	$(CURDIR)/null/effectPipesNull.c			\
+	$(CURDIR)/xbox/multitexxbox.c				\
+	$(MULTITEXCSRC)
+
+
+################################################################################
+# gcn
+################################################################################
+
+ifeq ("$(RWTARGET)", "gcn")
+ifeq ($(NOASM), 1)
+RWEQUDEP =
+else #
+RWEQUDEP =							\
+	$(CURDIR)/$(RWTARGET)/matfxequ.i
+endif # ($(NOASM), 1)
+endif # ("$(RWTARGET)", "gcn")
+
+gcnCSRC =							\
+	$(CURDIR)/$(RWTARGET)/effectPipesGcn.c			\
+	$(CURDIR)/$(RWTARGET)/multiTexGcnData.c			\
+	$(CURDIR)/$(RWTARGET)/multiTexGcnPipe.c			\
+	$(CURDIR)/$(RWTARGET)/multiTexGcn.c			\
+	$(CURDIR)/$(RWTARGET)/nbtGen.c				\
+	$(MULTITEXCSRC)
+
+################################################################################
+# nullgcn
+################################################################################
+
+ifeq ("$(RWTARGET)", "nullgcn")
+PLUGININCDIR = . $(CURDIR)/gcn
+endif # ("$(RWTARGET)", "nullgcn")
+
+nullgcnCSRC =							\
+	$(CURDIR)/gcn/effectPipesGcn.c				\
+	$(CURDIR)/gcn/multiTexGcnData.c				\
+	$(CURDIR)/gcn/multiTexGcnPipe.c				\
+	$(CURDIR)/gcn/multiTexGcn.c				\
+	$(CURDIR)/$(RWTARGET)/nbtGen.c				\
+	$(MULTITEXCSRC)
+
+#
+# Indicate where to look for included platform file when generating the
+# plugin header
+#
+ifndef PLUGININCDIR
+PLUGININCDIR = . $(CURDIR)/$(RWTARGET)
+endif
+
+#
+# Make the plugin
+#
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/makeplug
+
+CFLAGS += -I$(CURDIR)/$(RWTARGET)
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/gcn/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS) \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+$(CURDIR)/$(OBJDIR)/%.$(O) : $(CURDIR)/xbox/%.c
+	$(CC) $(CFLAGS) $(CODEGENCFLAGS) \
+	$(COUT)$(subst /,$(PATHSEP),$@) $<
+
+################################################################################
+# xbox
+################################################################################
+
+ifeq ("$(RWTARGET)", "xbox")
+
+# add new rules for pixel shader headers
+%.h : %.psh
+	$(VSHASM) $(VSHFLAGS) /I xbox $^
+
+$(CURDIR)/$(OBJDIR)/effectPipesXbox.$(O):	\
+	$(CURDIR)/$(RWTARGET)/effectPipesXbox.c	\
+	$(CURDIR)/$(RWTARGET)/envmap.h		\
+    $(CURDIR)/$(RWTARGET)/envmapnobase.h
+
+endif
+
+################################################################################
+# softras
+################################################################################
+
+ifeq ("$(RWTARGET)", "softras")
+
+CFLAGS +=							\
+	-I$(BASEDIR)/driver/softras/hybrid/include
+
+endif # RWTARGET==softras

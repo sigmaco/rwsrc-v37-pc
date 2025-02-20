@@ -1,0 +1,5 @@
+RWECODE(E_RP_SPLINE_INVNAME     ,"Invalid Spline Name")
+RWECODE(E_RP_SPLINE_INVTYPE     ,"Invalid Spline Type")
+RWECODE(E_RP_SPLINE_INVCONTROLS ,"Invalid Number of spline control points")
+RWECODE(E_RP_SPLINE_OPEN        ,"Unable to initialize Spline")
+RWECODE(E_RP_SPLINE_PLUGINNOTINIT     ,"The Spline plugin has not been attached")

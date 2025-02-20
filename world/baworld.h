@@ -414,6 +414,14 @@ extern RwInt32      RpWorldSetStreamRightsCallBack(RwUInt32 pluginID,
 extern RwInt32      RpWorldGetPluginOffset(RwUInt32 pluginID);
 extern RwBool       RpWorldValidatePlugins(RpWorld * world);
 
+//@{ Jaewon 20040923
+// in order to support archlord local lights.
+//@{ Jaewon 20050418
+// Max number of local lights : 2 -> 8
+typedef RwUInt32 (*RpWorldGetAtomicLocalLightsCallBack) (RpAtomic *pAtomic, RpLight *pLights[]);
+extern void RpWorldSetGetAtomicLocalLightsCallBack(RpWorldGetAtomicLocalLightsCallBack getCB);
+//@} Jaewon
+//@} Jaewon
 
 #if (defined(RWDEBUG) || defined(RWSUPPRESSINLINE))
 

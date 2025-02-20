@@ -1,0 +1,34 @@
+# What plugin are we building ?
+PLUGIN    = rtltmap
+PLUGINAPI = rtltmap.h
+LIBNAME   = rtltmap
+
+# Who are the maintainers ?
+MAINTAINERS = iestynb
+
+OPTDISTCLEAN = localdistclean
+OPTCLEAN = localclean
+
+# Additional objects
+CSRC = $(CURDIR)/area.c     \
+       $(CURDIR)/alwcren.c  \
+       $(CURDIR)/lmrgbren.c \
+       $(CURDIR)/lmwcren.c \
+       $(CURDIR)/ltmapps2.c \
+       $(CURDIR)/sample.c \
+       $(CURDIR)/vis.c \
+       $(CURDIR)/polypack.c \
+       $(CURDIR)/image.c
+
+######################################################################
+######################################################################
+
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+include $(BASEDIR)/makeincl/makeplug
+
+#####################################################################
+
+localclean: $(LOCALCLEAN)
+localdistclean: $(LOCALDISTCLEAN)

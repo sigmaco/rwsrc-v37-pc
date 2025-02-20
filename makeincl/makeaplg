@@ -1,0 +1,278 @@
+# Common rules for archive plugins
+
+# Define the root for the RenderWare build.
+# all directories are defined relative to the rwsdk BASEDIR
+ifndef BASEDIR
+BASEDIR = $(CURDIR)/../..
+endif
+
+# This target must be defined before makeopt is included. It contains a single
+# forward reference to the main target
+
+all: rwplugin $(OPTTARGET)
+
+# Include the shared RenderWare make definitions
+include $(BASEDIR)/makeincl/makeopt
+
+# Allows additional plugin libs to be generated from one plugin.
+# E.g. rpskin.lib & rpskinmatx.lib are both generated for rpskin.
+
+ifeq ("$(LIBNAME)", "")
+LIBNAME = $(PLUGIN)
+endif
+
+# derive the library, header and error filename from the plugin name
+RPLIB           = $(SDKLIBDIR)/archive/$(LIBPREFIX)$(PLUGIN).$(LIBEXT)
+RPHEAD          = $(SDKINCDIR)/archive/$(PLUGIN).h
+RPERR           = $(SDKINCDIR)/archive/$(PLUGIN).rpe
+RPDOCDIR        = ../../autodocs/doc/plugin.arc
+RPHLPDIR        = ../../autodocs/hlp/plugin.arc
+RPHTMDIR        = ../../autodocs/htm/plugin.arc
+TARGETLIB       = $(RPLIB)
+
+# and what object files are required. Note, if the RenderWare error &
+# debug mechnism is to be used then rpdbgerr.$(O) must be included
+# because of the needs for some compilers for the module names to be unique
+# we generate a unique name for this file based on the name of the plugin
+
+CSRC           += $(CURDIR)/$(PLUGIN).c
+CROOT           = $(notdir $(basename $(CSRC)))
+COBJS           = $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(CROOT)))
+OBJS           += $(COBJS)
+
+ifeq ($(RWDEBUG), 1)
+OBJS           += $(CURDIR)/$(OBJDIR)/u$(PLUGIN).$(O)
+endif
+PLUGINHEADERDIR = ./headers
+
+# What is the name of the plugins header file.
+ifeq ("$(PLUGINAPI)", "")
+PLUGINHEADER    = ./$(PLUGIN).h
+else
+PLUGINHEADER    = $(PLUGINHEADERDIR)/$(PLUGIN).$(RWTARGET).h
+endif
+
+DOCSRC         := $(PLUGINHEADER) $(PLUGIN).c $(DOCSRC)
+
+# Need to include the archive directory in the include path
+
+CFLAGS += -I$(SDKINCDIR)/archive
+
+# Add any platform specific files defined in the main Makefile
+ifneq ("$($(RWTARGET)CSRC)", "")
+PSCSRC = $($(RWTARGET)CSRC)
+else
+PSCSRC = $(genericCSRC)
+endif
+
+CSRC += $(PSCSRC)
+
+ifeq ("$(RWTARGET)","sky2")
+sky2DSMROOT = $(notdir $(basename $(sky2DSMSRC)))
+sky2DSMOBJS =  \
+    $(addprefix $(CURDIR)/$(OBJDIR)/, $(addsuffix .$(O), $(sky2DSMROOT)))
+OBJS += $(sky2DSMOBJS)
+endif 
+
+# The main entry point - checkopt is defined in makeopt and
+# checks that valid values for target, compiler and os have been defined
+
+rwplugin: checkopt dirsetup header equate $(RPLIB)
+
+header: dirsetup $(RPHEAD) $(RPERR) $($(RWTARGET)HDRS)
+
+equate: dirsetup $(RWEQUDEP)
+
+# The plugin library defined above
+$(RPLIB): $(OBJS)
+	$(RM) $@
+	$(AR) $(ARCREATEFLAGS)
+	$(ARPOSTCHECK)
+
+##############################################################################
+
+# Install the headers
+$(RPHEAD): $(PLUGINHEADER) 
+	$(CP) $< $@
+
+PLUGINREJECT = $(PLUGIN).reject
+PLUGINLIST = $(PLUGIN).list
+
+ifeq ($(findstring null,$(RWTARGET)),null)
+PLUGININCDIR = ./null
+else
+PLUGININCDIR = ./$(RWTARGET)
+endif
+
+# If the header file doesn't exist we have an incgen rule to make it.
+# The source file is $(PLUGINAPI) and it generates a file $(PLUGINHEADER)
+# The header file is copied into the include directory by the $(RPHEAD)
+# rule above.
+#
+# The plugin's makefile must define:
+#
+# PLUGINAPI =							\
+#		patchapi.h
+#
+# and a header list:
+#
+# PLUGINHEADERLIST = 						\
+#		rwcore.h					\
+#		rpcriter.h					\
+#		rpworld.h
+#
+# The header list defines the RW include files _not_ to recurse into whilst
+# running incgen.
+
+$(PLUGINHEADER): $(PLUGINAPI)
+	@echo Creating $(PLUGINHEADERDIR)
+	@echo 
+	$(MD) $(PLUGINHEADERDIR)
+	@echo Building $(PLUGINHEADER)
+	@echo 
+	@echo Building $(PLUGINREJECT) file for plugin $(PLUGIN)
+	echo "$(SDKINCDIR)/$(PLUGIN).rpe" > $(PLUGINREJECT)
+	for rejectfile in $(PLUGINHEADERLIST); 				\
+	do 								\
+		echo "$(SDKINCDIR)/$$rejectfile" >> $(PLUGINREJECT); 	\
+	done
+	@echo 
+	@echo Building $@ from $(PLUGINAPI) for plugin $(PLUGIN)
+	$(BUILDTOOLDIR)/incgen/incgen $(INCGENFLAGS) 			\
+		$(addprefix -s, $(basename $(PLUGINHEADERLIST)))	\
+		-p$(PLUGIN)						\
+		-i$(PLUGININCDIR)					\
+		-i$(SDKINCDIR)						\
+		$(PLUGINAPI)						\
+		-x$(PLUGINREJECT)					\
+		-o$(PLUGINHEADER)   					\
+		-l$(PLUGINLIST)
+	$(RM) $(PLUGINREJECT)
+	$(RM) $(PLUGINLIST)
+	
+##############################################################################
+
+
+# Generate the documentation
+$(RPDOCDIR) $(RPHLPDIR) $(RPHTMDIR) $(RPHLPDIR)/$(PLUGIN):
+	$(MD) $@
+
+DOXYSRC = $(SDKINCDIR)/archive/$(PLUGIN).h $(CSRC)
+
+# See rwsdk\doxy\doxycfg.c for more info.
+doxygen:
+	echo $(DOXYSRC) |                               \
+	$(BINDIR)/doxycfg				\
+	  -b$(BASEDIR)					\
+	  -d$(RPHLPDIR)/$(PLUGIN)/			\
+	  -m$(BASEDIR)/doxy/format/html		\
+	  -n$(PLUGIN)					\
+	  -o$(RWOS)					\
+	  -t$(RWTARGET)					\
+	> $(RPHLPDIR)/$(PLUGIN)/Doxyfile
+
+doc: 
+# Archive plugins removed from global documentation
+#	echo $(DOXYSRC) 1>> $(SDKHLPDIR)/$(RWTARGET)/Docfile
+
+defgroup:
+	-$(BINDIR)/egrep --line-number --with-filename \
+	"\\\defgroup" $(addprefix $(CURDIR)/, $(DOXYSRC))
+
+DOXYIMAGE = $(BASEDIR)/doxy/images
+
+# List of directories containing image files used by Doxygen
+SRCIMAGE
+	$(DOXYIMAGE)/*.*					\
+
+# Builds the chm
+# subtopic.sed tidies the API's index, pdf.sed enables pdf hyperlinking 
+plugindoc:
+	doxygen $(RPHLPDIR)/$(PLUGIN)/Doxyfile
+	-$(CP) $(SRCIMAGE) $(RPHLPDIR)/$(PLUGIN)/html
+	$(BINDIR)/UNIX2DOS $(RPHLPDIR)/$(PLUGIN)/html/index.hhc
+	-$(CP)  $(RPHLPDIR)/$(PLUGIN)/html/index.hhk \
+            $(RPHLPDIR)/$(PLUGIN)/html/index.hhk_old
+	$(SED) -f $(BINDIR)/subtopic.sed < $(RPHLPDIR)/$(PLUGIN)/html/index.hhk_old > \
+            $(RPHLPDIR)/$(PLUGIN)/html/index.hhk
+
+	for myhtml in $(RPHLPDIR)/$(PLUGIN)/html/*.html; do \
+	$(SED) -f $(BINDIR)/pdf.sed < $$myhtml > $(RPHLPDIR)/$(PLUGIN)/html/tmp._html; \
+	$(RM) $$myhtml; \
+	$(MV) $(RPHLPDIR)/$(PLUGIN)/html/tmp._html $$myhtml;\
+	done
+
+	@echo About to run -cmd /C $(BINDIR)/hhc $(RPHLPDIR)/$(PLUGIN)/html/index.hhp
+	-cmd /C $(BINDIR)/hhc $(RPHLPDIR)/$(PLUGIN)/html/index.hhp
+
+doxy: $(RPHLPDIR)/$(PLUGIN) $(RPHEAD) doxygen plugindoc
+
+# Create the directory for the object files
+
+dirsetup: $(CURDIR)/$(OBJDIR)
+
+$(CURDIR)/$(OBJDIR):
+	$(MD) $@
+
+$(OBJDIR):
+	$(MD) $@
+
+CVERIFY=$(CSRC)
+
+verify:
+	rwcheck $(RWCHECKFLAGS) $(CVERIFY)
+
+longline:
+	-egrep --line-number --with-filename "................................................................................" $(CVERIFY)
+
+tabs:
+	-egrep --line-number --with-filename "	" $(CVERIFY)
+
+maintainers:
+	@echo -n $(PLUGIN) 'maintainers are:'
+	@for maintainer in $(MAINTAINERS); do \
+		echo -n ' '$$maintainer ; \
+	done
+	@echo '.'
+
+# delete all intermediate files
+clean: checkopt $(OPTCLEAN)
+	$(RM) -r $(CURDIR)/$(OBJDIR)
+	$(RM) $(RWEQUDEP)
+	$(RM) $(OBJS)				\
+	      *.ipp				\
+	      *.err				\
+	      *.cmd				\
+	      *.pdb
+ifneq ("$(PLUGINAPI)", "")
+	$(RM) $(PLUGINHEADER)
+endif
+
+
+# delete all files in preparation for a release
+distclean: clean $(OPTDISTCLEAN)
+	$(RM) -r $(PLUGINHEADERDIR)		\
+		  obj
+	$(RM) $(RPLIB)				\
+	      $(RPHEAD)				\
+	      $(RPERR)				\
+	      $(PLUGIN).lib			\
+	      $(PLUGIN).rtf			\
+	      stddata.sed
+
+# dependencies
+
+$(RPHEAD): $(RPERR)
+
+$(PLUGIN).c: $(RPHEAD)
+
+$(RPERR): rperror.def
+
+ifeq ($(RWDEPEND), 1)
+ifdef WITH_DEPEND
+-include $(OBJS:.$(O)=.d)
+endif
+endif
+
+#########################################################################
+
