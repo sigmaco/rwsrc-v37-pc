@@ -17,9 +17,6 @@
 
 #include "D3D9pipe.h"
 
-//@{ Jaewon 20040917
-extern D3DTEXTUREOP TextureOpModulation;
-//@} Jaewon
 
 /****************************************************************************
  Global variables
@@ -91,7 +88,7 @@ _rwD3D9MeshGetNumVerticesMinIndex(const RxVertexIndex *indices,
             minVert = min(minVert, index);
             maxVert = max(maxVert, index);
 
-            ++indices;
+            indices++;
         }
         while (--numIndices);
 
@@ -222,7 +219,7 @@ _rwD3D9ConvertToTriList(RxVertexIndex *indexDst,
     /* Convert tri strip to tri list */
     if (minVert)
     {
-        for (n = 0; n < maxindex; ++n)
+        for (n = 0; n < maxindex; n++)
         {
             if (indexSrc[0] != indexSrc[1] &&
                 indexSrc[0] != indexSrc[2] &&
@@ -245,12 +242,12 @@ _rwD3D9ConvertToTriList(RxVertexIndex *indexDst,
                 numIndices += 3;
             }
 
-            ++indexSrc;
+            indexSrc++;
         }
     }
     else
     {
-        for (n = 0; n < maxindex; ++n)
+        for (n = 0; n < maxindex; n++)
         {
             if (indexSrc[0] != indexSrc[1] &&
                 indexSrc[0] != indexSrc[2] &&
@@ -273,7 +270,7 @@ _rwD3D9ConvertToTriList(RxVertexIndex *indexDst,
                 numIndices += 3;
             }
 
-            ++indexSrc;
+            indexSrc++;
         }
     }
 
@@ -297,22 +294,14 @@ _rwD3D9ResourceEntryInstanceDataDestroy(RwResEntry *repEntry)
     RwUInt32                n;
 
     RWFUNCTION(RWSTRING("_rwD3D9ResourceEntryInstanceDataDestroy"));
-	
+
     resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	//@{ Jaewon 20050428
-	// A temporary expedient...--
-    if (repEntry->owner != NULL && !IsBadReadPtr(repEntry->owner, sizeof(RwUInt8)) &&
-	//@} Jaewon
+    if (repEntry->owner != NULL &&
         !RWD9DOBJECTISWORLDSECTOR(repEntry->owner))
     {
         /* Check if dynamic */
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             if (resEntryHeader->vertexStream[n].managed == FALSE)
             {
@@ -324,13 +313,7 @@ _rwD3D9ResourceEntryInstanceDataDestroy(RwResEntry *repEntry)
                 {
                     RpAtomic *atomic = (RpAtomic *)repEntry->owner;
 
-					//@{ Jaewon 20050415
-					// At here the geometry can be null...(why?--;)
-					// So check it.
-					RpGeometry *geometry = RpAtomicGetGeometry(atomic);
-					if(geometry)
-	                    _rpD3D9RemoveDynamicGeometry(geometry);
-					//@} Jaewon
+                    _rpD3D9RemoveDynamicGeometry(RpAtomicGetGeometry(atomic));
                 }
 
                 break;
@@ -355,7 +338,7 @@ _rwD3D9ResourceEntryInstanceDataDestroy(RwResEntry *repEntry)
     }
 
     /* Destroy the vertex buffer */
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         vertexStream = &(resEntryHeader->vertexStream[n]);
 
@@ -388,17 +371,6 @@ _rwD3D9ResourceEntryInstanceDataDestroy(RwResEntry *repEntry)
         vertexStream->managed = FALSE;
         vertexStream->dynamicLock = FALSE;
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	
-	// Delete ResEntry Lock
-	CS_RESENTRYHEADER_DELLOCK( resEntryHeader );
-	//@} DDonSS
-
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 0;
 
     RWRETURNVOID();
 }
@@ -477,7 +449,7 @@ _rxD3D9Instance(void *object,
      * Initialize the RxD3D9ResEntryHeader
      */
     resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-	
+
     /* Set the serial number */
     resEntryHeader->serialNumber = meshHeader->serialNum;
 
@@ -566,7 +538,7 @@ _rxD3D9Instance(void *object,
     }
 
     /* Initialize the vertex buffers pointers */
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         resEntryHeader->vertexStream[n].vertexBuffer = NULL;
         resEntryHeader->vertexStream[n].offset = 0;
@@ -648,8 +620,8 @@ _rxD3D9Instance(void *object,
                     {
                         *indexDst = (RxVertexIndex)((*indexSrc) - (RxVertexIndex)instancedData->minVert);
 
-                        ++indexSrc;
-                        ++indexDst;
+                        indexSrc++;
+                        indexDst++;
                     }
                 }
                 else
@@ -720,8 +692,8 @@ _rxD3D9Instance(void *object,
 
         instancedData->baseIndex = 0;
 
-        ++instancedData;
-        ++mesh;
+        instancedData++;
+        mesh++;
     }
 
     if (indexBuffer != NULL)
@@ -730,11 +702,6 @@ _rxD3D9Instance(void *object,
 
         RWASSERT(resEntryHeader->totalNumIndex == startIndex);
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Initialize ResEntry Lock
-	CS_RESENTRYHEADER_INITLOCK( resEntryHeader );
-	//@} DDonSS
 
     /*
      * Call the instance callback
@@ -747,12 +714,7 @@ _rxD3D9Instance(void *object,
         {
             /* Destroy resource entry */
             if(allocateNative)
-            {				
-				//@{ 20050513 DDonSS : Threadsafe
-				// Delete ResEntry Lock
-				CS_RESENTRYHEADER_DELLOCK( resEntryHeader );
-				//@} DDonSS
-
+            {
                 RwFree(resEntry);
             }
             else
@@ -763,9 +725,6 @@ _rxD3D9Instance(void *object,
             RWRETURN(NULL);
         }
     }
-	
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 1;
 
     RWRETURN(resEntry);
 }
@@ -859,23 +818,6 @@ D3D9DefaultRenderBlack(RxD3D9ResEntryHeader *resEntryHeader,
     /* force refresh */
     useAlphaTexture = FALSE;
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	//>@ 2005.3.31 gemani
-	if(!resEntryHeader->isLive)
-	{
-		//@{ 20050513 DDonSS : Threadsafe
-		// ResEntry Unlock
-		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-		//@} DDonSS
-
-		RWRETURNVOID();
-	}
-	//<@
-
     /* Get the instanced data */
     instancedData = (RxD3D9InstanceData *)(resEntryHeader + 1);
 
@@ -935,13 +877,8 @@ D3D9DefaultRenderBlack(RxD3D9ResEntryHeader *resEntryHeader,
         }
 
         /* Move onto the next instancedData */
-        ++instancedData;
+        instancedData++;
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
     /* Restore some renderstates */
     RwD3D9SetRenderState(D3DRS_DITHERENABLE, ditherEnable);
@@ -979,25 +916,8 @@ _rxD3D9DefaultRenderCallback(RwResEntry *repEntry,
     /* Set clipping */
     _rwD3D9EnableClippingIfNeeded(object, type);
 
-	/* Get header */
+    /* Get header */
     resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	//>@ 2005.3.31 gemani
-	if(!resEntryHeader->isLive)
-	{
-		//@{ 20050513 DDonSS : Threadsafe
-		// ResEntry Unlock
-		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-		//@} DDonSS
-
-		RWRETURNVOID();
-	}
-	//<@
 
     /*
      * Data shared between meshes
@@ -1023,19 +943,8 @@ _rxD3D9DefaultRenderCallback(RwResEntry *repEntry,
     {
         if ((flags & rxGEOMETRY_PRELIT) == 0)
         {
-			//@{ 2006/07/21 burumal
-			CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-			//@}
-
             D3D9DefaultRenderBlack(resEntryHeader,
                                    (flags & (rxGEOMETRY_TEXTURED | rxGEOMETRY_TEXTURED2)) != 0);
-
-			//@{ 20050513 DDonSS : Threadsafe
-			// ResEntry Unlock
-			//@{ 2006/07/21 burumal
-			//CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-			//@}
-			//@} DDonSS
 
             RWRETURNVOID();
         }
@@ -1126,9 +1035,7 @@ _rxD3D9DefaultRenderCallback(RwResEntry *repEntry,
             {
                 if ((lastRenderFlags & RENDERFLAGS_HAS_TEXTURE) == 0)
                 {
-					//@{ Jaewon 20040917
-                    RwD3D9SetTextureStageState(0, D3DTSS_COLOROP,   TextureOpModulation);
-					//@} Jaewon
+                    RwD3D9SetTextureStageState(0, D3DTSS_COLOROP,   D3DTOP_MODULATE);
                     RwD3D9SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
                     RwD3D9SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
 
@@ -1139,9 +1046,7 @@ _rxD3D9DefaultRenderCallback(RwResEntry *repEntry,
 
                 if (currentRenderFlags & RENDERFLAGS_HAS_TFACTOR)
                 {
-					//@{ Jaewon 20040917
-                    RwD3D9SetTextureStageState(1, D3DTSS_COLOROP,   TextureOpModulation);
-					//@} Jaewon
+                    RwD3D9SetTextureStageState(1, D3DTSS_COLOROP,   D3DTOP_MODULATE);
                     RwD3D9SetTextureStageState(1, D3DTSS_COLORARG1, D3DTA_CURRENT);
                     RwD3D9SetTextureStageState(1, D3DTSS_COLORARG2, D3DTA_TFACTOR);
 
@@ -1210,15 +1115,10 @@ _rxD3D9DefaultRenderCallback(RwResEntry *repEntry,
                                 instancedData->baseIndex,
                                 instancedData->numPrimitives);
         }
-
-        /* Move onto the next instancedData */
-        ++instancedData;
+		
+		/* Move onto the next instancedData */
+        instancedData++;
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
     if (lastRenderFlags == (RENDERFLAGS_HAS_TEXTURE | RENDERFLAGS_HAS_TFACTOR))
     {

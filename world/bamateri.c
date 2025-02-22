@@ -250,7 +250,7 @@ _rpMaterialOpen(void *instance, RwInt32 offset, RwInt32 __RWUNUSED__ size)
     }
 
     /* One more module instance */
-    ++materialModule.numInstances;
+    materialModule.numInstances++;
 
     /* Success */
     RWRETURN(instance);
@@ -276,7 +276,7 @@ _rpMaterialClose(void *instance,
     }
 
     /* One less module instance */
-    --materialModule.numInstances;
+    materialModule.numInstances--;
 
     /* Success */
     RWRETURN(instance);
@@ -1328,10 +1328,7 @@ RpMaterialStreamWrite(const RpMaterial * material, RwStream * stream)
     RWASSERT(0 < material->refCount);
     RWASSERT(stream);
 
-	/*	2005.1.28	gemani */
-	memset(&mat, 0, sizeof(RpMaterialChunkInfo));
-
-	if (!RwStreamWriteChunkHeader(stream, rwID_MATERIAL,
+    if (!RwStreamWriteChunkHeader(stream, rwID_MATERIAL,
                                   RpMaterialStreamGetSize(material)))
     {
         RWRETURN((const RpMaterial *)NULL);

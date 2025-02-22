@@ -42,13 +42,6 @@
 
 #define FLOATASINT(f) (*((const RwInt32 *)&(f)))
 
-//@{ Jaewon 20040923
-//@{ Jaewon 20050418
-// Max number of local lights : 2 -> 8
-extern RpWorldGetAtomicLocalLightsCallBack getAtomicLocalLightsCB;
-//@} Jaewon
-//@} Jaewon
-
 /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    functions
@@ -73,11 +66,6 @@ _rwD3D9AtomicDefaultLightingCallback(void *object)
     RpGeometryFlag  flags;
 
     RWFUNCTION(RWSTRING("_rwD3D9AtomicDefaultLightingCallback"));
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     atomic = (RpAtomic *)object;
     flags = (RpGeometryFlag)
@@ -149,45 +137,6 @@ _rwD3D9AtomicDefaultLightingCallback(void *object)
          */
         if (flags & rxGEOMETRY_NORMALS)
         {
-		//@{ Jaewon 20040923
-		//@{ Jaewon 20050418
-		// Max number of local lights : 2 -> 8
-		if(getAtomicLocalLightsCB)
-		{
-			RpLight *pLight[8];
-			RwUInt32 nLights, i;
-			nLights = getAtomicLocalLightsCB(atomic, pLight);
-			for(i=0; i<nLights; ++i)
-			{
-                const RwMatrix  *matrixLight;
-                const RwV3d     *pos;
-                const RwSphere  *sphere;
-                RwV3d           distanceVector;
-                RwReal          distanceSquare;
-                RwReal          distanceCollision;
-
-                /* Does the light intersect the atomics bounding sphere */
-                matrixLight = RwFrameGetLTM(RpLightGetFrame(pLight[i]));
-
-                pos = &(matrixLight->pos);
-
-                sphere = RpAtomicGetWorldBoundingSphere(atomic);
-
-                RwV3dSub(&distanceVector, &(sphere->center), pos);
-
-                distanceSquare = RwV3dDotProduct(&distanceVector, &distanceVector);
-
-                distanceCollision = (sphere->radius + RpLightGetRadius(pLight[i]));
-
-                if (distanceSquare < (distanceCollision * distanceCollision))
-                {
-                    lighting |= _rwD3D9LightLocalEnable(pLight[i]);
-                }
-			}
-		}
-		//@} Jaewon
-		else
-		{
             /* Increase the marker ! */
             RWSRCGLOBAL(lightFrame)++;
 
@@ -255,8 +204,6 @@ _rwD3D9AtomicDefaultLightingCallback(void *object)
                 cur = rwLLLinkGetNext(cur);
             }
         }
-		//@} Jaewon
-		}
 
         /* Disable all unwanted lights and activate lighting if needed */
         _rwD3D9LightsEnable(lighting, rpATOMIC);
@@ -340,15 +287,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
     /* Get number of texture coordinates */
     numTextureCoords = RpGeometryGetNumTexCoordSets(geometry);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 0;
-
-	/*
+    /*
      * Calculate the stride of the vertex
      */
     if (!reinstance)
@@ -358,7 +297,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
         resEntryHeader->totalNumVertex = geometry->numVertices;
 
         /* Destroy previous vertex buffers */
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             vertexStream = &(resEntryHeader->vertexStream[n]);
 
@@ -433,7 +372,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
         declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
         declaration[declarationIndex].Usage = D3DDECLUSAGE_POSITION;
         declaration[declarationIndex].UsageIndex = 0;
-        ++declarationIndex;
+        declarationIndex++;
         vertexStream[stream].stride = sizeof(RwV3d);
         vertexStream[stream].geometryFlags = rpGEOMETRYLOCKVERTICES;
 
@@ -465,7 +404,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
             declaration[declarationIndex].Usage = D3DDECLUSAGE_NORMAL;
             declaration[declarationIndex].UsageIndex = 0;
-            ++declarationIndex;
+            declarationIndex++;
             vertexStream[stream].geometryFlags |= rpGEOMETRYLOCKNORMALS;
         }
 
@@ -487,13 +426,13 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
             declaration[declarationIndex].Usage = D3DDECLUSAGE_COLOR;
             declaration[declarationIndex].UsageIndex = 0;
-            ++declarationIndex;
+            declarationIndex++;
             vertexStream[stream].stride += sizeof(RwRGBA);
             vertexStream[stream].geometryFlags |= rpGEOMETRYLOCKPRELIGHT;
         }
 
         /* Texture coordinates */
-        for (n = 0; n < numTextureCoords; ++n)
+        for (n = 0; n < numTextureCoords; n++)
         {
             if (usageFlags & (rpD3D9GEOMETRYUSAGE_DYNAMICTEXCOORDS1 << n))
             {
@@ -510,7 +449,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
             declaration[declarationIndex].Usage = D3DDECLUSAGE_TEXCOORD;
             declaration[declarationIndex].UsageIndex = n;
-            ++declarationIndex;
+            declarationIndex++;
             vertexStream[stream].stride += sizeof(RwV2d);
             vertexStream[stream].geometryFlags |= (rpGEOMETRYLOCKTEXCOORDS1 << n);
         }
@@ -550,7 +489,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
         while (numStreams > 1 &&
                vertexStream[numStreams - 1].stride == 0)
         {
-           --numStreams;
+            numStreams--;
         }
 
         RWASSERT(numStreams > 0);
@@ -577,7 +516,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
          */
         RWASSERT(numStreams > 0 && numStreams <= RWD3D9_MAX_VERTEX_STREAMS);
 
-        for (n = 0; n < numStreams; ++n)
+        for (n = 0; n < numStreams; n++)
         {
             vertexStream = &(resEntryHeader->vertexStream[n]);
 
@@ -591,11 +530,6 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                                                       &(vertexStream->vertexBuffer),
                                                       &(vertexStream->offset)))
                 {
-					//@{ 20050513 DDonSS : Threadsafe
-					// ResEntry Unlock
-					CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-					//@} DDonSS
-
                     RWRETURN(FALSE);
                 }
             }
@@ -606,12 +540,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                 if (FALSE == RwD3D9DynamicVertexBufferCreate(vbSize,
                                                              &(vertexStream->vertexBuffer)))
                 {
-					//@{ 20050513 DDonSS : Threadsafe
-					// ResEntry Unlock
-					CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-					//@} DDonSS
-
-					RWRETURN(FALSE);
+                    RWRETURN(FALSE);
                 }
             }
             else
@@ -624,11 +553,6 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                                                           &(vertexStream->vertexBuffer),
                                                           &(vertexStream->offset)))
                     {
-						//@{ 20050513 DDonSS : Threadsafe
-						// ResEntry Unlock
-						CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-						//@} DDonSS
-
                         RWRETURN(FALSE);
                     }
                 }
@@ -639,11 +563,6 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                     if (FALSE == RwD3D9DynamicVertexBufferCreate(vbSize,
                                                                  &(vertexStream->vertexBuffer)))
                     {
-						//@{ 20050513 DDonSS : Threadsafe
-						// ResEntry Unlock
-						CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-						//@} DDonSS
-
                         RWRETURN(FALSE);
                     }
                 }
@@ -665,7 +584,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             {
                 instancedData->baseIndex = instancedData->minVert;
 
-                ++instancedData;
+                instancedData++;
             }
             while (--numMeshes);
         }
@@ -681,7 +600,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                 instancedData->baseIndex = instancedData->minVert +
                                            (resEntryHeader->vertexStream[0].offset / resEntryHeader->vertexStream[0].stride);
 
-                ++instancedData;
+                instancedData++;
             }
             while (--numMeshes);
         }
@@ -703,7 +622,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                 numStreams = declaration[n].Stream + 1;
             }
 
-            ++n;
+            n++;
         }
 
         RWASSERT(numStreams > 0 && numStreams <= RWD3D9_MAX_VERTEX_STREAMS);
@@ -712,7 +631,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
     /*
      * Lock the vertex buffer
      */
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         lockedVertexBuffer[n] = NULL;
     }
@@ -721,7 +640,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
     {
         lockedSinceLastInst = rpGEOMETRYLOCKALL;
 
-        for (n = 0; n < numStreams; ++n)
+        for (n = 0; n < numStreams; n++)
         {
             vertexStream = &(resEntryHeader->vertexStream[n]);
 
@@ -736,7 +655,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
     {
         lockedSinceLastInst = geometry->lockedSinceLastInst;
 
-        for (n = 0; n < numStreams; ++n)
+        for (n = 0; n < numStreams; n++)
         {
             vertexStream = &(resEntryHeader->vertexStream[n]);
 
@@ -804,7 +723,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             while (declaration[declarationIndex].Usage != D3DDECLUSAGE_POSITION ||
                    declaration[declarationIndex].UsageIndex != 0)
             {
-                ++declarationIndex;
+                declarationIndex++;
             }
             RWASSERT(declarationIndex < 16);
 
@@ -830,7 +749,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                 while (declaration[declarationIndex].Usage != D3DDECLUSAGE_NORMAL ||
                        declaration[declarationIndex].UsageIndex != 0)
                 {
-                    ++declarationIndex;
+                    declarationIndex++;
                 }
                 RWASSERT(declarationIndex < 16);
 
@@ -856,7 +775,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
         while (declaration[declarationIndex].Usage != D3DDECLUSAGE_POSITION ||
                declaration[declarationIndex].UsageIndex != 0)
         {
-            ++declarationIndex;
+            declarationIndex++;
         }
         RWASSERT(declarationIndex < 16);
 
@@ -882,7 +801,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             while (declaration[declarationIndex].Usage != D3DDECLUSAGE_NORMAL ||
                    declaration[declarationIndex].UsageIndex != 0)
             {
-                ++declarationIndex;
+                declarationIndex++;
             }
             RWASSERT(declarationIndex < 16);
 
@@ -910,7 +829,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             while (declaration[declarationIndex].Usage != D3DDECLUSAGE_COLOR ||
                    declaration[declarationIndex].UsageIndex != 0)
             {
-                ++declarationIndex;
+                declarationIndex++;
             }
             RWASSERT(declarationIndex < 16);
 
@@ -931,7 +850,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                                                 stride);
 
 
-                ++instancedData;
+                instancedData++;
             }
             while (--numMeshes);
         }
@@ -947,7 +866,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             {
                 instancedData->vertexAlpha = FALSE;
 
-                ++instancedData;
+                instancedData++;
             }
             while (--numMeshes);
         }
@@ -962,7 +881,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
         {
             const RwV2d *texCoord;
 
-            for (i = 0; i < numTextureCoords; ++i)
+            for (i = 0; i < numTextureCoords; i++)
             {
                 if (lockedSinceLastInst & (rpGEOMETRYLOCKTEXCOORDS1 << i))
                 {
@@ -973,7 +892,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                     while (declaration[declarationIndex].Usage != D3DDECLUSAGE_TEXCOORD ||
                            declaration[declarationIndex].UsageIndex != i)
                     {
-                        ++declarationIndex;
+                        declarationIndex++;
                     }
                     RWASSERT(declarationIndex < 16);
 
@@ -1003,7 +922,7 @@ D3D9AtomicDefaultInstanceCallback(void *object,
             while (declaration[declarationIndex].Usage != D3DDECLUSAGE_TANGENT ||
                    declaration[declarationIndex].UsageIndex != 0)
             {
-                ++declarationIndex;
+                declarationIndex++;
             }
             RWASSERT(declarationIndex < 16);
 
@@ -1021,33 +940,20 @@ D3D9AtomicDefaultInstanceCallback(void *object,
                                                 NULL,
                                                 texCoord,
                                                 resEntryHeader,
-                                                resEntryHeader->vertexStream[declaration[declarationIndex].Stream].stride
-												//@{ Jaewon 20050330
-												,
-												geometry->mesh
-												//@} Jaewon
-												);
+                                                resEntryHeader->vertexStream[declaration[declarationIndex].Stream].stride);
         }
     }
 
     /*
      * Unlock the vertex buffer
      */
-    for (n = 0; n < numStreams; ++n)
+    for (n = 0; n < numStreams; n++)
     {
         if (lockedVertexBuffer[n] != NULL)
         {
             IDirect3DVertexBuffer9_Unlock((LPVERTEXBUFFER)(resEntryHeader->vertexStream[n].vertexBuffer));
         }
     }
-
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 1;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
     RWRETURN(TRUE);
 }
@@ -1068,8 +974,7 @@ D3D9AtomicDefaultReinstanceCallback(void *object,
 {
     const RpAtomic  *atomic;
     RpGeometry      *geometry;
-	RxD3D9ResEntryHeader    *resEntryHeader;
-            
+
     RWFUNCTION(RWSTRING("D3D9AtomicDefaultReinstanceCallback"));
     RWASSERT(NULL != object);
     RWASSERT(NULL != resEntry);
@@ -1079,16 +984,6 @@ D3D9AtomicDefaultReinstanceCallback(void *object,
     geometry = RpAtomicGetGeometry(atomic);
     RWASSERT(NULL != geometry);
 
-	resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 0;
-
     /* If were a morpth target, morph if were dirty */
     if ((RpGeometryGetNumMorphTargets(geometry) != 1))
     {
@@ -1097,23 +992,19 @@ D3D9AtomicDefaultReinstanceCallback(void *object,
          if ( (interp->flags & rpINTERPOLATORDIRTYINSTANCE) ||
               geometry->lockedSinceLastInst )
          {
-			RpGeometryFlag          lockedFlags;			
-			//@{ 2006/07/27 burumal
-			//RxD3D9ResEntryHeader    *resEntryHeader;
-			//@}
+            RpGeometryFlag          lockedFlags;
+            RxD3D9ResEntryHeader    *resEntryHeader;
 
             lockedFlags = geometry->lockedSinceLastInst;
 
             geometry->lockedSinceLastInst |= (rpGEOMETRYLOCKVERTICES | rpGEOMETRYLOCKNORMALS);
 
-			//@{ 2006/07/27 burumal
-            //resEntryHeader= (RxD3D9ResEntryHeader *)(resEntry + 1);
-			//@}
-			
+            resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
+
             D3D9AtomicDefaultInstanceCallback(object,
                                               resEntryHeader,
                                               TRUE);
-			
+
             geometry->lockedSinceLastInst = lockedFlags;
          }
     }
@@ -1124,33 +1015,18 @@ D3D9AtomicDefaultReinstanceCallback(void *object,
          */
         if (instanceCallback)
         {
-			//@{ 2006/07/27 burumal
-            //RxD3D9ResEntryHeader *resEntryHeader;
-            //resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-			//@}
-			
+            RxD3D9ResEntryHeader *resEntryHeader;
+
+            resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
+
             if (!instanceCallback(object,
                                   resEntryHeader,
                                   TRUE))
             {
-				//@{ 20050513 DDonSS : Threadsafe
-				// ResEntry Unlock
-				//@{ 2006/07/21 burumal
-				//CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-				//@}
-				//@} DDonSS
-
                 RWRETURN(FALSE);
             }
         }
     }
-
-	resEntryHeader->isLive = 1;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
     RWRETURN(TRUE);
 }
@@ -1170,7 +1046,6 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
     _rxD3D9InstanceNodeData *privateData;
     RwMatrix                *matrix;
     RwUInt32                lighting;
-	RxD3D9ResEntryHeader    *resEntryHeader;
 
     RWFUNCTION(RWSTRING("D3D9AtomicAllInOneNode"));
     RWASSERT(NULL != self);
@@ -1221,8 +1096,9 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
         /* If the meshes have changed we should re-instance */
         if (resEntry)
         {
-			resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
+            RxD3D9ResEntryHeader    *resEntryHeader;
 
+            resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
             if (resEntryHeader->serialNumber != meshHeader->serialNum)
             {
                 /* Destroy resources to force reinstance */
@@ -1234,14 +1110,6 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
         /* Check to see if a resource entry already exists */
         if (resEntry)
         {
-			// 2005.3.31 gemani
-			resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
-			//@{ 20050513 DDonSS : Threadsafe
-			// ResEntry Lock
-			CS_RESENTRYHEADER_LOCK( resEntryHeader );
-			//@} DDonSS
-
             if (geometry->lockedSinceLastInst ||
                 (RpGeometryGetNumMorphTargets(geometry) != 1))
             {
@@ -1251,11 +1119,6 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
                                                           resEntry,
                                                           privateData->instanceCallback) )
                     {
-						//@{ 20050513 DDonSS : Threadsafe
-						// ResEntry Unlock
-						CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-						//@} DDonSS
-						
                         /* Destroy resource entry */
                         RwResourcesFreeResEntry(resEntry);
 
@@ -1268,15 +1131,10 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
 
                 /* The geometry is up to date */
                 geometry->lockedSinceLastInst = 0;
-            }		
+            }
 
             /* We have a resEntry so use it */
             RwResourcesUseResEntry(resEntry);
-
-			//@{ 20050513 DDonSS : Threadsafe
-			// ResEntry Unlock
-			CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-			//@} DDonSS
         }
         else
         {
@@ -1325,22 +1183,6 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
     {
         RWRETURN(TRUE);
     }
-
-	resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	if(!resEntryHeader->isLive)
-	{
-		// ResEntry Unlock
-		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-		//@} DDonSS
-
-		RWRETURN(TRUE);
-	}
 
     /*
      * Set up lights
@@ -1399,7 +1241,7 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
     {
         RwD3D9SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
     }
-	
+
     /*
      * Render
      */
@@ -1407,11 +1249,6 @@ D3D9AtomicAllInOneNode(RxPipelineNodeInstance *self,
     {
         privateData->renderCallback(resEntry, (void *)atomic, rpATOMIC, geomFlags);
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
 #ifdef RWMETRICS
     /* Now update our metrics statistics */
@@ -1472,7 +1309,7 @@ RxNodeDefinition *
 RxNodeDefinitionGetD3D9AtomicAllInOne(void)
 {
 
-    static RwChar _AtomicInstance_csl[] = RWSTRING("nodeD3D9AtomicAllInOne.csl");
+    static RwChar _AtomicInstance_csl[] = "nodeD3D9AtomicAllInOne.csl";
 
     static RxNodeDefinition nodeD3D9AtomicAllInOneCSL = { /* */
         _AtomicInstance_csl,                        /* Name */
@@ -1577,7 +1414,6 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
     if (resEntry)
     {
         resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
         if (resEntryHeader->serialNumber != meshHeader->serialNum)
         {
             /* Destroy resources to force reinstance */
@@ -1606,7 +1442,6 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
         if (resEntry)
         {
             resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
             if (resEntryHeader->serialNumber != meshHeader->serialNum)
             {
                 /* Destroy resources to force reinstance */
@@ -1618,12 +1453,6 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
         /* Check to see if a resource entry already exists */
         if (resEntry)
         {
-			resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
-			// ResEntry Lock
-			CS_RESENTRYHEADER_LOCK( resEntryHeader );
-			//@} DDonSS
-
             if (geometry->lockedSinceLastInst ||
                 (RpGeometryGetNumMorphTargets(geometry) != 1))
             {
@@ -1661,11 +1490,6 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
                                                            resEntryHeader,
                                                            TRUE))
                         {
-							//@{ 20050513 DDonSS : Threadsafe
-							// ResEntry Unlock
-							CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-							//@} DDonSS
-
                             /* Destroy resource entry */
                             RwResourcesFreeResEntry(resEntry);
 
@@ -1683,11 +1507,6 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
 
             /* We have a resEntry so use it */
             RwResourcesUseResEntry(resEntry);
-
-			//@{ 20050513 DDonSS : Threadsafe
-			// ResEntry Unlock
-			CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-			//@} DDonSS
         }
         else
         {
@@ -1736,25 +1555,6 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
     {
         RWRETURN(TRUE);
     }
-
-    /* Get header */
-    resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	if(!resEntryHeader->isLive)
-	{
-		//@{ 20050513 DDonSS : Threadsafe
-		// ResEntry Unlock
-		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-		//@} DDonSS
-
-		RWRETURN(FALSE);
-	}
-	//<@
 
     /*
      * Dispatch geometry
@@ -1818,15 +1618,15 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
         {
             if (desc.numSpotLights)
             {
-                --desc.numSpotLights;
+                desc.numSpotLights--;
             }
             else if (desc.numPointLights)
             {
-                --desc.numPointLights;
+                desc.numPointLights--;
             }
             else if (desc.numDirectionalLights)
             {
-                --desc.numDirectionalLights;
+                desc.numDirectionalLights--;
             }
             else if (desc.fogMode)
             {
@@ -1847,6 +1647,9 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
     RwD3D9SetVertexShaderConstant(0,
                                   _rxD3D9VertexShaderConstants,
                                   (shaderConstantPtr - _rxD3D9VertexShaderConstants));
+
+    /* Get header */
+    resEntryHeader = (RxD3D9ResEntryHeader *)(resEntry + 1);
 
     /*
      * Data shared between meshes
@@ -1952,16 +1755,11 @@ _rxD3D9VertexShaderAtomicAllInOneNode(RxPipelineNodeInstance *self,
         /* Move onto the next instancedData */
         instancedData->vertexShader = NULL;
 
-        ++instancedData;
+        instancedData++;
     }
 
     RWASSERT(privateData->endCallback != NULL);
     privateData->endCallback(atomic, rpATOMIC, &desc);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
 #ifdef RWMETRICS
     /* Now update our metrics statistics */

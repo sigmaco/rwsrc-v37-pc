@@ -55,7 +55,7 @@ _rpSectorOpen(void *instance,
     RWFUNCTION(RWSTRING("_rpSectorOpen"));
 
     /* One more module instance */
-    ++sectorModule.numInstances;
+    sectorModule.numInstances++;
 
     /* Success */
     RWRETURN(instance);
@@ -75,7 +75,7 @@ _rpSectorClose(void *instance,
     RWFUNCTION(RWSTRING("_rpSectorClose"));
 
     /* One less module instance */
-    --sectorModule.numInstances;
+    sectorModule.numInstances--;
 
     /* Success */
     RWRETURN(instance);

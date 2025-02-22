@@ -69,11 +69,6 @@ D3D9WorldSectorDefaultLightingCallback(void *object)
 
     RWFUNCTION(RWSTRING("D3D9WorldSectorDefaultLightingCallback"));
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     flags = RpWorldGetFlags((const RpWorld *)RWSRCGLOBAL(curWorld));
     if (flags & rxGEOMETRY_LIGHT)
     {
@@ -159,14 +154,6 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
 
     RWFUNCTION(RWSTRING("D3D9WorldSectorDefaultInstanceCallback"));
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 0;
-
     sector = (const RpWorldSector *)object;
     flags = (RpGeometryFlag)
         RpWorldGetFlags((RpWorld *)RWSRCGLOBAL(curWorld));
@@ -217,7 +204,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
         declaration[declarationIndex].Usage = D3DDECLUSAGE_NORMAL;
         declaration[declarationIndex].UsageIndex = 0;
-        ++declarationIndex;
+        declarationIndex++;
         vertexStream->geometryFlags |= rpGEOMETRYLOCKNORMALS;
     }
 
@@ -230,7 +217,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
         declaration[declarationIndex].Usage = D3DDECLUSAGE_COLOR;
         declaration[declarationIndex].UsageIndex = 0;
-        ++declarationIndex;
+        declarationIndex++;
         offset += sizeof(RwRGBA);
         vertexStream->stride += sizeof(RwRGBA);
         vertexStream->geometryFlags |= rpGEOMETRYLOCKPRELIGHT;
@@ -245,7 +232,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
         declaration[declarationIndex].Usage = D3DDECLUSAGE_TEXCOORD;
         declaration[declarationIndex].UsageIndex = 0;
-        ++declarationIndex;
+        declarationIndex++;
         offset += sizeof(RwV2d);
         vertexStream->stride += sizeof(RwV2d);
         vertexStream->geometryFlags |= rpGEOMETRYLOCKTEXCOORDS1;
@@ -259,7 +246,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
         declaration[declarationIndex].Usage = D3DDECLUSAGE_TEXCOORD;
         declaration[declarationIndex].UsageIndex = 1;
-        ++declarationIndex;
+        declarationIndex++;
         offset += sizeof(RwV2d);
         vertexStream->stride += sizeof(RwV2d);
         vertexStream->geometryFlags |= rpGEOMETRYLOCKTEXCOORDS2;
@@ -286,7 +273,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         declaration[declarationIndex].Method = D3DDECLMETHOD_DEFAULT;
         declaration[declarationIndex].Usage = D3DDECLUSAGE_TANGENT;
         declaration[declarationIndex].UsageIndex = 0;
-        ++declarationIndex;
+        declarationIndex++;
     }
 
     declaration[declarationIndex].Stream = 0xFF;
@@ -313,11 +300,6 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                            &vertexStream->vertexBuffer,
                                            &vertexStream->offset))
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// ResEntry Unlock
-		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-		//@} DDonSS
-
         RWRETURN(FALSE);
     }
 
@@ -332,7 +314,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         instancedData->baseIndex = instancedData->minVert +
                                    (vertexStream->offset / vertexStream->stride);
 
-        ++instancedData;
+        instancedData++;
     }
     while (--numMeshes);
 
@@ -354,7 +336,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                               resEntryHeader->totalNumVertex,
                                               vertexStream->stride);
 
-    ++declarationIndex;
+    declarationIndex++;
 
     /* Normals */
     if (flags & rxGEOMETRY_NORMALS)
@@ -369,7 +351,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                                       resEntryHeader->totalNumVertex,
                                                       vertexStream->stride);
 
-        ++declarationIndex;
+        declarationIndex++;
     }
 
     /* Pre-lighting */
@@ -394,11 +376,11 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                               stride);
 
 
-            ++instancedData;
+            instancedData++;
         }
         while (--numMeshes);
 
-        ++declarationIndex;
+        declarationIndex++;
         offset += sizeof(RwUInt32);
     }
     else
@@ -410,7 +392,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
         {
             instancedData->vertexAlpha = FALSE;
 
-            ++instancedData;
+            instancedData++;
         }
         while (--numMeshes);
     }
@@ -428,7 +410,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                                   resEntryHeader->totalNumVertex,
                                                   vertexStream->stride);
 
-        ++declarationIndex;
+        declarationIndex++;
     }
 
     if (flags & rpWORLDTEXTURED2)
@@ -443,7 +425,7 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                                   resEntryHeader->totalNumVertex,
                                                   vertexStream->stride);
 
-        ++declarationIndex;
+        declarationIndex++;
     }
 
     if (usageFlags & rpD3D9WORLDSECTORUSAGE_CREATETANGENTS)
@@ -471,14 +453,9 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
                                                       normal,
                                                       texCoord,
                                                       resEntryHeader,
-                                                      vertexStream->stride
-													  //@{ Jaewon 20050330
-													  ,
-													  sector->mesh
-													  //@} Jaewon
-													  );
+                                                      vertexStream->stride);
 
-        ++declarationIndex;
+        declarationIndex++;
     }
 
     RWASSERT(offset == vertexStream->stride);
@@ -487,14 +464,6 @@ D3D9WorldSectorDefaultInstanceCallback(void *object,
      * Unlock the vertex buffer
      */
     IDirect3DVertexBuffer9_Unlock((LPVERTEXBUFFER)vertexStream->vertexBuffer);
-
-	// 2005.3.31 gemani
-	resEntryHeader->isLive = 1;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
     RWRETURN(TRUE);
 }
@@ -512,7 +481,6 @@ D3D9WorldSectorAllInOneNode(RxPipelineNodeInstance *self,
     RwUInt32                worldFlags;
     _rxD3D9InstanceNodeData *privateData;
     RwInt32                 numMeshes;
-	RxD3D9ResEntryHeader    *resEntryHeader;
 
     RWFUNCTION(RWSTRING("D3D9WorldSectorAllInOneNode"));
     RWASSERT(NULL != self);
@@ -552,8 +520,9 @@ D3D9WorldSectorAllInOneNode(RxPipelineNodeInstance *self,
         /* If the meshes have changed we should re-instance */
         if (repEntry)
         {
-            resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
+            RxD3D9ResEntryHeader    *resEntryHeader;
 
+            resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
             if (resEntryHeader->serialNumber != meshHeader->serialNum)
             {
                 /* Destroy resources to force reinstance */
@@ -593,13 +562,6 @@ D3D9WorldSectorAllInOneNode(RxPipelineNodeInstance *self,
         RWRETURN(TRUE);
     }
 
-	resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
     /*
      * Set up lights here, (for now at least)
      */
@@ -616,7 +578,7 @@ D3D9WorldSectorAllInOneNode(RxPipelineNodeInstance *self,
     RwD3D9SetTransformWorld(NULL);
 
     RwD3D9SetRenderState(D3DRS_NORMALIZENORMALS, FALSE);
-	
+
     /*
      * Render
      */
@@ -624,11 +586,6 @@ D3D9WorldSectorAllInOneNode(RxPipelineNodeInstance *self,
     {
         privateData->renderCallback(repEntry, (void *)sector, (RwUInt8)rwSECTORATOMIC, worldFlags);
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock	
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
 #ifdef RWMETRICS
     /* Now update our metrics statistics */
@@ -696,7 +653,7 @@ D3D9WorldSectorAllInOnePipelineInit(RxPipelineNode *node)
 RxNodeDefinition *
 RxNodeDefinitionGetD3D9WorldSectorAllInOne(void)
 {
-    static RwChar _D3D9ObjWorldSectorAllInOne_csl[] = RWSTRING("nodeD3D9WorldSectorAllInOne.csl");
+    static RwChar _D3D9ObjWorldSectorAllInOne_csl[] = "nodeD3D9WorldSectorAllInOne.csl";
 
     static RxNodeDefinition nodeD3D9WorldSectorAllInOneCSL = { /* */
         _D3D9ObjWorldSectorAllInOne_csl,            /* Name */
@@ -793,7 +750,6 @@ _rxD3D9VertexShaderWorldSectorAllInOneNode(RxPipelineNodeInstance *self,
         if (repEntry)
         {
             resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
-			
             if (resEntryHeader->serialNumber != meshHeader->serialNum)
             {
                 /* Destroy resources to force reinstance */
@@ -832,24 +788,6 @@ _rxD3D9VertexShaderWorldSectorAllInOneNode(RxPipelineNodeInstance *self,
     {
         RWRETURN(TRUE);
     }
-
-	resEntryHeader = (RxD3D9ResEntryHeader *)(repEntry + 1);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Lock
-	CS_RESENTRYHEADER_LOCK( resEntryHeader );
-	//@} DDonSS
-
-	if(!resEntryHeader->isLive)
-	{
-		//@{ 20050513 DDonSS : Threadsafe
-		// ResEntry Unlock
-		CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-		//@} DDonSS
-
-		RWRETURN(TRUE);
-	}
-	//<@
 
     /*
      * Dispatch sector
@@ -911,15 +849,15 @@ _rxD3D9VertexShaderWorldSectorAllInOneNode(RxPipelineNodeInstance *self,
         {
             if (desc.numSpotLights)
             {
-                --desc.numSpotLights;
+                desc.numSpotLights--;
             }
             else if (desc.numPointLights)
             {
-                --desc.numPointLights;
+                desc.numPointLights--;
             }
             else if (desc.numDirectionalLights)
             {
-                --desc.numDirectionalLights;
+                desc.numDirectionalLights--;
             }
             else if (desc.fogMode)
             {
@@ -1045,11 +983,6 @@ _rxD3D9VertexShaderWorldSectorAllInOneNode(RxPipelineNodeInstance *self,
     RWSRCGLOBAL(metrics)->numVertices  += RpWorldSectorGetNumVertices(sector);
     RWSRCGLOBAL(metrics)->numTriangles += RpWorldSectorGetNumTriangles(sector);
 #endif
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// ResEntry Unlock
-	CS_RESENTRYHEADER_UNLOCK( resEntryHeader );
-	//@} DDonSS
 
     RWRETURN(TRUE);
 }

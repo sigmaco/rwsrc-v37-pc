@@ -199,7 +199,7 @@ _rpMeshOpen(void *instance,
     RPMESHGLOBAL(nextSerialNum) = 1;
 
     /* One more module instance */
-    ++meshModule.numInstances;
+    meshModule.numInstances++;
 
     /* Set up LUTs for: RwPrimitiveType <--> rpMESHHEADER[primtype] */
     RPMESHGLOBAL(meshFlagsToPrimType)[0 /*rpMESHHEADERTRILIST */ ] =
@@ -400,7 +400,7 @@ _rpBuildMeshAddTriangle(RpBuildMesh * mesh, RpMaterial * material,
     mesh->meshTriangles[mesh->numTriangles].textureIndex = textureIndex;
     mesh->meshTriangles[mesh->numTriangles].rasterIndex = rasterIndex;
     mesh->meshTriangles[mesh->numTriangles].pipelineIndex = pipelineIndex;
-    ++mesh->numTriangles;
+    mesh->numTriangles++;
 
     RWRETURN(mesh);
 }
@@ -520,7 +520,7 @@ _rpMeshHeaderForAllMeshes(RpMeshHeader * meshHeader,
         }
 
         /* Set up for next mesh */
-        ++mesh;
+        mesh++;
     }
 
     RWRETURN(meshHeader);
@@ -609,7 +609,7 @@ _rpMeshWrite(const RpMeshHeader *meshHeader,
                 writeIndices = (numIndices < RWINDEXBUFFERSIZE) ?
                                (numIndices) : (RWINDEXBUFFERSIZE);
 
-                for (i = 0; i < writeIndices; ++i)
+                for (i = 0; i < writeIndices; i++)
                 {
                     IndexBuffer[i] = (RwUInt32)*meshIndices++;
                 }
@@ -626,7 +626,7 @@ _rpMeshWrite(const RpMeshHeader *meshHeader,
             }
         }
 
-        ++mesh;
+        mesh++;
     }
 
     /* All done */
@@ -745,7 +745,7 @@ _rpMeshRead(RwStream *stream,
                 }
             }
 
-            ++mesh;
+            mesh++;
         }
     }
 

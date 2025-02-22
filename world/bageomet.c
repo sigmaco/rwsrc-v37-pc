@@ -157,17 +157,13 @@ static RwBool
 GeometryAnnihilate(RpGeometry *geometry)
 {
     RWFUNCTION(RWSTRING("GeometryAnnihilate"));
+
     RWASSERT(geometry);
     RWASSERTISTYPE(geometry, rpGEOMETRY);
     RWASSERT(geometry->refCount <= 0);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Lock
-	CS_GEOMETRY_LOCK( geometry );
-	//@} DDonSS
-
     /* Temporarily bump up reference count to avoid assertion failures */
-    ++geometry->refCount;
+    geometry->refCount++;
 
     RWASSERT(geometry->refCount > 0);
 
@@ -189,14 +185,6 @@ GeometryAnnihilate(RpGeometry *geometry)
     /* Reinstate reference count */
     --geometry->refCount;
     RWASSERT(geometry->refCount <= 0);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Unlock
-	CS_GEOMETRY_UNLOCK( geometry );
-	
-	// Geometry Delete Lock
-	CS_GEOMETRY_DELLOCK( geometry );
-	//@} DDonSS
 
     RwFree(geometry);
 
@@ -226,7 +214,7 @@ _rpGeometryOpen(void *instance, RwInt32 offset,
     geometryModule.globalsOffset = offset;
 
     /* One more module instance */
-    ++geometryModule.numInstances;
+    geometryModule.numInstances++;
 
     /* Success */
     RWRETURN(instance);
@@ -246,7 +234,7 @@ _rpGeometryClose(void *instance,
     RWFUNCTION(RWSTRING("_rpGeometryClose"));
 
     /* One less module instance */
-    --geometryModule.numInstances;
+    geometryModule.numInstances--;
 
     /* Success */
     RWRETURN(instance);
@@ -255,7 +243,7 @@ _rpGeometryClose(void *instance,
 RwPluginRegEntry   *
 _rpGeometryGetTKListFirstRegEntry(void)
 {
-    RWFUNCTION(RWSTRING("_rpGeometryGetTKListFirstRegEntry"));
+    RWFUNCTION("_rpGeometryGetTKListFirstRegEntry");
 
     RWRETURN(geometryTKList.firstRegEntry);
 }
@@ -313,12 +301,7 @@ RpGeometryTransform(RpGeometry * geometry, const RwMatrix * matrix)
     if (RpGeometryLock(geometry, (rpGEOMETRYLOCKVERTICES |
                                   rpGEOMETRYLOCKNORMALS)))
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Lock
-		CS_GEOMETRY_LOCK( geometry );
-		//@} DDonSS
-
-        for (i = 0; i < geometry->numMorphTargets; ++i)
+        for (i = 0; i < geometry->numMorphTargets; i++)
         {
             RpMorphTarget      *morphTarget = &geometry->morphTarget[i];
 
@@ -338,7 +321,7 @@ RpGeometryTransform(RpGeometry * geometry, const RwMatrix * matrix)
                 while (j--)
                 {
                     _rwV3dNormalize(normals, normals);
-                    ++normals;
+                    normals++;
                 }
             }
 
@@ -349,11 +332,6 @@ RpGeometryTransform(RpGeometry * geometry, const RwMatrix * matrix)
         /* Can put it back into a device dependent form */
         if (!RpGeometryUnlock(geometry))
         {
-			//@{ 20050513 DDonSS : Threadsafe
-			// Geometry Unlock
-			CS_GEOMETRY_UNLOCK( geometry );
-			//@} DDonSS
-        	
             RpGeometryDestroy(geometry);
             RWRETURN((RpGeometry *)NULL);
         }
@@ -362,11 +340,6 @@ RpGeometryTransform(RpGeometry * geometry, const RwMatrix * matrix)
         RWASSERTISTYPE(geometry, rpGEOMETRY);
         RWASSERT(0 < geometry->refCount);
 
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( geometry );
-		//@} DDonSS
-		
         RWRETURN(geometry);
     }
 
@@ -415,17 +388,18 @@ RpGeometryCreateSpace(RwReal radius)
         morphTarget->boundingSphere.center.y = (RwReal) (0.0);
         morphTarget->boundingSphere.center.z = (RwReal) (0.0);
         morphTarget->boundingSphere.radius = radius;
-    }
 
-    if (!RpGeometryUnlock(geometry))
-    {
-        RpGeometryDestroy(geometry);
-        RWRETURN((RpGeometry *)NULL);
-    }
+		if (!RpGeometryUnlock(geometry))
+		{
+			RpGeometryDestroy(geometry);
+			RWRETURN((RpGeometry *)NULL);
+		}
 
-    RWASSERT(geometry);
-    RWASSERTISTYPE(geometry, rpGEOMETRY);
-    RWASSERT(geometry->refCount);
+		RWASSERT(geometry);
+		RWASSERTISTYPE(geometry, rpGEOMETRY);
+		RWASSERT(geometry->refCount);
+
+	}
 
     RWRETURN(geometry);
 }
@@ -581,7 +555,7 @@ RpMorphTargetCalcBoundingSphere(const RpMorphTarget * morphTarget,
             sphere_radius = nDist;
         }
 
-        ++vert;
+        vert++;
     }
 
     /* Now do the root */
@@ -639,7 +613,7 @@ RpMorphTargetCalcBoundingSphere(const RpMorphTarget * morphTarget,
 RwInt32
 RpGeometryAddMorphTargets(RpGeometry *geometry, RwInt32 mtcount)
 {
-    RwInt32 i, nReturn;
+    RwInt32 i;
     RwUInt32            mtsize,bytes;
     RpMorphTarget      *morphTarget;
     RwV3d               *vertexData;
@@ -665,11 +639,6 @@ RpGeometryAddMorphTargets(RpGeometry *geometry, RwInt32 mtcount)
         }
     }
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Lock
-	CS_GEOMETRY_LOCK( geometry );
-	//@} DDonSS
-
     bytes = mtsize * (geometry->numMorphTargets + mtcount);
 
     /* Is it a realloc or a first time alloc? */
@@ -682,13 +651,6 @@ RpGeometryAddMorphTargets(RpGeometry *geometry, RwInt32 mtcount)
                                                  rwID_GEOMETRY | rwMEMHINTDUR_EVENT);
         if (!morphTarget)
         {
-			/* 2006. 3. 6. Nonstopdj */
-			/* add geometry lock	 */
-			//@{ 20050513 DDonSS : Threadsafe
-			// Geometry Unlock
-			CS_GEOMETRY_UNLOCK( geometry );
-			//@} DDonSS
-
             /* Failed to allocate memory for the new morph target array */
             RWERROR((E_RW_NOMEM, (bytes)));
             RWRETURN(-1);
@@ -710,12 +672,6 @@ RpGeometryAddMorphTargets(RpGeometry *geometry, RwInt32 mtcount)
         if (!morphTarget)
         {
             /* Failed to allocate memory for the new morph target array */
-            
-			//@{ 20050513 DDonSS : Threadsafe
-			// Geometry Unlock
-			CS_GEOMETRY_UNLOCK( geometry );
-			//@} DDonSS
-            
             RWERROR((E_RW_NOMEM, (bytes)));
             RWRETURN(-1);
         }
@@ -732,7 +688,7 @@ RpGeometryAddMorphTargets(RpGeometry *geometry, RwInt32 mtcount)
                            (sizeof(RpMorphTarget) *
                             geometry->numMorphTargets));
 
-    for (i = 0; i < geometry->numMorphTargets; ++i)
+    for (i = 0; i < geometry->numMorphTargets; i++)
     {
         RpMorphTarget *aMorph = &geometry->morphTarget[i];
 
@@ -769,15 +725,7 @@ RpGeometryAddMorphTargets(RpGeometry *geometry, RwInt32 mtcount)
     }
 
     /* Done */
-
-	nReturn = geometry->numMorphTargets - mtcount;
-	    
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Unlock
-	CS_GEOMETRY_UNLOCK( geometry );
-	//@} DDonSS
-	
-    RWRETURN( nReturn );
+    RWRETURN(geometry->numMorphTargets - mtcount);
 }
 
 /**
@@ -870,22 +818,11 @@ RpGeometryRemoveMorphTarget(RpGeometry * geometry,
     {
         mtsize += sizeof(RwV3d) * geometry->numVertices;
     }
-    
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Lock
-	CS_GEOMETRY_LOCK( geometry );
-	//@} DDonSS
-	
     bytes = mtsize * (geometry->numMorphTargets - 1);
 
     morphTarget = (RpMorphTarget *)RwMalloc(bytes, rwID_GEOMETRY | rwMEMHINTDUR_EVENT);
     if (!morphTarget)
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( geometry );
-		//@} DDonSS
-
         /* Failed to allocate memory for the new morph target array */
         RWERROR((E_RW_NOMEM, (bytes)));
         RWRETURN((RpGeometry *)NULL);
@@ -893,19 +830,19 @@ RpGeometryRemoveMorphTarget(RpGeometry * geometry,
 
     /* copy across headers */
     numMorphs = 0;
-    for (i=0; i<geometry->numMorphTargets; ++i)
+    for (i=0; i<geometry->numMorphTargets; i++)
     {
         if (i != morphTargetIndex)
         {
             morphTarget[numMorphs] = geometry->morphTarget[i];
-            ++numMorphs;
+            numMorphs++;
         }
     }
 
     /* copy across vertexData */
     srcData = (RwUInt8 *)geometry->morphTarget + (sizeof(RpMorphTarget) * geometry->numMorphTargets);
     dstData = (RwUInt8 *)morphTarget + (sizeof(RpMorphTarget) * numMorphs);
-    for (i=0; i<geometry->numMorphTargets; ++i)
+    for (i=0; i<geometry->numMorphTargets; i++)
     {
         if (i != morphTargetIndex)
         {
@@ -918,11 +855,11 @@ RpGeometryRemoveMorphTarget(RpGeometry * geometry,
 
     RwFree(geometry->morphTarget);
     geometry->morphTarget = morphTarget;
-    --geometry->numMorphTargets;
+    geometry->numMorphTargets--;
 
     /* setup ALL pointers */
     vertexData = (RwV3d *)((RwUInt8 *)morphTarget + (sizeof(RpMorphTarget) * geometry->numMorphTargets));
-    for (i=0; i<geometry->numMorphTargets; ++i)
+    for (i=0; i<geometry->numMorphTargets; i++)
     {
         RpMorphTarget *aMorph = &geometry->morphTarget[i];
 
@@ -939,11 +876,6 @@ RpGeometryRemoveMorphTarget(RpGeometry * geometry,
             }
         }
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Unlock
-	CS_GEOMETRY_UNLOCK( geometry );
-	//@} DDonSS
 
     RWRETURN(geometry);
 }
@@ -1446,8 +1378,11 @@ RpGeometryGetMaterial(const RpGeometry *geometry, RwInt32 matNum)
     RWASSERT(geometry);
     RWASSERTISTYPE(geometry, rpGEOMETRY);
     RWASSERT(0 < geometry->refCount);
-    RWASSERT((matNum >= 0)
-             && (matNum < geometry->matList.numMaterials));
+    
+	if ( matNum >= geometry->matList.numMaterials || matNum < 0 )
+	{
+		RWRETURN(0);
+	}
 
     RWRETURN(RpGeometryGetMaterialMacro(geometry, matNum));
 }
@@ -1765,7 +1700,7 @@ RpGeometryForAllMaterials(RpGeometry * geometry,
     RWASSERT(fpCallBack);
 
     numMaterials = RpGeometryGetNumMaterials(geometry);
-    for (i = 0; i < numMaterials; ++i)
+    for (i = 0; i < numMaterials; i++)
     {
         RpMaterial         *material;
 
@@ -1902,7 +1837,7 @@ RpGeometryUnlock(RpGeometry * geometry)
                 pipelineArray = RwMalloc(sizeof(RxPipeline *) * numMaterials,
                                 rwID_GEOMETRYMODULE | rwMEMHINTDUR_FUNCTION);
 
-                for (i = 0; i < geometry->numTriangles; ++i)
+                for (i = 0; i < geometry->numTriangles; i++)
                 {
                     RpTriangle         *triangle = &geometry->triangles[i];
                     RpMaterial         *material;
@@ -1912,8 +1847,8 @@ RpGeometryUnlock(RpGeometry * geometry)
                     RwRaster           *raster = NULL;
 
                     RWASSERTM(triangle->matIndex != 0xFFFF,
-                              (RWSTRING("All triangles in a geometry must have ")
-                               RWSTRING("materials assigned to unlock the geometry")));
+                              (RWSTRING("All triangles in a geometry must have "
+                               "materials assigned to unlock the geometry")));
 
                     material =
                             _rpMaterialListGetMaterial(&geometry->matList,
@@ -1932,14 +1867,14 @@ RpGeometryUnlock(RpGeometry * geometry)
                     if (texIndex == numTex)
                     {
                         textureArray[texIndex] = texture;
-                        ++numTex;
+                        numTex++;
                     }
                     if (texture)
                     {
                         raster = RwTextureGetRaster(texture);
                     }
 
-                    for (rasIndex = 0; rasIndex < numRas; ++rasIndex)
+                    for (rasIndex = 0; rasIndex < numRas; rasIndex++)
                     {
                         if (rasterArray[rasIndex] == raster)
                         {
@@ -1951,11 +1886,11 @@ RpGeometryUnlock(RpGeometry * geometry)
                     if (rasIndex == numRas)
                     {
                         rasterArray[rasIndex] = raster;
-                        ++numRas;
+                        numRas++;
                     }
 
                     RpMaterialGetPipeline(material, &pipeline);
-                    for (pipIndex = 0; pipIndex < numPip; ++pipIndex)
+                    for (pipIndex = 0; pipIndex < numPip; pipIndex++)
                     {
                         if (pipelineArray[pipIndex] == pipeline)
                         {
@@ -1967,7 +1902,7 @@ RpGeometryUnlock(RpGeometry * geometry)
                     if (pipIndex == numPip)
                     {
                         pipelineArray[pipIndex] = pipeline;
-                        ++numPip;
+                        numPip++;
                     }
 
                     _rpBuildMeshAddTriangle(buildMesh, material,
@@ -1986,8 +1921,8 @@ RpGeometryUnlock(RpGeometry * geometry)
             {
                 /* If there are no materials there must also be no triangles */
                 RWASSERTM(0 == geometry->numTriangles,
-                          (RWSTRING("All triangles in a geometry must have ")
-                           RWSTRING("materials assigned to unlock the geometry")));
+                          (RWSTRING("All triangles in a geometry must have "
+                           "materials assigned to unlock the geometry")));
             }
 
             /* TODO: If we are to support other primitive types
@@ -2022,26 +1957,6 @@ RpGeometryUnlock(RpGeometry * geometry)
 
     /* Polygons are not locked, but that's OK */
     RWRETURN(geometry);
-}
-
-//. 2006. 1. 16. Nonstopdj
-//. Geometry Critical Section external Lock/UnLock
-void
-RpGeometryCSLock(RpGeometry *geometry)
-{
-	RWAPIFUNCTION(RWSTRING("RpGeometryCSLock"));
-    RWASSERT(geometry);
-
-	CS_GEOMETRY_LOCK(geometry);
-}
-
-void
-RpGeometryCSUnLock(RpGeometry *geometry)
-{
-	RWAPIFUNCTION(RWSTRING("RpGeometryCSUnLock"));
-    RWASSERT(geometry);
-
-	CS_GEOMETRY_UNLOCK(geometry);
 }
 
 /**
@@ -2236,11 +2151,6 @@ RpGeometryCreate(RwInt32 numVerts, RwInt32 numTriangles, RwUInt32 format)
         RWRETURN((RpGeometry *)NULL);
     }
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Initialize Geometry Lock
-	CS_GEOMETRY_INITLOCK( geometry );
-	//@} DDonSS
-	
     /* Set up the material list */
     if (!_rpMaterialListInitialize(&geometry->matList))
     {
@@ -2300,7 +2210,7 @@ RpGeometryCreate(RwInt32 numVerts, RwInt32 numTriangles, RwUInt32 format)
         {
             RwUInt32    i;
 
-            for (i=0; i<numTexCoordSets; ++i)
+            for (i=0; i<numTexCoordSets; i++)
             {
                 geometry->texCoords[i] = (RwTexCoords *)goffset;
                 goffset += sizeof(RwTexCoords) * numVerts;
@@ -2316,7 +2226,7 @@ RpGeometryCreate(RwInt32 numVerts, RwInt32 numTriangles, RwUInt32 format)
             goffset += sizeof(RpTriangle) * numTriangles;
 
             /* Setup all of the materials */
-            for (i = 0; i < numTriangles; ++i)
+            for (i = 0; i < numTriangles; i++)
             {
                 geometry->triangles[i].matIndex = 0xFFFF;
             }
@@ -2374,17 +2284,7 @@ RpGeometryAddRef(RpGeometry * geometry)
     RWASSERTISTYPE(geometry, rpGEOMETRY);
     RWASSERT(0 < geometry->refCount);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Lock
-	CS_GEOMETRY_LOCK( geometry );
-	//@} DDonSS
-
-    ++geometry->refCount;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Unlock
-	CS_GEOMETRY_UNLOCK( geometry );
-	//@} DDonSS
+    geometry->refCount++;
 
     RWRETURN(geometry);
 }
@@ -2424,11 +2324,6 @@ RpGeometryDestroy(RpGeometry * geometry)
     RWASSERTISTYPE(geometry, rpGEOMETRY);
     RWASSERT(0 < geometry->refCount);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Lock
-	CS_GEOMETRY_LOCK( geometry );
-	//@} DDonSS
-
     /* Do we  actually need to blow it away  ? */
     if ((geometry->refCount - 1) <= 0)
     {
@@ -2436,8 +2331,6 @@ RpGeometryDestroy(RpGeometry * geometry)
         if (geometry->repEntry)
         {
             RwResourcesFreeResEntry(geometry->repEntry);
-
-			geometry->repEntry = NULL;		// 2005.4.2 gemani
         }
 
         /* RWCRTCHECKMEMORY(); */
@@ -2449,11 +2342,6 @@ RpGeometryDestroy(RpGeometry * geometry)
         --geometry->refCount;
         /* RWCRTCHECKMEMORY(); */
 
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( geometry );
-		//@} DDonSS
-
         result = GeometryAnnihilate(geometry);
     }
     else
@@ -2461,11 +2349,6 @@ RpGeometryDestroy(RpGeometry * geometry)
         /* RWCRTCHECKMEMORY(); */
         --geometry->refCount;
         /* RWCRTCHECKMEMORY(); */
-        
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( geometry );
-		//@} DDonSS
     }
 
     RWRETURN(result);
@@ -2705,13 +2588,8 @@ GeometryStreamGetSizeActual(const RpGeometry *geometry)
             size += sizeof(_rpTriangle) * geometry->numTriangles;
         }
 
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Lock
-		CS_GEOMETRY_LOCK( ( (RpGeometry*)geometry ) );
-		//@} DDonSS
-
         /* Key frames */
-        for (i = 0; i < geometry->numMorphTargets; ++i)
+        for (i = 0; i < geometry->numMorphTargets; i++)
         {
             size += sizeof(_rpMorphTarget);
 
@@ -2725,10 +2603,6 @@ GeometryStreamGetSizeActual(const RpGeometry *geometry)
                 size += sizeof(RwV3d) * geometry->numVertices;
             }
         }
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-		//@} DDonSS
     }
     else
     {
@@ -2872,11 +2746,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
     RWASSERT((geometry->numTexCoordSets == 1) == ((flags & rpWORLDTEXTURED) > 0));
     RWASSERT((geometry->numTexCoordSets > 1) == ((flags & rpWORLDTEXTURED2) > 0));
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Lock
-	CS_GEOMETRY_LOCK( ( (RpGeometry*)geometry ) );
-	//@} DDonSS
-
     geom.format = flags | rpGEOMETRYTEXCOORDSETS(geometry->numTexCoordSets);
     geom.numTriangles = geometry->numTriangles;
     geom.numVertices = geometry->numVertices;
@@ -2890,11 +2759,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
 
     if (!RwStreamWrite(stream, &geom, sizeof(geom)))
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( (RpGeometry*)geometry );
-		//@} DDonSS
-		
         RWRETURN((const RpGeometry *)NULL);
     }
 
@@ -2909,11 +2773,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
                 if (!RwStreamWrite(stream, geometry->preLitLum,
                      sizeof(RwRGBA) * geometry->numVertices))
                 {
-					//@{ 20050513 DDonSS : Threadsafe
-					// Geometry Unlock
-					CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-					//@} DDonSS
-					
                     RWRETURN((const RpGeometry *)NULL);
                 }
             }
@@ -2932,11 +2791,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
                     if (!RwStreamWriteReal(
                             stream, (RwReal *) geometry->texCoords[i], sizeTC) )
                     {
-						//@{ 20050513 DDonSS : Threadsafe
-						// Geometry Unlock
-						CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-						//@} DDonSS
-						
                         RWRETURN((const RpGeometry *)NULL);
                     }
                 }
@@ -2965,11 +2819,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
                     /* Write it */
                     if (!RwStreamWrite(stream, &tri, sizeof(tri)))
                     {
-						//@{ 20050513 DDonSS : Threadsafe
-						// Geometry Unlock
-						CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-						//@} DDonSS
-						
                         RWRETURN((const RpGeometry *)NULL);
                     }
                 }
@@ -3003,11 +2852,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
         /* Write it */
         if (!RwStreamWrite(stream, &kf, sizeof(kf)))
         {
-			//@{ 20050513 DDonSS : Threadsafe
-			// Geometry Unlock
-			CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-			//@} DDonSS
-			
             RWRETURN((const RpGeometry *)NULL);
         }
 
@@ -3016,11 +2860,6 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
             if (!RwStreamWriteReal(stream, (RwReal *) (geometry->morphTarget)[i].verts,
                  sizeof(RwV3d) * geometry->numVertices))
             {
-				//@{ 20050513 DDonSS : Threadsafe
-				// Geometry Unlock
-				CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-				//@} DDonSS
-				
                 RWRETURN((const RpGeometry *)NULL);
             }
         }
@@ -3030,42 +2869,23 @@ RpGeometryStreamWrite(const RpGeometry * geometry, RwStream * stream)
             if (!RwStreamWriteReal(stream, (RwReal *) (geometry->morphTarget)[i].normals,
                  sizeof(RwV3d) * geometry->numVertices))
             {
-				//@{ 20050513 DDonSS : Threadsafe
-				// Geometry Unlock
-				CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-				//@} DDonSS
-				
                 RWRETURN((const RpGeometry *)NULL);
             }
         }
     }
-	
+
     /* Save off materials */
     if (!_rpMaterialListStreamWrite(&geometry->matList, stream))
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-		//@} DDonSS
         RWRETURN((const RpGeometry *)NULL);
     }
 
     /* GEOMETRY EXTENSION DATA */
     if (!rwPluginRegistryWriteDataChunks(&geometryTKList, stream, geometry))
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// Geometry Unlock
-		CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-		//@} DDonSS
-
         /* Failed to write extension data */
         RWRETURN((const RpGeometry *)NULL);
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Geometry Unlock
-	CS_GEOMETRY_UNLOCK( ( (RpGeometry*)geometry ) );
-	//@} DDonSS
 
     RWRETURN(geometry);
 }
@@ -3185,7 +3005,7 @@ RpGeometryStreamRead(RwStream * stream)
                                          sizeof(RwTexCoords);
 
                 /* Read vertex texture coordinates - reals, remember */
-                for (i = 0; i < geometry->numTexCoordSets; ++i)
+                for (i = 0; i < geometry->numTexCoordSets; i++)
                 {
                     RWASSERT(geometry->texCoords[i]);
 
@@ -3238,7 +3058,7 @@ RpGeometryStreamRead(RwStream * stream)
                     destTri->vertIndex[2] = hi;
                     destTri->matIndex = lo;
 
-                    ++destTri;
+                    destTri++;
                 }
             }
         }
@@ -3248,7 +3068,7 @@ RpGeometryStreamRead(RwStream * stream)
     {
         RwInt32             i;
 
-        for (i = 0; i < geometry->numMorphTargets; ++i)
+        for (i = 0; i < geometry->numMorphTargets; i++)
         {
             _rpMorphTarget      kf;
             RpMorphTarget      *morphTarget = RpGeometryGetMorphTarget(geometry, i);
@@ -3328,7 +3148,7 @@ RpGeometryStreamRead(RwStream * stream)
         RwInt32 i;
         RwInt16 matIndex;
 
-        for (i = 0; i < geometry->numTriangles; ++i)
+        for (i = 0; i < geometry->numTriangles; i++)
         {
             matIndex = (geometry->triangles)[i].matIndex;
             RWASSERT(matIndex < geometry->matList.numMaterials);

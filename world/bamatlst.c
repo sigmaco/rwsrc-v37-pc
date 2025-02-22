@@ -69,7 +69,7 @@ _rpMaterialListDeinitialize(RpMaterialList * matList)
         RwInt32             materialCount = matList->numMaterials;
         RwInt32             nI;
 
-        for (nI = 0; nI < materialCount; ++nI)
+        for (nI = 0; nI < materialCount; nI++)
         {
             RpMaterialDestroy(materialArray[nI]);
             materialArray[nI] = (RpMaterial *)NULL;
@@ -171,7 +171,7 @@ _rpMaterialListCopy(RpMaterialList * matListOut,
         }
 
         /* Copy and add ref */
-        for (i = 0; i < matListOut->numMaterials; ++i)
+        for (i = 0; i < matListOut->numMaterials; i++)
         {
             matListOut->materials[i] = matListIn->materials[i];
             (void)RpMaterialAddRef(matListOut->materials[i]);
@@ -284,7 +284,7 @@ _rpMaterialListAppendMaterial(RpMaterialList * matList,
         (*materials) = material;
         RpMaterialAddRef(material);
 
-        ++matList->numMaterials;
+        matList->numMaterials++;
 
         RWRETURN(matList->numMaterials - 1);
     }
@@ -319,7 +319,7 @@ _rpMaterialListAppendMaterial(RpMaterialList * matList,
 
     materials[matList->numMaterials] = material;
     RpMaterialAddRef(material);
-    ++matList->numMaterials;
+    matList->numMaterials++;
 
     RWRETURN(matList->numMaterials - 1);
 }
@@ -394,7 +394,7 @@ _rpMaterialListStreamGetSize(const RpMaterialList * matList)
     size = ( MaterialListStreamGetSizeActual(matList) +
              rwCHUNKHEADERSIZE );
 
-    for (i = 0; i < matList->numMaterials; ++i)
+    for (i = 0; i < matList->numMaterials; i++)
     {
         RwInt32             j;
 
@@ -454,7 +454,7 @@ _rpMaterialListStreamWrite(const RpMaterialList * matList,
         RWRETURN(FALSE);
     }
 
-    for (i = 0; i < matList->numMaterials; ++i)
+    for (i = 0; i < matList->numMaterials; i++)
     {
         j = i;
         while (j--)
@@ -469,7 +469,7 @@ _rpMaterialListStreamWrite(const RpMaterialList * matList,
         }
     }
 
-    for (i = 0; i < matList->numMaterials; ++i)
+    for (i = 0; i < matList->numMaterials; i++)
     {
         j = i;
         while (j--)
@@ -555,7 +555,7 @@ _rpMaterialListStreamRead(RwStream * stream, RpMaterialList * matList)
             RWRETURN((RpMaterialList *)NULL);
         }
 
-        for (i = 0; i < len; ++i)
+        for (i = 0; i < len; i++)
         {
             RpMaterial         *material;
 

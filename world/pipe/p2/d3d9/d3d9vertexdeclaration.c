@@ -106,7 +106,7 @@ _rpD3D9VertexDeclarationGetStride(const void *vertexDeclaration)
 
         stride += D3D9VertexTypeSize[d3d9vertexDeclaration[i].Type];
 
-        ++i;
+        i++;
     }
 
     RWRETURN(stride);
@@ -140,11 +140,11 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwReal   *dstPosition;
 
                 dstPosition = (RwReal *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *dstPosition = src->x;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwReal *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -157,12 +157,12 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwV2d   *dstPosition;
 
                 dstPosition = (RwV2d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src->x;
                     dstPosition->y = src->y;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV2d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -175,11 +175,11 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwV4d   *dstPosition;
 
                 dstPosition = (RwV4d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *dstPosition = *src;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV4d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -192,14 +192,14 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwV4d   *dstPosition;
 
                 dstPosition = (RwV4d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src->x;
                     dstPosition->y = src->y;
                     dstPosition->z = src->z;
                     dstPosition->w = src->w;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV4d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -212,7 +212,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     /* We need to swap values [0] and [2] */
                     if (src->x >= 1.0f)
@@ -234,7 +234,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                                                    dstPosition[3]);
                     }
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -246,14 +246,14 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src->y);
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src->z);
                     *(dstPosition + 3) = (RwUInt8)RwFastRealToUInt32(src->w);
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -265,12 +265,12 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -283,14 +283,14 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y);
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(src->z);
                     *(dstPosition + 3) = (RwInt16)RwFastRealToUInt32(src->w);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -303,7 +303,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     if (src->x >= 1.0f)
                     {
@@ -324,7 +324,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                                                    dstPosition[3]);
                     }
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -337,13 +337,13 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwInt32     nx;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x * 32767.0f);
                     dstPosition[0] = (RwInt16)nx;
                     dstPosition[1] = (RwInt16)(32767 - nx);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -357,7 +357,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwInt32     ny, nz, nw;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     ny = RwFastRealToUInt32(src->y * 32767.0f);
                     nz = RwFastRealToUInt32(src->z * 32767.0f);
@@ -369,7 +369,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
 
                     dstPosition[0] = (RwInt16)(32767 - ny - nz - nw);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -383,13 +383,13 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt32    nx;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x * 65535.0f);
                     dstPosition[0] = (RwUInt16)nx;
                     dstPosition[1] = (RwUInt16)(65535 - nx);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -403,7 +403,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt32    ny, nz, nw;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     ny = RwFastRealToUInt32(src->y * 65535.0f);
                     nz = RwFastRealToUInt32(src->z * 65535.0f);
@@ -415,7 +415,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
 
                     dstPosition[0] = (RwUInt16)(65535 - ny - nz - nw);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -429,7 +429,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x) & 0x3ff;
                     ny = RwFastRealToUInt32(src->y) & 0x3ff;
@@ -437,7 +437,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -451,7 +451,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     if (src->z < (1.0f / 511.0f))
                     {
@@ -470,7 +470,7 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                         *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
                     }
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -484,11 +484,11 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)src, 2);
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -500,11 +500,11 @@ _rpD3D9VertexDeclarationInstWeights(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)src, 4);
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -546,11 +546,11 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwReal   *dstPosition;
 
                 dstPosition = (RwReal *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *dstPosition = src->x;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwReal *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -563,12 +563,12 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwV2d   *dstPosition;
 
                 dstPosition = (RwV2d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src->x;
                     dstPosition->y = src->y;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV2d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -587,11 +587,11 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                     RwV3d   *dstPosition;
 
                     dstPosition = (RwV3d *)mem;
-                    for (i = 0; i < numVerts; ++i)
+                    for (i = 0; i < numVerts; i++)
                     {
                         *dstPosition = *src;
 
-                        ++src;
+                        src++;
                         dstPosition =
                             (RwV3d *)(((RwUInt8 *)dstPosition) + stride);
                     }
@@ -605,14 +605,14 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwV4d   *dstPosition;
 
                 dstPosition = (RwV4d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src->x;
                     dstPosition->y = src->y;
                     dstPosition->z = src->z;
                     dstPosition->w = 1.0f;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV4d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -625,7 +625,7 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     /* We need to swap values [0] and [2] */
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src->x * 255.f);
@@ -633,7 +633,7 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src->z * 255.f);
                     *(dstPosition + 3) = 0xff;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -645,14 +645,14 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src->y);
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src->z);
                     *(dstPosition + 3) = 1;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -664,12 +664,12 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -682,14 +682,14 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y);
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(src->z);
                     *(dstPosition + 3) = 1;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -702,14 +702,14 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src->x * 255.f);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src->y * 255.f);
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src->z * 255.f);
                     *(dstPosition + 3) = 0xff;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -721,12 +721,12 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x * 32767.0f);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y * 32767.0f);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -739,14 +739,14 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x * 32767.0f);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y * 32767.0f);
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(src->z * 32767.0f);
                     *(dstPosition + 3) = (RwInt16)32767;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -759,12 +759,12 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt16     *dstPosition;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(src->x * 65535.0f);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(src->y * 65535.0f);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -777,14 +777,14 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt16     *dstPosition;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(src->x * 65535.0f);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(src->y * 65535.0f);
                     *(dstPosition + 2) = (RwUInt16)RwFastRealToUInt32(src->z * 65535.0f);
                     *(dstPosition + 3) = (RwUInt16)65535;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -798,7 +798,7 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x) & 0x3ff;
                     ny = RwFastRealToUInt32(src->y) & 0x3ff;
@@ -806,7 +806,7 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -820,7 +820,7 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x * 511.0f) & 0x3ff;
                     ny = RwFastRealToUInt32(src->y * 511.0f) & 0x3ff;
@@ -828,7 +828,7 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -842,11 +842,11 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)src, 2);
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -858,12 +858,12 @@ _rpD3D9VertexDeclarationInstV3d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)src, 3);
                     ((RwUInt16 *)dstPosition)[3] = 0x3f80;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -907,13 +907,13 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwReal   *dstPosition;
 
                 dstPosition = (RwReal *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     *dstPosition = temp.x;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwReal *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -926,14 +926,14 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwV2d   *dstPosition;
 
                 dstPosition = (RwV2d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     dstPosition->x = temp.x;
                     dstPosition->y = temp.y;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV2d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -946,11 +946,11 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwV3d   *dstPosition;
 
                 dstPosition = (RwV3d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(*dstPosition, *src);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV3d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -963,13 +963,13 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwV4d   *dstPosition;
 
                 dstPosition = (RwV4d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(*dstPosition, *src);
 
                     dstPosition->w = 1.0f;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV4d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -982,7 +982,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -992,7 +992,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(temp.z * 255.f);
                     *(dstPosition + 3) = 0xff;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1004,7 +1004,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1013,7 +1013,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(temp.z);
                     *(dstPosition + 3) = 1;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1025,14 +1025,14 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(temp.x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(temp.y);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1045,7 +1045,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1054,7 +1054,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(temp.z);
                     *(dstPosition + 3) = 1;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1067,7 +1067,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1076,7 +1076,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(temp.z * 255.f);
                     *(dstPosition + 3) = 0xff;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1088,14 +1088,14 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(temp.x * 32767.0f);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(temp.y * 32767.0f);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1108,7 +1108,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1117,7 +1117,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(temp.z * 32767.0f);
                     *(dstPosition + 3) = (RwInt16)32767;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1130,14 +1130,14 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt16     *dstPosition;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(temp.x * 65535.0f);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(temp.y * 65535.0f);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1150,7 +1150,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt16     *dstPosition;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1159,7 +1159,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                     *(dstPosition + 2) = (RwUInt16)RwFastRealToUInt32(temp.z * 65535.0f);
                     *(dstPosition + 3) = (RwUInt16)65535;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1173,7 +1173,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1183,7 +1183,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1197,7 +1197,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
@@ -1207,7 +1207,7 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1221,13 +1221,13 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)&temp, 2);
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1239,14 +1239,14 @@ _rpD3D9VertexDeclarationInstV3dComp(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     RPV3DFROMVERTEXNORMAL(temp, *src);
 
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)&temp, 3);
                     ((RwUInt16 *)dstPosition)[3] = 0x3f80;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1291,12 +1291,12 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwReal   *dstPosition;
 
                 dstPosition = (RwReal *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *dstPosition = src1->x + (src2->x - src1->x) * scale;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwReal *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1309,13 +1309,13 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwV2d   *dstPosition;
 
                 dstPosition = (RwV2d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src1->x + (src2->x - src1->x) * scale;
                     dstPosition->y = src1->y + (src2->y - src1->y) * scale;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwV2d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1328,14 +1328,14 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwV3d   *dstPosition;
 
                 dstPosition = (RwV3d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src1->x + (src2->x - src1->x) * scale;
                     dstPosition->y = src1->y + (src2->y - src1->y) * scale;
                     dstPosition->z = src1->z + (src2->z - src1->z) * scale;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwV3d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1348,15 +1348,15 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwV4d   *dstPosition;
 
                 dstPosition = (RwV4d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src1->x + (src2->x - src1->x) * scale;
                     dstPosition->y = src1->y + (src2->y - src1->y) * scale;
                     dstPosition->z = src1->z + (src2->z - src1->z) * scale;
                     dstPosition->w = 1.0f;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwV4d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1373,7 +1373,7 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 255.0f;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     /* We need to swap values [0] and [2] */
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src1->x * minusScale + src2->x * scale);
@@ -1381,8 +1381,8 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src1->z * minusScale + src2->z * scale);
                     *(dstPosition + 3) = 0xff;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition += stride;
                 }
             }
@@ -1394,15 +1394,15 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src1->x + (src2->x - src1->x) * scale);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src1->y + (src2->y - src1->y) * scale);
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src1->z + (src2->z - src1->z) * scale);
                     *(dstPosition + 3) = 1;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition += stride;
                 }
             }
@@ -1414,13 +1414,13 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src1->x + (src2->x - src1->x) * scale);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src1->y + (src2->y - src1->y) * scale);
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1433,15 +1433,15 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src1->x + (src2->x - src1->x) * scale);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src1->y + (src2->y - src1->y) * scale);
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(src1->z + (src2->z - src1->z) * scale);
                     *(dstPosition + 3) = 1;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1458,15 +1458,15 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 255.0f;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src1->x * minusScale + src2->x * scale);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src1->y * minusScale + src2->y * scale);
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src1->z * minusScale + src2->z * scale);
                     *(dstPosition + 3) = 0xff;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition += stride;
                 }
             }
@@ -1482,13 +1482,13 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 32767.0f;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src1->x * minusScale + src2->x * scale);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src1->y * minusScale + src2->y * scale);
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1505,15 +1505,15 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 32767.0f;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src1->x * minusScale + src2->x * scale);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src1->y * minusScale + src2->y * scale);
                     *(dstPosition + 2) = (RwInt16)RwFastRealToUInt32(src1->z * minusScale + src2->z * scale);
                     *(dstPosition + 3) = (RwInt16)32767;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1530,13 +1530,13 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 65535.0f;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(src1->x * minusScale + src2->x * scale);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(src1->y * minusScale + src2->y * scale);
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1553,15 +1553,15 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 65535.0f;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(src1->x * minusScale + src2->x * scale);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(src1->y * minusScale + src2->y * scale);
                     *(dstPosition + 2) = (RwUInt16)RwFastRealToUInt32(src1->z * minusScale + src2->z * scale);
                     *(dstPosition + 3) = (RwUInt16)65535;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1575,7 +1575,7 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwUInt32    nx, ny, nz;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src1->x + (src2->x - src1->x) * scale) & 0x3ff;
                     ny = RwFastRealToUInt32(src1->y + (src2->y - src1->y) * scale) & 0x3ff;
@@ -1583,8 +1583,8 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1602,7 +1602,7 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 scale = scale * 511.0f;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src1->x * minusScale + src2->x * scale) & 0x3ff;
                     ny = RwFastRealToUInt32(src1->y * minusScale + src2->y * scale) & 0x3ff;
@@ -1610,8 +1610,8 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
 
                     *(dstPosition) = ( (nz << 20) | (ny << 10) | nx );
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1626,14 +1626,14 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     temp.x = src1->x + (src2->x - src1->x) * scale;
                     temp.y = src1->y + (src2->y - src1->y) * scale;
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)&temp, 2);
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition += stride;
                 }
             }
@@ -1646,7 +1646,7 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     temp.x = src1->x + (src2->x - src1->x) * scale;
                     temp.y = src1->y + (src2->y - src1->y) * scale;
@@ -1654,8 +1654,8 @@ _rpD3D9VertexDeclarationInstV3dMorph(RwUInt32 type,
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)&temp, 3);
                     ((RwUInt16 *)dstPosition)[3] = 0x3f80;
 
-                    ++src1;
-                    ++src2;
+                    src1++;
+                    src2++;
                     dstPosition += stride;
                 }
             }
@@ -1697,11 +1697,11 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwReal   *dstPosition;
 
                 dstPosition = (RwReal *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *dstPosition = src->x;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwReal *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1720,12 +1720,12 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                     RwV2d   *dstPosition;
 
                     dstPosition = (RwV2d *)mem;
-                    for (i = 0; i < numVerts; ++i)
+                    for (i = 0; i < numVerts; i++)
                     {
                         dstPosition->x = src->x;
                         dstPosition->y = src->y;
 
-                        ++src;
+                        src++;
                         dstPosition =
                             (RwV2d *)(((RwUInt8 *)dstPosition) + stride);
                     }
@@ -1739,13 +1739,13 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwV3d   *dstPosition;
 
                 dstPosition = (RwV3d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src->x;
                     dstPosition->y = src->y;
                     dstPosition->z = 0.0f;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV3d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1758,14 +1758,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwV4d   *dstPosition;
 
                 dstPosition = (RwV4d *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition->x = src->x;
                     dstPosition->y = src->y;
                     dstPosition->z = 0.0f;
                     dstPosition->w = 1.0f;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwV4d *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1778,7 +1778,7 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     /* We need to swap values [0] and [2] */
                     *(dstPosition + 2) = (RwUInt8)RwFastRealToUInt32(src->x * 255.f);
@@ -1786,7 +1786,7 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                     *(dstPosition + 0) = 0;
                     *(dstPosition + 3) = 0xff;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1798,14 +1798,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src->y);
                     *(dstPosition + 2) = 0;
                     *(dstPosition + 3) = 1;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1817,12 +1817,12 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1835,14 +1835,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y);
                     *(dstPosition + 2) = 0;
                     *(dstPosition + 3) = 1;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1855,14 +1855,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt8)RwFastRealToUInt32(src->x * 255.f);
                     *(dstPosition + 1) = (RwUInt8)RwFastRealToUInt32(src->y * 255.f);
                     *(dstPosition + 2) = 0;
                     *(dstPosition + 3) = 0xff;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -1874,12 +1874,12 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x * 32767.0f);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y * 32767.0f);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1892,14 +1892,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)RwFastRealToUInt32(src->x * 32767.0f);
                     *(dstPosition + 1) = (RwInt16)RwFastRealToUInt32(src->y * 32767.0f);
                     *(dstPosition + 2) = 0;
                     *(dstPosition + 3) = (RwInt16)32767;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1912,12 +1912,12 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt16     *dstPosition;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(src->x * 65535.0f);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(src->y * 65535.0f);
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1930,14 +1930,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt16     *dstPosition;
 
                 dstPosition = (RwUInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwUInt16)RwFastRealToUInt32(src->x * 65535.0f);
                     *(dstPosition + 1) = (RwUInt16)RwFastRealToUInt32(src->y * 65535.0f);
                     *(dstPosition + 2) = 0;
                     *(dstPosition + 3) = (RwUInt16)65535;
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt16 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1951,14 +1951,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt32    nx, ny;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x) & 0x3ff;
                     ny = RwFastRealToUInt32(src->y) & 0x3ff;
 
                     *(dstPosition) = ( (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1972,14 +1972,14 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt32    nx, ny;
 
                 dstPosition = (RwUInt32 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     nx = RwFastRealToUInt32(src->x * 511.0f) & 0x3ff;
                     ny = RwFastRealToUInt32(src->y * 511.0f) & 0x3ff;
 
                     *(dstPosition) = ( (ny << 10) | nx );
 
-                    ++src;
+                    src++;
                     dstPosition =
                         (RwUInt32 *)(((RwUInt8 *)dstPosition) + stride);
                 }
@@ -1993,11 +1993,11 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)src, 2);
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -2009,13 +2009,13 @@ _rpD3D9VertexDeclarationInstV2d(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     D3DXFloat32To16Array((D3DXFLOAT16 *)dstPosition, (const RwReal *)src, 2);
                     ((RwUInt16 *)dstPosition)[2] = 0;
                     ((RwUInt16 *)dstPosition)[3] = 0x3f80;
 
-                    ++src;
+                    src++;
                     dstPosition += stride;
                 }
             }
@@ -2052,7 +2052,7 @@ _rpD3D9VertexDeclarationInstColor(RwUInt8 *mem,
     RWASSERT(NULL != srcColor);
 
     dstColor = (RwUInt32 *)mem;
-    for (i = 0; i < numVerts; ++i)
+    for (i = 0; i < numVerts; i++)
     {
         *(dstColor) = ((srcColor[i].alpha << 24) |
                        (srcColor[i].red << 16) |
@@ -2098,7 +2098,7 @@ _rpD3D9VertexDeclarationInstIndices(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     /* We need to swap values [0] and [2] */
                     *(dstPosition + 0) = src[2];
@@ -2118,7 +2118,7 @@ _rpD3D9VertexDeclarationInstIndices(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = src[0];
                     *(dstPosition + 1) = src[1];
@@ -2137,7 +2137,7 @@ _rpD3D9VertexDeclarationInstIndices(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)src[0];
                     *(dstPosition + 1) = (RwInt16)src[1];
@@ -2155,7 +2155,7 @@ _rpD3D9VertexDeclarationInstIndices(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     *(dstPosition + 0) = (RwInt16)src[0];
                     *(dstPosition + 1) = (RwInt16)src[1];
@@ -2207,7 +2207,7 @@ _rpD3D9VertexDeclarationInstIndicesRemap(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     /* We need to swap values [0] and [2] */
                     dstPosition[0] = remap[src[2]];
@@ -2227,7 +2227,7 @@ _rpD3D9VertexDeclarationInstIndicesRemap(RwUInt32 type,
                 RwUInt8     *dstPosition;
 
                 dstPosition = (RwUInt8 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition[0] = remap[src[0]];
                     dstPosition[1] = remap[src[1]];
@@ -2246,7 +2246,7 @@ _rpD3D9VertexDeclarationInstIndicesRemap(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition[0] = (RwInt16)remap[src[0]];
                     dstPosition[1] = (RwInt16)remap[src[1]];
@@ -2264,7 +2264,7 @@ _rpD3D9VertexDeclarationInstIndicesRemap(RwUInt32 type,
                 RwInt16     *dstPosition;
 
                 dstPosition = (RwInt16 *)mem;
-                for (i = 0; i < numVerts; ++i)
+                for (i = 0; i < numVerts; i++)
                 {
                     dstPosition[0] = (RwInt16)remap[src[0]];
                     dstPosition[1] = (RwInt16)remap[src[1]];
@@ -2301,12 +2301,7 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
                                     const RpVertexNormal *packedNormal,
                                     const RwTexCoords *texCoord,
                                     RxD3D9ResEntryHeader *meshHeader,
-                                    RwUInt32 stride
-									//@{ Jaewon 20050330
-									,
-									const RpMeshHeader *mH
-									//@} Jaewon
-									)
+                                    RwUInt32 stride)
 {
     RwUInt32    numIndices, numVertices;
     RwUInt32    n, j;
@@ -2316,12 +2311,9 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
     RwV3d       edge01, edge02, cp;
     RwUInt32            numMeshes;
     RxD3D9InstanceData  *instancedData;
-    //const RxVertexIndex *indexBufferOrigin;
+    const RxVertexIndex *indexBufferOrigin;
     const RxVertexIndex *indexBuffer;
     RwUInt32    *tangentsRemapping;
-	//@{ Jaewon 20050330
-	RpMesh *mesh;
-	//@} Jaewon
 
     RWFUNCTION(RWSTRING("_rpD3D9VertexDeclarationInstTangent"));
     RWASSERT(NULL != mem);
@@ -2332,48 +2324,27 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
     RWASSERT(NULL != meshHeader->indexBuffer);
     RWASSERT(type < D3DDECLTYPE_UNUSED);
 
-	//@{ Jaewon 20050330
-	if(meshHeader->indexBuffer==NULL || meshHeader->totalNumIndex==0)
-		RWRETURN(0);
-	//@} Jaewon
-
     numVertices = meshHeader->totalNumVertex;
 
     tangent = (RwV3d *)RwMalloc(sizeof(RwV3d) * numVertices,
         rwMEMHINTDUR_FUNCTION | rwID_WORLDPIPEMODULE);
     memset(tangent , 0, sizeof(RwV3d) * numVertices);
 
-	//@{ Jaewon 20050330
-	/*
     IDirect3DIndexBuffer9_Lock((LPINDEXBUFFER)meshHeader->indexBuffer,
                                 0,
-								//@{ Jaewon 20050330
-                                0,//(meshHeader->totalNumIndex) * sizeof(RwUInt16),
-								//@} Jaewon
+                                (meshHeader->totalNumIndex) * sizeof(RwUInt16),
                                 (RwUInt8 **)&indexBufferOrigin, 0);
-	*/
-	mesh = (RpMesh *)(mH + 1);
-	//@} Jaewon
 
     numMeshes = meshHeader->numMeshes;
     instancedData = (RxD3D9InstanceData *)(meshHeader + 1);
 
     do
     {
-		//@{ Jaewon 20050330
-		// indexBuffer = indexBufferOrigin + instancedData->startIndex;
-        indexBuffer = mesh->indices;
-		//@} Jaewon
+        indexBuffer = indexBufferOrigin + instancedData->startIndex;
 
-		//@{ Jaewon 20050421
-		// instancedData->numIndex -> mesh->numIndices
-        numIndices = mesh->numIndices;
-		//@} Jaewon
+        numIndices = instancedData->numIndex;
 
-		//@{ Jaewon 20050420
-        //if (meshHeader->primType == D3DPT_TRIANGLESTRIP)
-		if(RpMeshHeaderGetPrimType((RpMeshHeader*)mH) == rwPRIMTYPETRISTRIP)
-		//@} Jaewon
+        if (meshHeader->primType == D3DPT_TRIANGLESTRIP)
         {
             numIndices -= 2;
         }
@@ -2391,52 +2362,28 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
             RwV3d *tang2;
             RwV3d *tang3;
 
-			//@{ Jaewon 20050420
-            //if (meshHeader->primType == D3DPT_TRIANGLELIST)
-			if(RpMeshHeaderGetPrimType((RpMeshHeader*)mH) == rwPRIMTYPETRILIST)
-			//@} Jaewon
+            if (meshHeader->primType == D3DPT_TRIANGLELIST)
             {
-				//@{ Jaewon 20050330
-                /*
-				i1 = indexBuffer[n + 0] + instancedData->minVert;
+                i1 = indexBuffer[n + 0] + instancedData->minVert;
                 i2 = indexBuffer[n + 1] + instancedData->minVert;
                 i3 = indexBuffer[n + 2] + instancedData->minVert;
-				*/
-				i1 = indexBuffer[n + 0];
-				i2 = indexBuffer[n + 1];
-				i3 = indexBuffer[n + 2];
-				//@} Jaewon
                 n += 3;
             }
             else /* if (meshHeader->primType == D3DPT_TRIANGLESTRIP) */
             {
                 if (n & 0x01)
                 {
-					//@{ Jaewon 20050330
-                    /*
-					i1 = indexBuffer[n + 2] + instancedData->minVert;
+                    i1 = indexBuffer[n + 2] + instancedData->minVert;
                     i2 = indexBuffer[n + 1] + instancedData->minVert;
                     i3 = indexBuffer[n + 0] + instancedData->minVert;
-					*/
-					i1 = indexBuffer[n + 2];
-					i2 = indexBuffer[n + 1];
-					i3 = indexBuffer[n + 0];
-					//@} Jaewon
                 }
                 else
                 {
-					//@{ Jaewon 20050330
-                    /*
-					i1 = indexBuffer[n + 0] + instancedData->minVert;
+                    i1 = indexBuffer[n + 0] + instancedData->minVert;
                     i2 = indexBuffer[n + 1] + instancedData->minVert;
                     i3 = indexBuffer[n + 2] + instancedData->minVert;
-					*/
-					i1 = indexBuffer[n + 0];
-					i2 = indexBuffer[n + 1];
-					i3 = indexBuffer[n + 2];
-					//@} Jaewon
                 }
-                ++n;
+                n++;
 
                 if (i1 == i2 || i1 == i3 || i2 == i3)
                 {
@@ -2512,34 +2459,27 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
             }
         }
 
-        ++instancedData;
-		//@{ Jaewon 20050330
-		++mesh;
-		//@} Jaewon
+        instancedData++;
     }
     while (--numMeshes);
 
-	//@{ Jaewon 20050330
-	/*
     IDirect3DIndexBuffer9_Unlock((LPINDEXBUFFER)meshHeader->indexBuffer);
-	*/
-	//@} Jaewon
 
     /* Fix for similar vertices tangents */
     tangentsRemapping = (RwUInt32 *)RwMalloc(sizeof(RwUInt32) * numVertices,
                                 rwMEMHINTDUR_FUNCTION | rwID_WORLDPIPEMODULE);
 
-    for (n = 0; n < numVertices; ++n)
+    for (n = 0; n < numVertices; n++)
     {
         tangentsRemapping[n] = n;
     }
 
     /* Lock for similar vertex with a similar tangent */
-    for (n = 0; n < numVertices; ++n)
+    for (n = 0; n < numVertices; n++)
     {
         currentTangent = (tangent + n);
 
-        for (j = n + 1; j < numVertices; ++j)
+        for (j = n + 1; j < numVertices; j++)
         {
             if (tangentsRemapping[j] > n)
             {
@@ -2585,7 +2525,7 @@ _rpD3D9VertexDeclarationInstTangent(RwUInt32 type,
     }
 
     /* Normalize the tangents vectors */
-    for (n = 0; n < numVertices; ++n)
+    for (n = 0; n < numVertices; n++)
     {
         if (tangentsRemapping[n] == n)
         {
@@ -2947,7 +2887,7 @@ _rpD3D9GetMinMaxValuesV3d(const RwV3d *src,
     max->y = src->y;
     max->z = src->z;
 
-    for (n = 1; n < numElements; ++n, ++src)
+    for (n = 1; n < numElements; n++, src++)
     {
         if (min->x > src->x)
         {
@@ -3003,7 +2943,7 @@ _rpD3D9GetMinMaxValuesV2d(const RwV2d *src,
     max->x = src->x;
     max->y = src->y;
 
-    for (n = 1; n < numElements; ++n, ++src)
+    for (n = 1; n < numElements; n++, src++)
     {
         if (min->x > src->x)
         {
