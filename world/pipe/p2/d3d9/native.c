@@ -80,7 +80,7 @@ _rpGeometryNativeWrite(RwStream *stream, const RpGeometry *geometry)
             size += (resEntryHeader->totalNumIndex) * sizeof(RxVertexIndex);
         }
 
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             size += sizeof(RxD3D9VertexStream);
             if (resEntryHeader->vertexStream[n].vertexBuffer != NULL)
@@ -98,7 +98,7 @@ _rpGeometryNativeWrite(RwStream *stream, const RpGeometry *geometry)
             instancedData->material = (RpMaterial *)
                 _rpMaterialListFindMaterialIndex(&geometry->matList,
                                                  instancedData->material);
-            ++instancedData;
+            instancedData++;
         }
 
         /* Write a chunk header so we get a VERSION NUMBER */
@@ -163,7 +163,7 @@ _rpGeometryNativeWrite(RwStream *stream, const RpGeometry *geometry)
         }
 
         /* Write vertex information */
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             RxD3D9VertexStream  *vertexStream;
             RwUInt8 *vertexBuffer;
@@ -211,7 +211,7 @@ _rpGeometryNativeWrite(RwStream *stream, const RpGeometry *geometry)
                 _rpMaterialListGetMaterial(&geometry->matList,
                                            (RwInt32)
                                            (instancedData->material));
-            ++instancedData;
+            instancedData++;
         }
     }
 
@@ -304,7 +304,7 @@ _rpGeometryNativeRead(RwStream *stream __RWUNUSEDRELEASE__,
 
     resEntryHeader->indexBuffer = NULL;
 
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         resEntryHeader->vertexStream[n].vertexBuffer = NULL;
     }
@@ -378,7 +378,7 @@ _rpGeometryNativeRead(RwStream *stream __RWUNUSEDRELEASE__,
     error = TRUE;
     numStreams = 0;
 
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         RxD3D9VertexStream  *vertexStream;
         RwUInt32    vbSize;
@@ -484,7 +484,7 @@ _rpGeometryNativeRead(RwStream *stream __RWUNUSEDRELEASE__,
         {
             instancedData->baseIndex = instancedData->minVert;
 
-            ++instancedData;
+            instancedData++;
         }
         while (--numMeshes);
     }
@@ -500,7 +500,7 @@ _rpGeometryNativeRead(RwStream *stream __RWUNUSEDRELEASE__,
             instancedData->baseIndex = instancedData->minVert +
                                         (resEntryHeader->vertexStream[0].offset / resEntryHeader->vertexStream[0].stride);
 
-            ++instancedData;
+            instancedData++;
         }
         while (--numMeshes);
     }
@@ -515,7 +515,7 @@ _rpGeometryNativeRead(RwStream *stream __RWUNUSEDRELEASE__,
             _rpMaterialListGetMaterial(&geometry->matList,
                                        (RwInt32)
                                        (instancedData->material));
-        ++instancedData;
+        instancedData++;
     }
 
     RWASSERT(size == 0);
@@ -558,7 +558,7 @@ _rpGeometryNativeSize(const RpGeometry *geometry)
 
         size += resEntryHeader->totalNumIndex * sizeof(RxVertexIndex);
 
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             size += sizeof(RxD3D9VertexStream);
             if (resEntryHeader->vertexStream[n].vertexBuffer != NULL)
@@ -618,7 +618,7 @@ _rpWorldSectorNativeWrite(RwStream *stream, const RpWorldSector *sector)
             size += (resEntryHeader->totalNumIndex) * sizeof(RxVertexIndex);
         }
 
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             size += sizeof(RxD3D9VertexStream);
             if (resEntryHeader->vertexStream[n].vertexBuffer != NULL)
@@ -636,7 +636,7 @@ _rpWorldSectorNativeWrite(RwStream *stream, const RpWorldSector *sector)
             instancedData->material = (RpMaterial *)
                 _rpMaterialListFindMaterialIndex(&world->matList,
                                                  instancedData->material);
-            ++instancedData;
+            instancedData++;
         }
 
         /* Write a chunk header so we get a VERSION NUMBER */
@@ -699,7 +699,7 @@ _rpWorldSectorNativeWrite(RwStream *stream, const RpWorldSector *sector)
         }
 
         /* Write vertex information */
-        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+        for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
         {
             RxD3D9VertexStream  *vertexStream;
             RwUInt8 *vertexBuffer;
@@ -743,7 +743,7 @@ _rpWorldSectorNativeWrite(RwStream *stream, const RpWorldSector *sector)
                 _rpMaterialListGetMaterial(&world->matList,
                                            (RwInt32)
                                            (instancedData->material));
-            ++instancedData;
+            instancedData++;
         }
     }
 
@@ -838,7 +838,7 @@ _rpWorldSectorNativeRead(RwStream *stream, RpWorldSector *sector)
 
     resEntryHeader->indexBuffer = NULL;
 
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         resEntryHeader->vertexStream[n].vertexBuffer = NULL;
     }
@@ -911,7 +911,7 @@ _rpWorldSectorNativeRead(RwStream *stream, RpWorldSector *sector)
     error = TRUE;
     numStreams = 0;
 
-    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+    for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
     {
         RxD3D9VertexStream  *vertexStream;
         RwUInt32        bytesRead;
@@ -930,7 +930,7 @@ _rpWorldSectorNativeRead(RwStream *stream, RpWorldSector *sector)
 
         if (vertexStream->vertexBuffer != NULL)
         {
-            ++numStreams;
+            numStreams++;
 
             vbSize = (resEntryHeader->totalNumVertex) * (vertexStream->stride);
 
@@ -989,7 +989,7 @@ _rpWorldSectorNativeRead(RwStream *stream, RpWorldSector *sector)
         {
             instancedData->baseIndex = instancedData->minVert;
 
-            ++instancedData;
+            instancedData++;
         }
         while (--numMeshes);
     }
@@ -1005,7 +1005,7 @@ _rpWorldSectorNativeRead(RwStream *stream, RpWorldSector *sector)
             instancedData->baseIndex = instancedData->minVert +
                                         (resEntryHeader->vertexStream[0].offset / resEntryHeader->vertexStream[0].stride);
 
-            ++instancedData;
+            instancedData++;
         }
         while (--numMeshes);
     }
@@ -1020,7 +1020,7 @@ _rpWorldSectorNativeRead(RwStream *stream, RpWorldSector *sector)
             _rpMaterialListGetMaterial(&world->matList,
                                        (RwInt32)
                                        (instancedData->material));
-        ++instancedData;
+        instancedData++;
     }
 
     RWRETURN(sector);
@@ -1066,7 +1066,7 @@ _rpWorldSectorNativeSize(const RpWorldSector *sector)
 
             size += resEntryHeader->totalNumIndex * sizeof(RxVertexIndex);
 
-            for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; ++n)
+            for (n = 0; n < RWD3D9_MAX_VERTEX_STREAMS; n++)
             {
                 size += sizeof(RxD3D9VertexStream);
                 if (resEntryHeader->vertexStream[n].vertexBuffer != NULL)

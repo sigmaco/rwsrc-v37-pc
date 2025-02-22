@@ -419,7 +419,7 @@ D3D9CreateLight(rpD3D9LightData *lightData)
 
     if (NumLightIndexFree)
     {
-        --NumLightIndexFree;
+        NumLightIndexFree--;
 
         RWASSERT(LightIndexFree != NULL);
         lightData->index = LightIndexFree[NumLightIndexFree];
@@ -428,7 +428,7 @@ D3D9CreateLight(rpD3D9LightData *lightData)
     {
         lightData->index = MaxLightIndex;
 
-        ++MaxLightIndex;
+        MaxLightIndex ++;
     }
 
     RWRETURNVOID();
@@ -470,14 +470,14 @@ D3D9AddEnabledLight(RwUInt32 index)
                                         rwMEMHINTFLAG_RESIZABLE);
         }
 
-        for (; n < MaxLightsToEnable; ++n)
+        for (; n < MaxLightsToEnable; n++)
         {
             LightsToEnable[n] = 0;
         }
     }
 
     LightsToEnable[NumLightsToEnable] = index;
-    ++NumLightsToEnable;
+    NumLightsToEnable++;
 
     RWRETURNVOID();
 }
@@ -500,11 +500,6 @@ _rwD3D9LightsGlobalEnable(RpLightFlag flags)
     RwBool          lighting = FALSE;
 
     RWFUNCTION(RWSTRING("_rwD3D9LightsGlobalEnable"));
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     AmbientSaturated.red = 0.f;
     AmbientSaturated.green = 0.f;
@@ -817,7 +812,7 @@ _rwD3D9LightsEnable(RwBool enable, RwUInt32 type)
                 const RwUInt32 index = LightsToDisable[n];
 
                 /* Check if this light is going to be activated again */
-                for (c = 0; c < NumLightsToEnable; ++c)
+                for (c = 0; c < NumLightsToEnable; c++)
                 {
                     if (LightsToEnable[c] == index)
                     {
@@ -830,7 +825,7 @@ _rwD3D9LightsEnable(RwBool enable, RwUInt32 type)
                     RwD3D9EnableLight(index, FALSE);
                 }
 
-                ++n;
+                n++;
             }
             while (n < NumLightsToDisable);
         }
@@ -839,7 +834,7 @@ _rwD3D9LightsEnable(RwBool enable, RwUInt32 type)
         {
             RwUInt32 *pointerAux;
 
-            for (n = 0; n < NumLightsToEnable; ++n)
+            for (n = 0; n < NumLightsToEnable; n++)
             {
                 RwD3D9EnableLight(LightsToEnable[n], TRUE);
             }

@@ -77,9 +77,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-//@{ Jaewon 20051108
-#include <TCHAR.H>
-//@} Jaewon
 
 #include <rwcore.h>
 
@@ -134,23 +131,14 @@ struct RpClumpStreamWriteStatus
     RwBool              success;
 };
 
-/* Binary Representations (2004.11.8 gemani atomic에 uda save)*/
+/* Binary Representations */
 typedef struct rpAtomicBinary _rpAtomicBinary;
 struct rpAtomicBinary
 {
     RwInt32             frameIndex;
-	RwInt32             geomIndex;
+    RwInt32             geomIndex;
     RwInt32             flags;
     RwInt32             unused;
-	
-	RwInt16				renderType;
-	RwInt16				blendMode;
-
-	//@{ Jaewon 20041222
-	// atomic identification number
-	// 2005.3.1. unused
-	RwInt32				id;
-	//@} Jaewon
 };
 
 typedef struct rpAtomicLightData _rpAtomicLightData;
@@ -212,18 +200,6 @@ static RwInt32  _rpClumpCameraExtOffset = 0;
 static RwInt32  _rpClumpLightExtOffset = 0;
 
 static RwModuleInfo clumpModule;
-
-//@{ 20050513 DDonSS : Threadsafe
-#if defined USE_THREADSAFE_CLUMP
-#if defined WIN32
-// Critical Section for clump
-static CRITICAL_SECTION _csClump;
-#else // defined WIN32
-static void* csClump = NULL;
-#endif // defined WIN32
-#endif // defined USE_THREADSAFE_CLUMP
-//@} DDonSS
-
 
 /****************************************************************************
  Local (Static) Functions
@@ -382,7 +358,7 @@ CountAtomic(RpAtomic * atomic, void *pData)
     RWASSERT(pData);
     RWASSERTISTYPE(atomic, rpATOMIC);
 
-    ++(*(RwInt32 *) pData);
+    (*(RwInt32 *) pData)++;
 
     RWRETURN(atomic);
 }
@@ -406,7 +382,7 @@ CountLight(RpLight * light, void *pData)
     RWASSERT(pData);
     RWASSERTISTYPE(light, rpLIGHT);
 
-    ++(*(RwInt32 *) pData);
+    (*(RwInt32 *) pData)++;
 
     RWRETURN(light);
 }
@@ -430,7 +406,7 @@ CountCamera(RwCamera * camera, void *pData)
     RWASSERT(pData);
     RWASSERTISTYPE(camera, rwCAMERA);
 
-    ++(*(RwInt32 *) pData);
+    (*(RwInt32 *) pData)++;
 
     RWRETURN(camera);
 }
@@ -453,8 +429,7 @@ AtomicSync(RwObjectHasFrame * object)
     RWASSERTISTYPE(object, rpATOMIC);
 
     interpolator = &atomic->interpolator;
-	
-    if (interpolator->flags & rpINTERPOLATORDIRTYSPHERE )
+    if (interpolator->flags & rpINTERPOLATORDIRTYSPHERE)
     {
         _rpAtomicResyncInterpolatedSphere(atomic);
     }
@@ -486,15 +461,15 @@ AtomicDefaultRenderCallBack(RpAtomic *atomic)
     RWFUNCTION(RWSTRING("AtomicDefaultRenderCallBack"));
     RWASSERT(atomic);
 
-	if (pipeline == NULL)
+    if (pipeline == NULL)
     {
-		pipeline = RXPIPELINEGLOBAL(currentAtomicPipeline);
-	}
+        pipeline = RXPIPELINEGLOBAL(currentAtomicPipeline);
+    }
 
-	if (RxPipelineExecute(pipeline, (void *) atomic, TRUE))
-	{
-		RWRETURN(atomic);
-	}
+    if (RxPipelineExecute(pipeline, (void *) atomic, TRUE))
+    {
+        RWRETURN(atomic);
+    }
 
     RWRETURN((RpAtomic *)NULL);
 }
@@ -569,7 +544,7 @@ GeometryListDeinitialize(rpGeometryList * geomList)
     RWASSERT(geomList);
 
     /* remove the read reference to each geometry */
-    for (i = 0; i < geomList->numGeoms; ++i)
+    for (i = 0; i < geomList->numGeoms; i++)
     {
         RpGeometryDestroy(geomList->geometries[i]);
     }
@@ -603,7 +578,7 @@ GeometryListFindGeometry(const rpGeometryList * geomList,
     RWASSERT(geomList);
     RWASSERT(geom);
 
-    for (i = 0; i < geomList->numGeoms; ++i)
+    for (i = 0; i < geomList->numGeoms; i++)
     {
         if (geomList->geometries[i] == geom)
         {
@@ -636,7 +611,7 @@ GeometryListStreamGetSize(const rpGeometryList * geomList)
     size = sizeof(RwInt32) + rwCHUNKHEADERSIZE;
 
     /* Add the size of the geometry chunks for each geometry in the list */
-    for (i = 0; i < geomList->numGeoms; ++i)
+    for (i = 0; i < geomList->numGeoms; i++)
     {
         RpGeometry         *geom = geomList->geometries[i];
 
@@ -653,9 +628,7 @@ GeometryListInitialize(rpGeometryList * geomList, RpClump * clump)
 {
     RwInt32             numGeoms;
     RpGeometry        **fppCur;
-	RpAtomic			*cur_atomic,*end_atomic,*next_atomic;
-	RpGeometry         *geom;
-    //RwLLLink           *cur, *end;
+    RwLLLink           *cur, *end;
 
     RWFUNCTION(RWSTRING("GeometryListInitialize"));
     RWASSERT(geomList);
@@ -682,61 +655,25 @@ GeometryListInitialize(rpGeometryList * geomList, RpClump * clump)
 
     /* fill it with _unique_ geometries */
     fppCur = geomList->geometries;
-	//@> 2005.3.1 gemani
+    cur = rwLinkListGetFirstLLLink(&clump->atomicList);
+    end = rwLinkListGetTerminator(&clump->atomicList);
+    while (cur != end)
+    {
+        RpAtomic           *apAtom =
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-	
-	if(clump->atomicList)
-	{
-		cur_atomic = clump->atomicList;
-		end_atomic = cur_atomic;
+            rwLLLinkGetData(cur, RpAtomic, inClumpLink);
+        RpGeometry         *geom = RpAtomicGetGeometry(apAtom);
 
-		do
-		{
-			geom = RpAtomicGetGeometry(cur_atomic);
-			next_atomic = cur_atomic->next;
+        /* is it already in the list? (should really mark atomic) */
+        if (!GeometryListFindGeometry(geomList, geom, (RwInt32 *)NULL))
+        {
+            RpGeometryAddRef(geom);
+            *fppCur++ = geom;
+            geomList->numGeoms++;
+        }
 
-			/* is it already in the list? (should really mark atomic) */
-			if (!GeometryListFindGeometry(geomList, geom, (RwInt32 *)NULL))
-			{
-				RpGeometryAddRef(geom);
-				*fppCur++ = geom;
-				++geomList->numGeoms;
-			}
-
-			cur_atomic = next_atomic;
-		}while(cur_atomic != end_atomic);
-	}
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
-	
-    //cur = rwLinkListGetFirstLLLink(&clump->atomicList);
-    //end = rwLinkListGetTerminator(&clump->atomicList);
-    //while (cur != end)
-    //{
-    //    RpAtomic           *apAtom =
-
-    //        rwLLLinkGetData(cur, RpAtomic, inClumpLink);
-    //    RpGeometry         *geom = RpAtomicGetGeometry(apAtom);
-
-    //    /* is it already in the list? (should really mark atomic) */
-    //    if (!GeometryListFindGeometry(geomList, geom, (RwInt32 *)NULL))
-    //    {
-    //        RpGeometryAddRef(geom);
-    //        *fppCur++ = geom;
-    //        ++geomList->numGeoms;
-    //    }
-
-    //    cur = rwLLLinkGetNext(cur);
-    //}
-
-	//<@ 2005.3.1 gemani
+        cur = rwLLLinkGetNext(cur);
+    }
 
     /* Done */
     RWRETURN(geomList);
@@ -783,7 +720,7 @@ GeometryListStreamWrite(const rpGeometryList * geomList, RwStream * stream)
     }
 
     /* Now write off all the geometries */
-    for (i = 0; i < geomList->numGeoms; ++i)
+    for (i = 0; i < geomList->numGeoms; i++)
     {
         RpGeometry         *geom = geomList->geometries[i];
 
@@ -850,7 +787,7 @@ GeometryListStreamRead(RwStream * stream, rpGeometryList * geomList)
             geomList->geometries = (RpGeometry **)NULL;
         }
 
-        for (i = 0; i < gl; ++i)
+        for (i = 0; i < gl; i++)
         {
             /* Read the geometry */
             if (!RwStreamFindChunk(stream, rwID_GEOMETRY,
@@ -869,7 +806,7 @@ GeometryListStreamRead(RwStream * stream, rpGeometryList * geomList)
                     RWRETURN((rpGeometryList *)NULL);
                 }
                 /* Increment the number of geometries in the list */
-                ++geomList->numGeoms;
+                geomList->numGeoms++;
             }
             else
             {
@@ -1329,13 +1266,6 @@ ClumpAtomicStreamWrite(RpAtomic * atomic, void *pData)
     /* Fill it */
     a.flags = RpAtomicGetFlags(atomic);
     a.unused = 0;              /* Make it known */
-	a.renderType = atomic->stRenderInfo.renderType;
-	a.blendMode = atomic->stRenderInfo.blendMode;
-	//@{ Jaewon 20041222
-	//a.id = RpAtomicGetId(atomic);
-	//  2005.3.1.gemani unused
-	a.id = -1;
-	//@} Jaewon
 
     /* only if we have frame list */
     if (status->fl.numFrames)
@@ -1438,21 +1368,12 @@ ClumpAtomicStreamRead(RwStream * stream, rwFrameList * fl,
             RWRETURN((RpAtomic *)NULL);
         }
 
-		//@{ Jaewon 20041222
-		// ID 저장 안합니다.. lod적용하여 저장하니 문제 생김 2005.3.1.
-		//RpAtomicSetId(atom, a.id);
-		//@} Jaewon
-
         /* Set the atomic types */
         RpAtomicSetFlags(atom, a.flags);
         if (fl->numFrames)
         {
             RpAtomicSetFrame(atom, fl->frames[a.frameIndex]);
         }
-
-		/* 2004.11.8 gemani render uda load*/
-		atom->stRenderInfo.renderType = (char)a.renderType;
-		atom->stRenderInfo.blendMode = (char)a.blendMode;
 
         /* get the geometry */
         if (gl->numGeoms)
@@ -1544,27 +1465,15 @@ void
 _rpAtomicResyncInterpolatedSphere(RpAtomic * atomic)
 {
     RpGeometry         *geom;
-	RpInterpolator     *interpolator = &atomic->interpolator;
 
     RWFUNCTION(RWSTRING("_rpAtomicResyncInterpolatedSphere"));
     RWASSERT(atomic);
 
     /* Need geometry to get the spheres */
-
-	//. 2006. 1. 16. Nonstopdj
-	//. 전역 Geometry lock추가
-	CS_GLOBAL_GEOMETRY_LOCK();
-
-    if (atomic->geometry)
+    geom = atomic->geometry;
+    if (geom)
     {
-		//@{ Jaewon 20051108
-		// Threadsafe : Geometry Lock
-		CS_GEOMETRY_LOCK(atomic->geometry);
-		//@} Jaewon
-
-		//. 2006. 1. 17. Nonstopdj
-		//. confirm RpGeometry pointer
-		geom = RpAtomicGetGeometry(atomic);
+        RpInterpolator     *interpolator = &atomic->interpolator;
 
         if ((interpolator->startMorphTarget == interpolator->endMorphTarget)
             || (interpolator->startMorphTarget >= geom->numMorphTargets)
@@ -1581,34 +1490,10 @@ _rpAtomicResyncInterpolatedSphere(RpAtomic * atomic)
                  */
                 atomic->boundingSphere = geom->morphTarget[0].boundingSphere;
             }
-            //@{ Jaewon 20051121
-			// A stop-gap measure for the crash prevention
-			else if(geom->morphTarget)
-			//@} Jaewon
+            else
             {
                 /* Both morph targets must be the same,
                  * so grab one or the other */
-				//@{ Jaewon 20051108
-				// Set the trap...
-				if(geom->morphTarget == NULL && RWSRCGLOBAL(debugLogFunc))
-				{
-					RwChar buf[256]; buf[255] = '\0';
-					_sntprintf(buf, 255, RWSTRING("(geom->morphTarget == NULL) : %s, %s, 0x%08x, %d, %d, %d, %d, 0x%08x, %d, %d, %d, %d\n"),
-						atomic->szName,
-						atomic->clump?atomic->clump->szName:RWSTRING("No Clump"),
-						geom,
-						geom->numMorphTargets,
-						geom->refCount, 
-						geom->numVertices,
-						geom->numTriangles,
-						atomic->geometry,
-						atomic->geometry?atomic->geometry->numMorphTargets:0,
-						atomic->geometry?atomic->geometry->refCount:0, 
-						atomic->geometry?atomic->geometry->numVertices:0,
-						atomic->geometry?atomic->geometry->numTriangles:0);
-					RWSRCGLOBAL(debugLogFunc)(buf);
-				}
-				//@} Jaewon
                 atomic->boundingSphere =
                     geom->morphTarget[interpolator->
                                       startMorphTarget].boundingSphere;
@@ -1652,16 +1537,7 @@ _rpAtomicResyncInterpolatedSphere(RpAtomic * atomic)
         rwObjectSetPrivateFlags(atomic,
                                 rwObjectGetPrivateFlags(atomic) |
                                 rpATOMICPRIVATEWORLDBOUNDDIRTY);
-
-		//@{ Jaewon 20051108
-		// Threadsafe : Geometry Unlock
-		CS_GEOMETRY_UNLOCK(atomic->geometry);
-		//@} Jaewon
     }
-	
-	//. 2005. 1. 16. Nonstopdj
-	CS_GLOBAL_GEOMETRY_UNLOCK();
-
 
     RWRETURNVOID();
 }
@@ -1780,47 +1656,19 @@ _rpClumpClose(void *instance,
     RWFUNCTION(RWSTRING("_rpClumpClose"));
 
     /* Kill any objects which are left over */
-    //RwFreeListForAllUsed(RWCLUMPGLOBAL(clumpFreeList),
-    //                     ClumpTidyDestroyClump, NULL);
-    //RwFreeListForAllUsed(RWCLUMPGLOBAL(atomicFreeList),
-    //                     ClumpTidyDestroyAtomic, NULL);
-
-    ///* Then blow away the free lists themselves */
-    //RwFreeListDestroy(RWCLUMPGLOBAL(atomicFreeList));
-    //RwFreeListDestroy(RWCLUMPGLOBAL(clumpFreeList));
-    //RWCLUMPGLOBAL(atomicFreeList) = (RwFreeList *)NULL;
-    //RWCLUMPGLOBAL(clumpFreeList) = (RwFreeList *)NULL;
-
-	// 2005.1.28 modified by gemani
-	if(RWCLUMPGLOBAL(clumpFreeList))
-	{
-		RwFreeListForAllUsed(RWCLUMPGLOBAL(clumpFreeList),
+    RwFreeListForAllUsed(RWCLUMPGLOBAL(clumpFreeList),
                          ClumpTidyDestroyClump, NULL);
-
-		RwFreeListDestroy(RWCLUMPGLOBAL(clumpFreeList));
-		RWCLUMPGLOBAL(clumpFreeList) = (RwFreeList *)NULL;
-	}
-
-	if(RWCLUMPGLOBAL(atomicFreeList))
-	{
-		RwFreeListForAllUsed(RWCLUMPGLOBAL(atomicFreeList),
+    RwFreeListForAllUsed(RWCLUMPGLOBAL(atomicFreeList),
                          ClumpTidyDestroyAtomic, NULL);
 
-		RwFreeListDestroy(RWCLUMPGLOBAL(atomicFreeList));
-		RWCLUMPGLOBAL(atomicFreeList) = (RwFreeList *)NULL;
-	}
+    /* Then blow away the free lists themselves */
+    RwFreeListDestroy(RWCLUMPGLOBAL(atomicFreeList));
+    RwFreeListDestroy(RWCLUMPGLOBAL(clumpFreeList));
+    RWCLUMPGLOBAL(atomicFreeList) = (RwFreeList *)NULL;
+    RWCLUMPGLOBAL(clumpFreeList) = (RwFreeList *)NULL;
 
     /* One less module instance */
-    --clumpModule.numInstances;
-
-	//. 2005. 12. 21. Nonstopdj
-	//. global Atomic Lock object release
-	CS_ATOMIC_DELLOCK();
-
-	//. 2006. 1. 3. Nondtopdj
-	//. Global Geometry Lock object release
-	CS_GLOBAL_GEOMETRY_DELLOCK();
-	
+    clumpModule.numInstances--;
 
     /* Success */
     RWRETURN(instance);
@@ -1926,15 +1774,7 @@ _rpClumpOpen( void *instance,
         if (RWCLUMPGLOBAL(clumpFreeList))
         {
             /* One more module instance */
-            ++clumpModule.numInstances;
-
-			//. 2005. 12. 21. Nonstopdj
-			//. Atomic Lock객체 초기화
-			CS_ATOMIC_INITLOCK();
-
-			//. 2006. 1. 3. Nonstopdj
-			//. 전역 Geometry lock객체 초기화
-			CS_GLOBAL_GEOMETRY_INITLOCK();
+            clumpModule.numInstances++;
 
             /* Success */
             RWRETURN(instance);
@@ -1944,7 +1784,6 @@ _rpClumpOpen( void *instance,
         RwFreeListDestroy(RWCLUMPGLOBAL(atomicFreeList));
         RWCLUMPGLOBAL(atomicFreeList) = (RwFreeList *)NULL;
     }
-
 
     /* Failure */
     RWRETURN(NULL);
@@ -2294,70 +2133,35 @@ RpAtomicRender(RpAtomic * atomic)
 RpClump            *
 RpClumpRender(RpClump * clump)
 {
-	// 2005.3.1 gemani RwLLLink 구조에서 자체 자료구조로 변경
-
     RpClump *result = clump;
-	RpAtomic	*cur_atomic,*end_atomic,*next_atomic;
-    //RwLLLink           *cur, *end;
+    RwLLLink           *cur, *end;
 
     RWAPIFUNCTION(RWSTRING("RpClumpRender"));
     RWASSERT(clumpModule.numInstances);
     RWASSERT(clump);
     RWASSERTISTYPE(clump, rpCLUMP);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
+    cur = rwLinkListGetFirstLLLink(&clump->atomicList);
+    end = rwLinkListGetTerminator(&clump->atomicList);
 
-	if(clump->atomicList)
-	{
-		cur_atomic = clump->atomicList;
-		end_atomic = cur_atomic;
-		do
-		{
-			next_atomic = cur_atomic->next;
-			if (rwObjectTestFlags(cur_atomic, rpATOMICRENDER))
-			{
-				/* Force this baby to be synced */
-				RwFrameGetLTM((RwFrame *) rwObjectGetParent(cur_atomic));
+    while (cur != end)
+    {
+        RpAtomic *apAtom = rwLLLinkGetData(cur, RpAtomic, inClumpLink);
 
-				/* Then try and render it */
-				if( NULL == RpAtomicRender(cur_atomic) )
-				{
-					result = NULL;
-				}
-			}
-			cur_atomic = next_atomic;
-		}while(cur_atomic != end_atomic);
-	}
+        if (rwObjectTestFlags(apAtom, rpATOMICRENDER))
+        {
+            /* Force this baby to be synced */
+            RwFrameGetLTM((RwFrame *) rwObjectGetParent(apAtom));
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
+            /* Then try and render it */
+            if( NULL == RpAtomicRender(apAtom) )
+            {
+                result = NULL;
+            }
+        }
 
-    //cur = rwLinkListGetFirstLLLink(&clump->atomicList);
-    //end = rwLinkListGetTerminator(&clump->atomicList);
-
-    //while (cur != end)
-    //{
-    //    RpAtomic *apAtom = rwLLLinkGetData(cur, RpAtomic, inClumpLink);
-
-    //    if (rwObjectTestFlags(apAtom, rpATOMICRENDER))
-    //    {
-    //        /* Force this baby to be synced */
-    //        RwFrameGetLTM((RwFrame *) rwObjectGetParent(apAtom));
-
-    //        /* Then try and render it */
-    //        if( NULL == RpAtomicRender(apAtom) )
-    //        {
-    //            result = NULL;
-    //        }
-    //    }
-
-    //    cur = rwLLLinkGetNext(cur);
-    //}
+        cur = rwLLLinkGetNext(cur);
+    }
 
     RWRETURN(result);
 }
@@ -2398,12 +2202,7 @@ RpClumpRender(RpClump * clump)
 RpClump            *
 RpClumpForAllAtomics(RpClump * clump, RpAtomicCallBack callback, void *pData)
 {
-	// 2005.3.1 gemani RwLLLink 구조에서 자체 자료구조로 변경
-    //RwLLLink           *cur, *end, *next;
-	RpAtomic			*cur_atomic,*next_atomic;
-	//@{ Jaewon 20050413
-	RwBool end;
-	//@} Jaewon
+    RwLLLink           *cur, *end, *next;
 
     RWAPIFUNCTION(RWSTRING("RpClumpForAllAtomics"));
     RWASSERT(clumpModule.numInstances);
@@ -2411,74 +2210,27 @@ RpClumpForAllAtomics(RpClump * clump, RpAtomicCallBack callback, void *pData)
     RWASSERT(callback);
     RWASSERTISTYPE(clump, rpCLUMP);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
-	if(clump->atomicList)
-	{
-		cur_atomic = clump->atomicList;
-		do
-		{
-			//@{ Jaewon 20050413
-			// We have to test the end condition here.
-			end = (cur_atomic->next == clump->atomicList);
-			//@} Jaewon
-			next_atomic = cur_atomic->next;
-			if(next_atomic == NULL && RWSRCGLOBAL(debugLogFunc))
-			{
-				RwChar buf[256]; buf[255] = '\0';
-				_sntprintf(buf, 255, RWSTRING("(next_atomic == NULL) : %d, %d, %s, prev=0x%08x\n"), 
-					cur_atomic->id, 
-					cur_atomic->geometry?cur_atomic->geometry->numTriangles:0, 
-					cur_atomic->clump?cur_atomic->clump->szName:RWSTRING("No Clump"),
-					cur_atomic->prev);
-				RWSRCGLOBAL(debugLogFunc)(buf);
-			}
-			if(!callback(cur_atomic, pData))
-			{
-				//@{ 20050513 DDonSS : Threadsafe
-				// Clump Unlock
-				CS_CLUMP_UNLOCK( clump );
-				//@} DDonSS
-
-				/* Early out */
-				RWRETURN(clump);
-			}
-			cur_atomic = next_atomic;
-		//@{ Jaewon 20050413
-		// Use the result of the end test here.
-		}while(!end);//clump->atomicList && cur_atomic != clump->atomicList);
-		//@} Jaewon
-	}
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
-
     /* Enumerate all of the atomics in this clump */
-    //cur = rwLinkListGetFirstLLLink(&clump->atomicList);
-    //end = rwLinkListGetTerminator(&clump->atomicList);
+    cur = rwLinkListGetFirstLLLink(&clump->atomicList);
+    end = rwLinkListGetTerminator(&clump->atomicList);
 
-    //while (cur != end)
-    //{
-    //    RpAtomic *atomic = rwLLLinkGetData(cur, RpAtomic, inClumpLink);
-    //    RWASSERTISTYPE(atomic, rpATOMIC);
+    while (cur != end)
+    {
+        RpAtomic *atomic = rwLLLinkGetData(cur, RpAtomic, inClumpLink);
+        RWASSERTISTYPE(atomic, rpATOMIC);
 
-    //    /* Find next now, just in case we destroy the link */
-    //    next = rwLLLinkGetNext(cur);
+        /* Find next now, just in case we destroy the link */
+        next = rwLLLinkGetNext(cur);
 
-    //    if (!callback(atomic, pData))
-    //    {
-    //        /* Early out */
-    //        RWRETURN(clump);
-    //    }
+        if (!callback(atomic, pData))
+        {
+            /* Early out */
+            RWRETURN(clump);
+        }
 
-    //    /* Onto the next atomic */
-    //    cur = next;
-    //}
+        /* Onto the next atomic */
+        cur = next;
+    }
 
     RWRETURN(clump);
 }
@@ -2522,11 +2274,6 @@ RpClumpForAllCameras(RpClump * clump, RwCameraCallBack callback, void *pData)
     RWASSERT(callback);
     RWASSERTISTYPE(clump, rpCLUMP);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
     /* Enumerate all of the cameras in this clump */
     cur = rwLinkListGetFirstLLLink(&clump->cameraList);
     end = rwLinkListGetTerminator(&clump->cameraList);
@@ -2543,11 +2290,6 @@ RpClumpForAllCameras(RpClump * clump, RwCameraCallBack callback, void *pData)
 
         if (!callback(camera, pData))
         {
-			//@{ 20050513 DDonSS : Threadsafe
-			// Clump Unlock
-			CS_CLUMP_UNLOCK( clump );
-			//@} DDonSS
-
             /* Early out */
             RWRETURN(clump);
         }
@@ -2555,11 +2297,6 @@ RpClumpForAllCameras(RpClump * clump, RwCameraCallBack callback, void *pData)
         /* Onto the next camera */
         cur = next;
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -2603,11 +2340,6 @@ RpClumpForAllLights(RpClump * clump, RpLightCallBack callback, void *pData)
     RWASSERT(callback);
     RWASSERTISTYPE(clump, rpCLUMP);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
     /* Enumerate all of the lights in this clump */
     cur = rwLinkListGetFirstLLLink(&clump->lightList);
     end = rwLinkListGetTerminator(&clump->lightList);
@@ -2624,11 +2356,6 @@ RpClumpForAllLights(RpClump * clump, RpLightCallBack callback, void *pData)
 
         if (!callback(light, pData))
         {
-			//@{ 20050513 DDonSS : Threadsafe
-			// Clump Unlock
-			CS_CLUMP_UNLOCK( clump );
-			//@} DDonSS
-
             /* Early out */
             RWRETURN(clump);
         }
@@ -2636,11 +2363,6 @@ RpClumpForAllLights(RpClump * clump, RpLightCallBack callback, void *pData)
         /* Onto the next light */
         cur = next;
     }
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -2764,11 +2486,7 @@ RpAtomicCreate(void)
         (rpINTERPOLATORDIRTYINSTANCE | rpINTERPOLATORDIRTYSPHERE);
 
     /* membership of clump */
-	// 2005.3.1 gemani
-    //rwLLLinkInitialize(&atomic->inClumpLink);
-	atomic->prev = NULL;
-	atomic->next = NULL;
-
+    rwLLLinkInitialize(&atomic->inClumpLink);
     atomic->clump = (RpClump *)NULL;
 
     /* use the default atomic object pipeline */
@@ -2780,138 +2498,7 @@ RpAtomicCreate(void)
     /* Initialize memory allocated to toolkits */
     rwPluginRegistryInitObject(&atomicTKList, atomic);
 
-	atomic->pvApBase = NULL;
-	atomic->ulFlag = 0;
-	atomic->szName = NULL;
-
-	atomic->stRenderInfo.renderType = 0;
-	atomic->stRenderInfo.blendMode = 0;
-	atomic->stRenderInfo.isHasBillboard = 0;
-	atomic->stRenderInfo.isNowBillboard = 0;
-
-	atomic->stRenderInfo.shaderUseType = 0;
-	atomic->stRenderInfo.beforeLODLevel = -2;
-	atomic->stRenderInfo.fadeinLevel = 0;
-	atomic->stRenderInfo.fadeoutLevel = 0;
-
-	atomic->stRenderInfo.countStart = 0;
-	atomic->stRenderInfo.countEnd = 0;
-
-	atomic->stRenderInfo.curTick = 0;
-	atomic->stRenderInfo.intersectTick = 0;
-	atomic->stRenderInfo.backupCB = NULL;
-	atomic->stRenderInfo.backupCB2 = NULL;
-	atomic->stRenderInfo.backupCB3 = NULL;
-
-	atomic->stRenderInfo.pData1 = NULL;
-	atomic->stRenderInfo.pData2 = NULL;
-
-	/* init stType */
-	atomic->stType = NULL;
-	//atomic->stType.eType = 0;
-	//atomic->stType.lID = 0;
-	//atomic->stType.pObject = NULL;
-	//atomic->stType.pTemplate = NULL;
-	//atomic->stType.pCustData = NULL;
-	//atomic->stType.pPickAtomic = NULL;
-	//atomic->stType.pOcTreeData = NULL;
-	//atomic->stType.pOcTreeIDList = NULL;
-	//
-	//atomic->stType.boundingSphere.center.x = 0.0f;
-	//atomic->stType.boundingSphere.center.y = 0.0f;
-	//atomic->stType.boundingSphere.center.z = 0.0f;
-	//atomic->stType.boundingSphere.radius = 0.0f;
-
-	//atomic->stType.pUpdateList = NULL;
-	//atomic->stType.updateTick = 0;
-
-	//atomic->stType.frustumTestTick = 0;
-	//atomic->stType.frustumTestResult = 0;
-	//atomic->stType.viewSectorDistance = 0;
-	//
-	//atomic->stType.pCollisionAtomic = NULL;
-	//atomic->stType.pRenderAddedNode = NULL;
-
-	atomic->id = -1;
-
-	atomic->iPartID = -1;
-
-	//. 2006. 1. 16. Nonstopdj
-	//. atomic skin split 상태
-	atomic->skinSplitFlags = rpATOMICSKINSPLITNONE;
-
     RWRETURN(atomic);
-}
-
-/**
- * \ingroup rpatomic
- *
- * ref. AgcmRender::RemoveAtomicFromRenderWorld( RpAtomic*	pAtomic, RpClump*	pClump )
- *
- * 2006. 7. 7. Nonstopdj
- * 
- * AgcmRender::m_listWorldClump 에서 remove될 때 dirtylist에서도 명시적으로 제거해준다.
- */
-RwBool
-RpAtomicRemoveDirtyFrameListEx(RpAtomic * atomic)
-{
-
-	RWAPIFUNCTION(RWSTRING("RpAtomicRemoveDirtyFrameListEx"));
-    RWASSERT(atomic);
-
-	rwObjectHasFrameReleaseFrame(atomic);
-
-	return FALSE;
-}
-
-
-/**
- * \ingroup rpatomic
- *
- * ref. AgcmRender::RemoveClumpFromRenderWorld( RpClump*	pClump )
- *
- * 2006. 7. 7. Nonstopdj
- * 
- * AgcmRender::m_listWorldClump 에서 remove될 때 dirtylist에서도 명시적으로 제거해준다.
- */
-RwBool
-RpAtomicRemoveDirtyFrameList(RpAtomic * atomic)
-{
-	RwFrame		*frame;
-	RwFrame		*root;
-	RpAtomic	*begin;
-
-	RWAPIFUNCTION(RWSTRING("RpAtomicRemoveDirtyFrameList"));
-    RWASSERT(atomic);
-
-	if(!atomic)
-		return FALSE;
-
-	begin = atomic;
-
-	do
-	{
-		frame = RpAtomicGetFrame(atomic);
-
-		if(frame)
-		{
-			root = frame->root;
-
-			if(frame == root)
-				rwLinkListRemoveLLLink(&root->inDirtyListLink);
-			else
-				rwLinkListRemoveLLLink(&frame->inDirtyListLink);
-		}
-
-		atomic = atomic->next;
-		if(!atomic)
-			break;
-	}
-	while( begin != atomic);
-
-
-	return TRUE;
-
 }
 
 /**
@@ -2978,13 +2565,9 @@ RpAtomicSetGeometry(RpAtomic * atomic, RpGeometry * geometry, RwUInt32 flags)
     RWASSERT(atomic);
     RWASSERTISTYPE(atomic, rpATOMIC);
 
-	//. 2006. 1. 23. Nonstopdj
-	//. 전역 Geometry lock추가
-	CS_GLOBAL_GEOMETRY_LOCK();
-
     if (geometry != atomic->geometry)
     {
-		RwFrame            *frame;
+        RwFrame            *frame;
 
         if (geometry)
         {
@@ -2998,7 +2581,7 @@ RpAtomicSetGeometry(RpAtomic * atomic, RpGeometry * geometry, RwUInt32 flags)
             RpGeometryDestroy(atomic->geometry);
         }
 
-		/* The instanced copy will be updated when the
+        /* The instanced copy will be updated when the
          * mesh serial numbers don't match during instancing
          */
 
@@ -3025,9 +2608,6 @@ RpAtomicSetGeometry(RpAtomic * atomic, RpGeometry * geometry, RwUInt32 flags)
          * mesh serial numbers don't match during instancing
          */
     }
-
-	//. 2006. 1. 23. Nonstopdj
-	CS_GLOBAL_GEOMETRY_UNLOCK();
 
     RWRETURN(atomic);
 }
@@ -3114,10 +2694,6 @@ RpAtomicDestroy(RpAtomic * atomic)
     RWASSERT(atomic);
     RWASSERTISTYPE(atomic, rpATOMIC);
 
-	//. 2006. 1. 23. Nonstopdj
-	//. \see WorldAtomicSync()
-	CS_ATOMIC_LOCK();
-
     /* De-init the clump plugin registered memory */
     rwPluginRegistryDeInitObject(&atomicTKList, atomic);
 
@@ -3125,8 +2701,6 @@ RpAtomicDestroy(RpAtomic * atomic)
     if (atomic->repEntry)
     {
         RwResourcesFreeResEntry(atomic->repEntry);
-
-		atomic->repEntry = NULL;		// 2005.4.2 gemani
     }
 
     /* Detach the geometry
@@ -3136,27 +2710,8 @@ RpAtomicDestroy(RpAtomic * atomic)
     /* Remove it from the list of objects if attached to frame */
     rwObjectHasFrameReleaseFrame(atomic);
 
-	/* 2005.2.11 gemani */
-	if(atomic->stType)
-	{
-		free(atomic->stType);
-		atomic->stType = NULL;
-	}
-
-	//@{ Jaewon 20050831
-	// ;)
-	if(atomic->szName)
-	{
-		free(atomic->szName);
-		atomic->szName = NULL;
-	}
-	//@} Jaewon
-
     /* Free the atom */
     RwFreeListFree(RWCLUMPGLOBAL(atomicFreeList), atomic);
-
-	//. 2006. 1. 23. Nonstopdj
-	CS_ATOMIC_UNLOCK();
 
     RWRETURN(TRUE);
 }
@@ -4011,11 +3566,6 @@ RpAtomicClone(RpAtomic *atomic)
     /* Duplicate the type */
     rwObjectCopy(newAtomic, atomic);
 
-	newAtomic->stRenderInfo.renderType = atomic->stRenderInfo.renderType;
-	newAtomic->stRenderInfo.blendMode = atomic->stRenderInfo.blendMode;
-	newAtomic->stRenderInfo.pData1 = atomic->stRenderInfo.pData1;
-	newAtomic->iPartID = atomic->iPartID;
-
     /* Copy the flags */
     RpAtomicSetFlags(newAtomic, RpAtomicGetFlags(atomic));
 
@@ -4033,12 +3583,6 @@ RpAtomicClone(RpAtomic *atomic)
 
     /* Interpolation info */
     newAtomic->interpolator = atomic->interpolator;
-
-	//@{ Jaewon 20050831
-	// ;)
-	if(atomic->szName)
-		RpAtomicSetName(newAtomic, atomic->szName);
-	//@} Jaewon
 
     /* Copy over plugin info */
     rwPluginRegistryCopyObject(&atomicTKList, newAtomic, atomic);
@@ -4137,12 +3681,6 @@ RpClumpClone(RpClump * clump)
 
     /* Copy over the callback */
     clumpCloneStatus.newClump->callback = clumpCloneStatus.oldClump->callback;
-
-	//@{ Jaewon 20050905
-	// ;)
-	if(clump->szName)
-		RpClumpSetName(clumpCloneStatus.newClump, clumpCloneStatus.oldClump->szName);
-	//@} Jaewon
 
     /* Copy the clump's plugin data */
     rwPluginRegistryCopyObject(&clumpTKList,
@@ -4281,12 +3819,7 @@ RpClumpCreate(void)
     RpClumpSetFrame(clump, NULL);
 
     /* Contains nothing */
-	//2005.3.1 gemani
-    //rwLinkListInitialize(&clump->atomicList);
-
-	clump->atomicList = NULL;
-	clump->iLastAtomicID = 0;
-
+    rwLinkListInitialize(&clump->atomicList);
     rwLinkListInitialize(&clump->lightList);
     rwLinkListInitialize(&clump->cameraList);
 
@@ -4298,49 +3831,6 @@ RpClumpCreate(void)
 
     /* Initialize memory allocated to toolkits */
     rwPluginRegistryInitObject(&clumpTKList, clump);
-
-	clump->pvApBase = NULL;
-	clump->ulFlag = 0;
-	clump->szName = NULL;
-
-	/* init stUserData */
-	clump->stUserData.characterShadowLevel = 0;
-	clump->stUserData.maxLODLevel = 0;
-	clump->stUserData.customLightStatus = 0;
-	clump->stUserData.octreeModeCamZIndex = 0;
-
-	clump->stUserData.calcDistance = 0.0f;
-	clump->stUserData.calcDistanceTick = 0;
-
-	/* init stType */
-	clump->stType.eType = 0;
-	clump->stType.lID = 0;
-	clump->stType.pObject = NULL;
-	clump->stType.pTemplate = NULL;
-	clump->stType.pCustData = NULL;
-	clump->stType.pPickAtomic = NULL;
-	clump->stType.pOcTreeData = NULL;
-	clump->stType.pOcTreeIDList = NULL;
-	
-	clump->stType.boundingSphere.center.x = 0.0f;
-	clump->stType.boundingSphere.center.y = 0.0f;
-	clump->stType.boundingSphere.center.z = 0.0f;
-	clump->stType.boundingSphere.radius = 0.0f;
-
-	clump->stType.pUpdateList = NULL;
-	clump->stType.updateTick = 0;
-
-	clump->stType.frustumTestTick = 0;
-	clump->stType.frustumTestResult = 0;
-	clump->stType.viewSectorDistance = 0;
-	
-	clump->stType.pCollisionAtomic = NULL;
-	clump->stType.pRenderAddedNode = NULL;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Initialize Clump Lock
-	CS_CLUMP_INITLOCK( clump );
-	//@} DDonSS
 
     /* All Done */
     RWRETURN(clump);
@@ -4387,12 +3877,7 @@ RpClumpDestroy(RpClump * clump)
     RWASSERTISTYPE(clump, rpCLUMP);
 
     /* De-init the clump plugin registered memory */
-	/* 2006. 3. 30. nonstopdj
-	 * add lock position.
-	 */
-	CS_CLUMP_LOCK(clump);
     rwPluginRegistryDeInitObject(&clumpTKList, clump);
-
 
     RpClumpForAllAtomics(clump, DestroyClumpAtomic, NULL);
     RpClumpForAllLights(clump, DestroyClumpLight, NULL);
@@ -4404,24 +3889,6 @@ RpClumpDestroy(RpClump * clump)
     {
         RwFrameDestroyHierarchy(frame);
     }
-
-	//@{ Jaewon 20050905
-	// ;)
-	if(clump->szName)
-	{
-		free(clump->szName);
-		clump->szName = NULL;
-	}
-	//@} Jaewon
-
-	/* 2006. 4. 27. nonstopdj
-	 * ref. change unlock position
-	 */
-	CS_CLUMP_UNLOCK(clump);
-
-	// Delete Clump Lock
-	CS_CLUMP_DELLOCK( clump );
-	//@} DDonSS
 
     /* Destroy the clump */
     RwFreeListFree(RWCLUMPGLOBAL(clumpFreeList), clump);
@@ -4467,45 +3934,8 @@ RpClumpAddAtomic(RpClump * clump, RpAtomic * atomic)
      * clump might be
      */
 
-	//@> 2005.3.1 gemani
-    //rwLinkListAddLLLink(&clump->atomicList, &atomic->inClumpLink);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
-	//@{ Jaewon 20050603
-	// If it has been already a part of another clump,
-	// remove this from the clump first.
-	if(atomic->clump)
-		RpClumpRemoveAtomic(atomic->clump, atomic);
-	//@} Jaewon
-
-	if(clump->atomicList)
-	{
-		RpAtomic*	prev = clump->atomicList->prev;
-		prev->next = atomic;
-		atomic->prev = prev;
-		atomic->next = clump->atomicList;
-		clump->atomicList->prev = atomic;
-	}
-	else
-	{
-		clump->atomicList = atomic;
-		atomic->next = clump->atomicList;
-		atomic->prev = clump->atomicList;
-	}
-
-	atomic->id = clump->iLastAtomicID++;
-	//<@ 2005.3.1 gemani
-
+    rwLinkListAddLLLink(&clump->atomicList, &atomic->inClumpLink);
     atomic->clump = clump;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -4544,56 +3974,9 @@ RpClumpRemoveAtomic(RpClump * clump, RpAtomic * atomic)
     RWASSERT(atomic);
     RWASSERTISTYPE(atomic, rpATOMIC);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
-	//@{ Jaewon 20050413
-	// Early out.
-	if(clump->atomicList == NULL)
-	{
-		//@{ 20050513 DDonSS : Threadsafe
-		// Clump Unlock
-		CS_CLUMP_UNLOCK( clump );
-		//@} DDonSS
-
-		RWRETURN(clump);
-	}
-	//@} Jaewon
-
     /* NOTE !!!! - this assumes the clump is NOT IN THE WORLD */
-	//@> 2005.3.1 gemani
-    //rwLinkListRemoveLLLink(&atomic->inClumpLink);
-
-	//@{ Jaewon 20050413
-	// Clean up ugly codes.
-	if(atomic == clump->atomicList)
-	{
-		if(atomic == atomic->next)
-		{
-			clump->atomicList = NULL;
-		}
-		else
-		{
-			clump->atomicList = atomic->next;
-		}
-	}
-	atomic->prev->next = atomic->next;
-	atomic->next->prev = atomic->prev;
-	//@} Jaewon
-	//<@ 2005.3.1 gemani
-
-	//@{ Jaewon 20050413
-	atomic->next = NULL;
-	atomic->prev = NULL;
-	//@} Jaewon
+    rwLinkListRemoveLLLink(&atomic->inClumpLink);
     atomic->clump = (RpClump *)NULL;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -4637,18 +4020,8 @@ RpClumpAddLight(RpClump * clump, RpLight * light)
      * clump might be
      */
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
     rwLinkListAddLLLink(&clump->lightList, &lightExt->inClumpLink);
     lightExt->clump = clump;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -4689,11 +4062,6 @@ RpClumpRemoveLight(RpClump * clump, RpLight * light)
     RWASSERT(light);
     RWASSERTISTYPE(light, rpLIGHT);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
     /* NOTE !!!! - this assumes the clump is NOT IN THE WORLD */
     /* We should find a way to ASSERT about this (perhaps clumps
      * should be used *only* as handy containers - so we should
@@ -4701,11 +4069,6 @@ RpClumpRemoveLight(RpClump * clump, RpLight * light)
     rwLinkListRemoveLLLink(&lightExt->inClumpLink);
     rwLLLinkInitialize(&lightExt->inClumpLink);
     lightExt->clump = (RpClump *)NULL;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -4746,22 +4109,12 @@ RpClumpAddCamera(RpClump * clump, RwCamera * camera)
     RWASSERT(camera);
     RWASSERTISTYPE(camera, rwCAMERA);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
     /* It is assumed the camera is NOT in the world although the
      * clump might be
      */
 
     rwLinkListAddLLLink(&clump->cameraList, &cameraExt->inClumpLink);
     cameraExt->clump = clump;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -4802,20 +4155,10 @@ RpClumpRemoveCamera(RpClump * clump, RwCamera * camera)
     RWASSERT(camera);
     RWASSERTISTYPE(camera, rwCAMERA);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Lock
-	CS_CLUMP_LOCK( clump );
-	//@} DDonSS
-
     /* NOTE !!!! - this assumes the clump is NOT IN THE WORLD */
     rwLinkListRemoveLLLink(&cameraExt->inClumpLink);
     rwLLLinkInitialize(&cameraExt->inClumpLink);
     cameraExt->clump = (RpClump *)NULL;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Clump Unlock
-	CS_CLUMP_UNLOCK( clump );
-	//@} DDonSS
 
     RWRETURN(clump);
 }
@@ -5275,7 +4618,7 @@ RpClumpStreamRead(RwStream * stream)
         }
 
         /* Iterate over the atomics */
-        for (i = 0; i < cl.numAtomics; ++i)
+        for (i = 0; i < cl.numAtomics; i++)
         {
             status = RwStreamFindChunk(stream, (RwUInt32)rwID_ATOMIC,
                                        (RwUInt32 *)NULL, &version);
@@ -5299,7 +4642,7 @@ RpClumpStreamRead(RwStream * stream)
         }
 
         /* Iterate over the lights */
-        for (i = 0; i < cl.numLights; ++i)
+        for (i = 0; i < cl.numLights; i++)
         {
             RpLight *light;
             RwInt32 frameIndex;
@@ -5338,7 +4681,7 @@ RpClumpStreamRead(RwStream * stream)
         }
 
         /* Iterate over the cameras */
-        for (i = 0; i < cl.numCameras; ++i)
+        for (i = 0; i < cl.numCameras; i++)
         {
             RwCamera   *camera;
             RwInt32     frameIndex;
@@ -6026,8 +5369,6 @@ RpAtomicSetFrame(RpAtomic * atomic, RwFrame * frame)
 RpClump            *
 RpClumpSetFrame(RpClump * clump, RwFrame * frame)
 {
-	RpClump*	retVal;
-
     RWAPIFUNCTION(RWSTRING("RpClumpSetFrame"));
     RWASSERT(clumpModule.numInstances);
     RWASSERT(clump);
@@ -6038,9 +5379,7 @@ RpClumpSetFrame(RpClump * clump, RwFrame * frame)
         RWASSERTISTYPE(frame, rwFRAME);
     }
 
-	retVal = RpClumpSetFrameMacro(clump, frame);
-
-    RWRETURN(retVal);
+    RWRETURN(RpClumpSetFrameMacro(clump, frame));
 }
 
 /**
@@ -6069,18 +5408,12 @@ RpClumpSetFrame(RpClump * clump, RwFrame * frame)
 RwFrame            *
 RpClumpGetFrame(const RpClump * clump)
 {
-	RwFrame*	retVal;
-
     RWAPIFUNCTION(RWSTRING("RpClumpGetFrame"));
     RWASSERT(clumpModule.numInstances);
     RWASSERT(clump);
     RWASSERTISTYPE(clump, rpCLUMP);
 
-	// 2005.3.11 gemani FrameLocking 코드 삭제
-		
-	retVal = (RwFrame *) rwObjectGetParent(clump);
-	
-    RWRETURN(retVal);
+    RWRETURN((RwFrame *) rwObjectGetParent(clump));
 }
 
 /**
@@ -6179,106 +5512,6 @@ RpAtomicGetFlags(const RpAtomic * atomic)
 
 #endif /* ( defined(RWDEBUG) || defined(RWSUPPRESSINLINE) ) */
 
-
-//@{ Jaewon 20041222
-// Id setter/getter
-RpAtomic           *
-RpAtomicSetId(RpAtomic * atomic, RwInt32 id)
-{
-    RWAPIFUNCTION(RWSTRING("RpAtomicSetId"));
-    RWASSERT(clumpModule.numInstances);
-    RWASSERT(atomic);
-    RWASSERTISTYPE(atomic, rpATOMIC);
-
-	atomic->id = id;
-
-    RWRETURN(atomic);
-}
-RwInt32
-RpAtomicGetId(const RpAtomic * atomic)
-{
-    RWAPIFUNCTION(RWSTRING("RpAtomicGetId"));
-    RWASSERT(clumpModule.numInstances);
-    RWASSERT(atomic);
-    RWASSERTISTYPE(atomic, rpATOMIC);
-
-    RWRETURN(atomic->id);
-}
-//@} Jaewon
-
-//@{ Jaewon 20050831
-// ;)
-RpAtomic *
-RpAtomicSetName(RpAtomic *atomic,
-				const RwChar *name)
-{
-	RWAPIFUNCTION(RWSTRING("RpAtomicSetName"));
-	RWASSERT(clumpModule.numInstances);
-	RWASSERT(atomic);
-	RWASSERTISTYPE(atomic, rpATOMIC);
-	RWASSERT(name);
-
-	if(atomic->szName)
-	{
-		free(atomic->szName);
-		atomic->szName = NULL;
-	}
-
-	atomic->szName = (RwChar*)malloc((strlen(name)+1)*sizeof(RwChar));
-	if(atomic->szName)
-		strcpy(atomic->szName, name);
-
-	RWRETURN(atomic);
-}
-
-const RwChar *
-RpAtomicGetName(const RpAtomic *atomic)
-{
-	RWAPIFUNCTION(RWSTRING("RpAtomicGetName"));
-	RWASSERT(clumpModule.numInstances);
-	RWASSERT(atomic);
-	RWASSERTISTYPE(atomic, rpATOMIC);
-
-	RWRETURN(atomic->szName);
-}
-//@} Jaewon
-
-//@{ Jaewon 20050905
-// ;)
-RpClump *
-RpClumpSetName(RpClump *clump,
-				const RwChar *name)
-{
-	RWAPIFUNCTION(RWSTRING("RpClumpSetName"));
-	RWASSERT(clumpModule.numInstances);
-	RWASSERT(clump);
-	RWASSERTISTYPE(clump, rpCLUMP);
-	RWASSERT(name);
-
-	if(clump->szName)
-	{
-		free(clump->szName);
-		clump->szName = NULL;
-	}
-
-	clump->szName = (RwChar*)malloc((strlen(name)+1)*sizeof(RwChar));
-	if(clump->szName)
-		strcpy(clump->szName, name);
-
-	RWRETURN(clump);
-}
-
-const RwChar *
-RpClumpGetName(const RpClump *clump)
-{
-	RWAPIFUNCTION(RWSTRING("RpClumpGetName"));
-	RWASSERT(clumpModule.numInstances);
-	RWASSERT(clump);
-	RWASSERTISTYPE(clump, rpCLUMP);
-
-	RWRETURN(clump->szName);
-}
-//@} Jaewon
 
 /* native.h will overload this for PS2 which does things its own way */
 #if (!defined(_rpGeometryNativeFreeResEntry))

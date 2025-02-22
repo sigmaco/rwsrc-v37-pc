@@ -661,11 +661,6 @@ _rpLightTieDestroy(RpLightTie * tie)
 
     RWASSERT(tie);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     rwLinkListRemoveLLLink(&tie->WorldSectorInLight);
     rwLinkListRemoveLLLink(&tie->lightInWorldSector);
 
@@ -681,11 +676,6 @@ _rpTieDestroy(RpTie * tie)
     RWFUNCTION(RWSTRING("_rpTieDestroy"));
 
     RWASSERT(tie);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     /* There is the potential of this being a dummy tie.  These are
      * characterised by their being on the stack, and having NULL
@@ -727,11 +717,6 @@ AtomicDestroyTies(RpAtomic * atomic)
     cur = rwLinkListGetFirstLLLink(&atomic->llWorldSectorsInAtomic);
     while (cur != end)
     {
-		//@{ 20050513 DDonSS : Threadsafe
-		// Threadsafe Check
-		THREADSAFE_CHECK_ISCALLEDMAIN();
-		//@} DDonSS
-
         /* Remove the tie */
         tie = rwLLLinkGetData(cur, RpTie, lWorldSectorInAtomic);
         cur = rwLLLinkGetNext(cur);
@@ -770,11 +755,6 @@ WorldAttachAtomicSphere(RpWorld * world, RpAtomic * atomic)
     /* Get the atomic's world space sphere */
     worldSphere = RpAtomicGetWorldBoundingSphere(atomic);
     RWASSERT(worldSphere);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     /* Set up the bounding box */
     RwV3dAssign(&inf, &worldSphere->center);
@@ -884,18 +864,18 @@ WorldAtomicSync(RwObjectHasFrame * type)
     {
         RpWorld            *world = atomicExt->world;
 
-		if (world)
-		{
-			/* Needs to be in a world to have ties */
-			/* Now update the ties */
-			RWASSERTISTYPE(world, rpWORLD);
+        if (world)
+        {
+            /* Needs to be in a world to have ties */
+            /* Now update the ties */
+            RWASSERTISTYPE(world, rpWORLD);
 
-			/* Detach this atomic from all its sectors */
-			AtomicDestroyTies(atomic);
+            /* Detach this atomic from all its sectors */
+            AtomicDestroyTies(atomic);
 
-			/* It can be treated as a sphere */
-			WorldAttachAtomicSphere(world, atomic);
-		}
+            /* It can be treated as a sphere */
+            WorldAttachAtomicSphere(world, atomic);
+        }
 
         /* Return success */
         RWRETURN(type);
@@ -1104,11 +1084,6 @@ LightDestroyTies(RpLight * light)
     RWASSERT(light);
     RWASSERTISTYPE(light, rpLIGHT);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     cur = rwLinkListGetFirstLLLink(&light->WorldSectorsInLight);
     end = rwLinkListGetTerminator(&light->WorldSectorsInLight);
 
@@ -1142,11 +1117,6 @@ WorldLightSync(RwObjectHasFrame * object)
 
     RWASSERT(light);
     RWASSERTISTYPE(light, rpLIGHT);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     /* Do the default thing first */
     if (lightExt->oldSync(object))
@@ -1422,7 +1392,7 @@ WorldSyncCamera(RpWorld * world, RwCamera * camera)
 
             /* Is it in the viewing frustum ? */
 
-            for (i = 0; i < 6; ++i)
+            for (i = 0; i < 6; i++)
             {
                 RwV3d               vCorner;
                 RwSplitBits         sbSide;
@@ -2467,10 +2437,16 @@ RpWorldRemoveAtomic(RpWorld * world, RpAtomic * atomic)
     RWASSERT(atomicExt->world == world); /* This one in fact */
 
     /* Blow away it's instance copy if it has one */
+
+#if defined(PSP_DRVMODEL_H)
+	/* This will avoid problems with PTank atomics on PSP, as 
+	PTank data is stored in the atomic's RwResEntry. */
+#else
     if (atomic->repEntry)
     {
         RwResourcesFreeResEntry(atomic->repEntry);
     }
+#endif /* defined(PSP_DRVMODEL_H) */
     AtomicDestroyTies(atomic);
 
     atomicExt->world = (RpWorld *)NULL;
@@ -2549,11 +2525,6 @@ RpAtomicForAllWorldSectors(RpAtomic * atomic,
     RWASSERT(atomic);
     RWASSERT(callback);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     /* For all sectors that this atomic lies in, apply all lights within */
     cur = rwLinkListGetFirstLLLink(&atomic->llWorldSectorsInAtomic);
     end = rwLinkListGetTerminator(&atomic->llWorldSectorsInAtomic);
@@ -2619,11 +2590,6 @@ RpWorldSectorForAllAtomics(RpWorldSector * sector,
 
     dummyTie.apAtom = (RpAtomic *)NULL;
     dummyTie.worldSector = (RpWorldSector *)NULL;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     /* High priority */
     cur = rwLinkListGetFirstLLLink(&(sector->collAtomicsInWorldSector));
@@ -2703,11 +2669,6 @@ RpWorldSectorForAllCollisionAtomics(RpWorldSector * sector,
     RWASSERT(callback);
     RWASSERT(worldObjModule.numInstances);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     /* Step through all the atomics in this sector */
 
     dummyTie.apAtom = (RpAtomic *)NULL;
@@ -2782,11 +2743,6 @@ RpWorldSectorForAllLights(RpWorldSector * sector,
 
     dummyTie.light = (RpLight *)NULL;
     dummyTie.sect = (RpWorldSector *)NULL;
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     /* Step through all the lights in this sector */
     cur = rwLinkListGetFirstLLLink(&sector->lightsInWorldSector);
@@ -2896,11 +2852,6 @@ RpWorldAddClump(RpWorld * world, RpClump * clump)
     clumpExt = CLUMPEXTFROMCLUMP(clump);
     RWASSERT(!clumpExt->world); /* Should not be in a world */
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     /* Check there are any atomics in it in the first place */
     rwLinkListAddLLLink(&world->clumpList, &clump->inWorldLink);
 
@@ -2974,17 +2925,12 @@ RpWorldRemoveClump(RpWorld * world, RpClump * clump)
     RWASSERT(clumpExt->world); /* Should be in a world */
     RWASSERT(clumpExt->world == world); /* This one in fact */
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     if (clumpExt->world)
     {
         RWASSERTISTYPE(clumpExt->world, rpWORLD);
 
         /* Make sure the # of clumps, and current are up to date */
-        --(clumpExt->world)->numClumpsInWorld;
+        (clumpExt->world)->numClumpsInWorld--;
 
         if ((&clump->inWorldLink) ==
             (clumpExt->world)->currentClumpLink)
@@ -3070,7 +3016,7 @@ RwCameraForAllSectorsInFrustum(RwCamera * camera,
     /* We may have no sectors if the camera is out of the world, but
      * position will be zero in this case.
      */
-    for (i = cameraExt->position; i; --i)
+    for (i = cameraExt->position; i; i--)
     {
         RWASSERT(*frustumSectors);
 
@@ -3181,11 +3127,6 @@ RwCameraForAllClumpsInFrustum(RwCamera *camera,
     RWASSERTISTYPE(camera, rwCAMERA);
     RWASSERT(RwCameraGetWorld(camera));
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     /* Make the id unique */
     RPWORLDOBJGLOBAL(clumpsInFrustumID)++;
     clumpsInFrustumID = RPWORLDOBJGLOBAL(clumpsInFrustumID);
@@ -3193,7 +3134,7 @@ RwCameraForAllClumpsInFrustum(RwCamera *camera,
     /* Iterate over all of the rendered atomic sectors */
     cameraExt = WORLDCAMERAEXTFROMCAMERA(camera);
     frustumSectors = cameraExt->frustumSectors;
-    for (i = cameraExt->position; i; --i, ++frustumSectors)
+    for (i = cameraExt->position; i; i--, frustumSectors++)
     {
         RpTie            dummyTie;
         RwLinkList      *atomicList;
@@ -3300,11 +3241,6 @@ RwCameraForAllAtomicsInFrustum(RwCamera *camera,
     RWASSERTISTYPE(camera, rwCAMERA);
     RWASSERT(RwCameraGetWorld(camera));
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     /* Make the id unique */
     RPWORLDOBJGLOBAL(clumpsInFrustumID)++;
     clumpsInFrustumID = RPWORLDOBJGLOBAL(clumpsInFrustumID);
@@ -3312,7 +3248,7 @@ RwCameraForAllAtomicsInFrustum(RwCamera *camera,
     /* Iterate over all of the rendered atomic sectors */
     cameraExt = WORLDCAMERAEXTFROMCAMERA(camera);
     frustumSectors = cameraExt->frustumSectors;
-    for (i = cameraExt->position; i; --i, ++frustumSectors)
+    for (i = cameraExt->position; i; i--, frustumSectors++)
     {
         RpTie            dummyTie;
         RwLinkList      *atomicList;
@@ -3407,11 +3343,6 @@ RpWorldAddLight(RpWorld * world, RpLight * light)
 
     RWASSERT(!lightExt->world);
 
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
-
     lightExt->world = world;
 
     if (rwObjectGetSubType(light) < rpLIGHTPOSITIONINGSTART)
@@ -3484,11 +3415,6 @@ RpWorldRemoveLight(RpWorld * world, RpLight * light)
     lightExt = LIGHTEXTFROMLIGHT(light);
     RWASSERT(lightExt->world); /* Should be in a world */
     RWASSERT(world == lightExt->world); /* This one in fact */
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     lightExt->world = (RpWorld *)NULL;
 
@@ -3564,11 +3490,6 @@ RpLightForAllWorldSectors(RpLight * light,
     RWASSERT(worldObjModule.numInstances);
     RWASSERT(light);
     RWASSERT(callback);
-
-	//@{ 20050513 DDonSS : Threadsafe
-	// Threadsafe Check
-	THREADSAFE_CHECK_ISCALLEDMAIN();
-	//@} DDonSS
 
     /* Is this local or global? */
     type = RpLightGetType(light);

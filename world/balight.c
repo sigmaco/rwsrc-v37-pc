@@ -1290,7 +1290,7 @@ _rpLightClose(void *instance,
     RWLIGHTGLOBAL(lightFreeList) = (RwFreeList *)NULL;
 
     /* One less module instance */
-    --lightModule.numInstances;
+    lightModule.numInstances--;
 
     /* Success */
     RWRETURN(instance);
@@ -1357,7 +1357,7 @@ _rpLightOpen( void *instance,
     if (RWLIGHTGLOBAL(lightFreeList))
     {
         /* One more module instance */
-        ++lightModule.numInstances;
+        lightModule.numInstances++;
 
         /* Success */
         RWRETURN(instance);
